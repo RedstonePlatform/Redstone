@@ -31,19 +31,6 @@ namespace Redstone.RedstoneD
                 Network network = args.Contains("-testnet") ? RedstoneNetwork.RedstoneTest : RedstoneNetwork.RedstoneMain;
                 NodeSettings nodeSettings = new NodeSettings(network, ProtocolVersion.ALT_PROTOCOL_VERSION, args:args, loadConfiguration:false);
 
-                // TODO: make more generic - move to apisettings
-                var apiHost = ApiSettings.DefaultApiHost;
-                var apiPort = network.IsTest()
-                    ? API.ApiSettings.TestRedstoneApiPort
-                    : API.ApiSettings.DefaultRedstoneApiPort;
-
-                //Func<ApiSettings> apiSettingsSetup = (apiSettings) => apiSettings.
-                void ApiSetup(ApiSettings settings)
-                {
-                    settings.ApiUri = new Uri($"{apiHost}:{apiPort}");
-                    settings.ApiPort = apiPort;
-                }
-
                 // NOTES: running networks side by side is not possible yet as the flags for serialization are static
                 var node = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings)
@@ -54,7 +41,7 @@ namespace Redstone.RedstoneD
                     .UseWallet()
                     //.AddPowPosMining()
                     .AddMining() // required for pow
-                    .UseApi(ApiSetup)
+                    .UseApi()
                     .AddRPC()
                     .Build();
 
