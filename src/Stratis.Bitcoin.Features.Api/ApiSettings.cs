@@ -96,7 +96,7 @@ namespace Stratis.Bitcoin.Features.Api
         /// </summary>
         /// <param name="network">The network to use.</param>
         /// <returns>The default API port.</returns>
-        private static int GetDefaultPort(Network network)
+        protected virtual int GetDefaultPort(Network network)
         {
             if (network.IsBitcoin())
                 return network.IsTest() ? TestBitcoinApiPort : DefaultBitcoinApiPort;
@@ -106,7 +106,7 @@ namespace Stratis.Bitcoin.Features.Api
 
         /// <summary>Prints the help information on how to configure the API settings to the logger.</summary>
         /// <param name="network">The network to use.</param>
-        public static void PrintHelp(Network network)
+        public void PrintHelp(Network network)
         {
             var builder = new StringBuilder();
 
