@@ -25,6 +25,12 @@ namespace Stratis.Bitcoin.Features.Api
         /// <summary>The default port used by the API when the node runs on the Stratis testnet network.</summary>
         public const int TestStratisApiPort = 38221;
 
+        /// <summary>The default port used by the API when the node runs on the Restone network.</summary>
+        public const int DefaultRedstoneApiPort = 37222;
+
+        /// <summary>The default port used by the API when the node runs on the Restone testnet network.</summary>
+        public const int TestRedstoneApiPort = 38222;
+
         /// <summary>The default port used by the API when the node runs on the Stratis network.</summary>
         public const string DefaultApiHost = "http://localhost";
 
@@ -63,7 +69,7 @@ namespace Stratis.Bitcoin.Features.Api
 
             // Find out which port should be used for the API.
             var apiPort = config.GetOrDefault("apiport", GetDefaultPort(nodeSettings.Network));
-
+            
             // If no port is set in the API URI.
             if (apiUri.IsDefaultPort)
             {
@@ -96,17 +102,17 @@ namespace Stratis.Bitcoin.Features.Api
         /// </summary>
         /// <param name="network">The network to use.</param>
         /// <returns>The default API port.</returns>
-        private static int GetDefaultPort(Network network)
+        protected virtual int GetDefaultPort(Network network)
         {
-            if (network.IsBitcoin())
-                return network.IsTest() ? TestBitcoinApiPort : DefaultBitcoinApiPort;
-
-            return network.IsTest() ? TestStratisApiPort : DefaultStratisApiPort;
+            //if (network.IsBitcoin())
+            //    return network.IsTest() ? TestBitcoinApiPort : DefaultBitcoinApiPort;
+            
+            return network.IsTest() ? TestRedstoneApiPort : DefaultRedstoneApiPort;
         }
 
         /// <summary>Prints the help information on how to configure the API settings to the logger.</summary>
         /// <param name="network">The network to use.</param>
-        public static void PrintHelp(Network network)
+        public void PrintHelp(Network network)
         {
             var builder = new StringBuilder();
 

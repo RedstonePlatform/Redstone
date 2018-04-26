@@ -97,7 +97,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redstone.Core", "Redstone\R
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redstone.RedstoneD", "Redstone\Redstone.RedstoneD\Redstone.RedstoneD.csproj", "{A6C23DB5-B369-4778-B449-269606CD2B52}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Redstone.API", "Redstone\Redstone.API\Redstone.API.csproj", "{78E09104-0A48-400A-BC67-8E1289C61FA2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redstone.API", "Redstone\Redstone.API\Redstone.API.csproj", "{78E09104-0A48-400A-BC67-8E1289C61FA2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redstone.Features.Api", "Redstone\Redstone.Features.Api\Redstone.Features.Api.csproj", "{FD194745-EDD5-4B1F-82C0-DA45BE88E7CE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -253,6 +255,10 @@ Global
 		{78E09104-0A48-400A-BC67-8E1289C61FA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{78E09104-0A48-400A-BC67-8E1289C61FA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{78E09104-0A48-400A-BC67-8E1289C61FA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD194745-EDD5-4B1F-82C0-DA45BE88E7CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD194745-EDD5-4B1F-82C0-DA45BE88E7CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD194745-EDD5-4B1F-82C0-DA45BE88E7CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD194745-EDD5-4B1F-82C0-DA45BE88E7CE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -289,6 +295,7 @@ Global
 		{FFDB4E37-788C-4F01-9E2C-5A1BFCAD5C39} = {14FAE76E-2EE8-44AF-B322-35B8D59301CF}
 		{A6C23DB5-B369-4778-B449-269606CD2B52} = {14FAE76E-2EE8-44AF-B322-35B8D59301CF}
 		{78E09104-0A48-400A-BC67-8E1289C61FA2} = {14FAE76E-2EE8-44AF-B322-35B8D59301CF}
+		{FD194745-EDD5-4B1F-82C0-DA45BE88E7CE} = {14FAE76E-2EE8-44AF-B322-35B8D59301CF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6C780ABA-5872-4B83-AD3F-A5BD423AD907}

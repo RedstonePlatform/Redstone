@@ -76,7 +76,7 @@ namespace Stratis.Bitcoin.Features.Api
         /// <param name="network">The network to extract values from.</param>
         public static void PrintHelp(Network network)
         {
-            ApiSettings.PrintHelp(network);
+            new ApiSettings(null).PrintHelp(network);
         }
 
         /// <inheritdoc />
