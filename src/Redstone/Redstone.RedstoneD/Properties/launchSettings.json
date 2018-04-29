@@ -7,6 +7,10 @@
       "commandName": "Project",
       "commandLineArgs": "-testnet"
     },
+    "Redstone.RedstoneD Test Mine": {
+      "commandName": "Project",
+      "commandLineArgs": "-testnet -mine=true -mineaddress=xxx -walletname=yyy -walletpassword=zzz"
+    },
     "Redstone.RedstoneD Test with RPC": {
       "commandName": "Project",
       "commandLineArgs": "-testnet -server -rpcpassword=password -rpcuser=user"
