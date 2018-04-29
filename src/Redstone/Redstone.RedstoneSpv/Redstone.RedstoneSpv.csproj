@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <ApplicationIcon />
+    <OutputType>Library</OutputType>
+    <StartupObject />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\NBitcoin\NBitcoin.csproj" />
+    <ProjectReference Include="..\..\Stratis.Bitcoin.Features.LightWallet\Stratis.Bitcoin.Features.LightWallet.csproj" />
+    <ProjectReference Include="..\Redstone.API\Redstone.API.csproj" />
+    <ProjectReference Include="..\Redstone.Core\Redstone.Core.csproj" />
+  </ItemGroup>
+
+</Project>
