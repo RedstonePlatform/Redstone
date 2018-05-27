@@ -118,10 +118,10 @@ namespace Redstone.Core
                 // TODO:Redstone - need seed hosts
                 .AddDNSSeeds(new[]
                 {
-                    new DNSSeedData("seednode1.stratisplatform.com", "seednode1.stratisplatform.com"),
-                    new DNSSeedData("seednode2.stratis.cloud", "seednode2.stratis.cloud"),
-                    new DNSSeedData("seednode3.stratisplatform.com", "seednode3.stratisplatform.com"),
-                    new DNSSeedData("seednode4.stratis.cloud", "seednode4.stratis.cloud")
+                    new DNSSeedData("35.176.127.127", "35.176.127.127"), // initial test node will need to be updated
+                    //new DNSSeedData("testnet2.stratisplatform.com", "testnet2.stratisplatform.com"),
+                    //new DNSSeedData("testnet3.stratisplatform.com", "testnet3.stratisplatform.com"),
+                    //new DNSSeedData("testnet4.stratisplatform.com", "testnet4.stratisplatform.com")
                 })
 
                 // TODO:Redstone - what are these - documented for bitcoin here: https://dev.visucore.com/bitcoin/doxygen/class_c_chain_params.html

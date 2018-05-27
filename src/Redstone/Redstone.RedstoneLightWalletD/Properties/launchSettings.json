@@ -1,0 +1,19 @@
+{
+  "profiles": {
+    "Redstone.RedstoneLightWalletD": {
+      "commandName": "Project"
+    },
+    "Redstone.RedstoneLightWalletD Test": {
+      "commandName": "Project",
+      "commandLineArgs": "-testnet"
+    },
+    "Redstone.RedstoneLightWalletD Test with RPC": {
+      "commandName": "Project",
+      "commandLineArgs": "-testnet -server -rpcpassword=password -rpcuser=user"
+    },
+    "Redstone.RedstoneLightWalletD Test Keepalive 60s": {
+      "commandName": "Project",
+      "commandLineArgs": "-testnet -keepalive=60"
+    }
+  }
+}
