@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -13,8 +14,7 @@ using Stratis.Bitcoin.Features.Miner.Controllers;
 using Stratis.Bitcoin.Features.Miner.Interfaces;
 using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Bitcoin.Mining;
 
 namespace Stratis.Bitcoin.Features.Miner
 {
@@ -40,9 +40,6 @@ namespace Stratis.Bitcoin.Features.Miner
 
         /// <summary>Instance logger.</summary>
         private readonly ILogger logger;
-
-        /// <summary>POW mining loop.</summary>
-        private IAsyncLoop powLoop;
 
         /// <summary>State of time synchronization feature that stores collected data samples.</summary>
         private readonly ITimeSyncBehaviorState timeSyncBehaviorState;
@@ -91,6 +88,16 @@ namespace Stratis.Bitcoin.Features.Miner
         }
 
         /// <summary>
+        /// Get the default configuration.
+        /// </summary>
+        /// <param name="builder">The string builder to add the settings to.</param>
+        /// <param name="network">The network to base the defaults off.</param>
+        public static void BuildDefaultConfigurationFile(StringBuilder builder, Network network)
+        {
+            MinerSettings.BuildDefaultConfigurationFile(builder, network);
+        }
+
+        /// <summary>
         /// Starts staking a wallet.
         /// </summary>
         /// <param name="walletName">The name of the wallet.</param>
@@ -132,6 +139,15 @@ namespace Stratis.Bitcoin.Features.Miner
             this.logger.LogInformation("Staking stopped.");
         }
 
+        /// <summary>
+        /// Stop a Proof of Work miner.
+        /// </summary>
+        public void StopMining()
+        {
+            this.powMining?.StopMining();
+            this.logger.LogInformation("Mining stopped.");
+        }
+
         /// <inheritdoc />
         public override void Initialize()
         {
@@ -145,7 +161,7 @@ namespace Stratis.Bitcoin.Features.Miner
                 {
                     this.logger.LogInformation("Mining enabled.");
 
-                    this.powLoop = this.powMining.Mine(BitcoinAddress.Create(mineToAddress, this.network).ScriptPubKey);
+                    this.powMining.Mine(BitcoinAddress.Create(mineToAddress, this.network).ScriptPubKey);
                 }
             }
 
@@ -158,7 +174,7 @@ namespace Stratis.Bitcoin.Features.Miner
         /// <inheritdoc />
         public override void Dispose()
         {
-            this.powLoop?.Dispose();
+            this.StopMining();
             this.StopStaking();
         }
 
@@ -206,11 +222,12 @@ namespace Stratis.Bitcoin.Features.Miner
                     .FeatureServices(services =>
                     {
                         services.AddSingleton<IPowMining, PowMining>();
-                        services.AddSingleton<IAssemblerFactory, PowAssemblerFactory>();
+                        services.AddSingleton<IBlockProvider, BlockProvider>();
+                        services.AddSingleton<BlockDefinition, PowBlockDefinition>();
                         services.AddSingleton<MinerController>();
                         services.AddSingleton<MiningRPCController>();
                         services.AddSingleton<MinerSettings>(new MinerSettings(setup));
-					});
+                    });
             });
 
             return fullNodeBuilder;
@@ -237,11 +254,13 @@ namespace Stratis.Bitcoin.Features.Miner
                     {
                         services.AddSingleton<IPowMining, PowMining>();
                         services.AddSingleton<IPosMinting, PosMinting>();
-                        services.AddSingleton<IAssemblerFactory, PosAssemblerFactory>();
+                        services.AddSingleton<IBlockProvider, BlockProvider>();
+                        services.AddSingleton<BlockDefinition, PowBlockDefinition>();
+                        services.AddSingleton<BlockDefinition, PosBlockDefinition>();
                         services.AddSingleton<MinerController>();
                         services.AddSingleton<MiningRPCController>();
                         services.AddSingleton<MinerSettings>(new MinerSettings(setup));
-					});
+                    });
             });
 
             return fullNodeBuilder;
