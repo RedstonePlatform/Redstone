@@ -20,10 +20,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\NBitcoin\NBitcoin.csproj" />
-    <ProjectReference Include="..\..\Stratis.Bitcoin.Features.LightWallet\Stratis.Bitcoin.Features.LightWallet.csproj" />
-    <ProjectReference Include="..\Redstone.Core\Redstone.Core.csproj" />
-    <ProjectReference Include="..\Redstone.Features.Api\Redstone.Features.Api.csproj" />    
+    <ProjectReference Include="..\..\..\NBitcoin\NBitcoin.csproj" />
+    <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.LightWallet\Stratis.Bitcoin.Features.LightWallet.csproj" />
+    <ProjectReference Include="..\..\Features\Redstone.Features.Api\Redstone.Features.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>

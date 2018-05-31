@@ -16,7 +16,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Stratis.Bitcoin.Tests.Common\Stratis.Bitcoin.Tests.Common.csproj" />
     <ProjectReference Include="..\..\..\Stratis.Bitcoin.Tests.Wallet.Common\Stratis.Bitcoin.Tests.Wallet.Common.csproj" />
-    <ProjectReference Include="..\..\Redstone.Core\Redstone.Core.csproj" />
   </ItemGroup>
 
 </Project>

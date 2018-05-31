@@ -1,8 +1,8 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using NBitcoin;
 using NBitcoin.Protocol;
-using Redstone.Core;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.Api;
@@ -26,7 +26,7 @@ namespace Redstone.RedstoneLightWalletD
                 const string agent = "RedstoneSpv";
 
                 var isTestNet = args.Contains("-testnet");
-                var network = isTestNet ? RedstoneNetwork.RedstoneTest : RedstoneNetwork.RedstoneMain;            
+                var network = isTestNet ? Network.RedstoneTest : Network.RedstoneMain;            
 
                 var nodeSettings = new NodeSettings(network, ProtocolVersion.ALT_PROTOCOL_VERSION, agent, loadConfiguration:false);
 

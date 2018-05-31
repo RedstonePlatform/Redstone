@@ -12,12 +12,13 @@ namespace Redstone.Sdk.Server.Services
     // move httpcontextaccessor part to a different service
     public class TokenService : ITokenService
     {
+        private readonly Network _network;
         private readonly IWalletService _walletService;
         private readonly IRequestHeaderService _requestHeaderService;
 
         public TokenService(INetworkService networkService, IWalletService walletService, IRequestHeaderService requestHeaderService)
         {
-            networkService.InitializeNetwork(true);
+            _network = networkService.InitializeNetwork(true);
             _walletService = walletService;
             _requestHeaderService = requestHeaderService;
         }
@@ -32,7 +33,7 @@ namespace Redstone.Sdk.Server.Services
         {
             try
             {
-                var transaction = new Transaction(GetHex());
+                var transaction = Transaction.Load(GetHex(), _network); ;
 
                 // TODO any other checks
                 return minPayment <= transaction.TotalOut.Satoshi;

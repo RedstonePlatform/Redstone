@@ -1,7 +1,9 @@
-﻿namespace Redstone.Sdk.Server.Services
+﻿using NBitcoin;
+
+namespace Redstone.Sdk.Server.Services
 {
     public interface INetworkService
     {
-        void InitializeNetwork(bool testNet);
+        Network InitializeNetwork(bool testNet);
     }
 }
