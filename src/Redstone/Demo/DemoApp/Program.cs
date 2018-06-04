@@ -23,11 +23,23 @@ namespace Redstone.DemoApp
             var result = await CallApiAsync(token);
             Console.WriteLine($"Result: {result}");
 
-            Console.WriteLine("Press a key to make a payment");
-            Console.ReadKey();
+
             var transaction = await BuildTransactionAsync(args);
-            var tokenResponse = await GetApiTokenAsync(transaction.Hex);
-            token = JsonConvert.DeserializeAnonymousType(tokenResponse, new { token = "" }).token;
+            while (token == "")
+            {
+                try
+                {
+                    Console.WriteLine("Press a key to make a payment");
+                    Console.ReadKey();
+                   
+                    var tokenResponse = await GetApiTokenAsync(transaction.Hex);
+                    token = JsonConvert.DeserializeAnonymousType(tokenResponse, new { token = "" }).token;
+                }
+                catch (Exception e)
+                {
+
+                }
+            }
 
             Console.WriteLine($"Token: {token}");
 

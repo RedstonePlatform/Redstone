@@ -12,7 +12,7 @@ namespace Redstone.Sdk.Server.Utils
         private const string initVector = "alw982jcuu92_(h*";
         // This constant is used to determine the keysize of the encryption algorithm
         private const int keysize = 256;
-        //Encrypt
+
         public static string EncryptString(string plainText, string key)
         {
             byte[] initVectorBytes = Encoding.UTF8.GetBytes(initVector);
@@ -30,7 +30,7 @@ namespace Redstone.Sdk.Server.Utils
             cryptoStream.Close();
             return Convert.ToBase64String(cipherTextBytes);
         }
-        //Decrypt
+
         public static string DecryptString(string cipherText, string key)
         {
             byte[] initVectorBytes = Encoding.UTF8.GetBytes(initVector);

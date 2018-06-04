@@ -90,7 +90,7 @@ namespace NBitcoin
             network.Consensus.ConsensusFactory = new PosConsensusFactory() { Consensus = network.Consensus };
             network.Consensus.ProofOfStakeLimit = new BigInteger(uint256.Parse("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false));
             network.Consensus.ProofOfStakeLimitV2 = new BigInteger(uint256.Parse("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false));
-            network.Consensus.CoinType = 105;
+            network.Consensus.CoinType = 787264; // unique coin type TODO how do we get this added
             network.Consensus.DefaultAssumeValid = new uint256("0x8c2cf95f9ca72e13c8c4cdf15c2d7cc49993946fb49be4be147e106d502f1869"); // 795970
             network.genesis = CreateRedstoneGenesisBlock(network.Consensus.ConsensusFactory, 1470467000, 1831645, 0x1e0fffff, 1, Money.Zero);
             network.Consensus.HashGenesisBlock = network.genesis.GetHash();
@@ -181,9 +181,9 @@ namespace NBitcoin
             network.Consensus.MajorityEnforceBlockUpgrade = 750;
             network.Consensus.MajorityRejectBlockOutdated = 950;
             network.Consensus.MajorityWindow = 1000;
-            network.Consensus.BuriedDeployments[BuriedDeployments.BIP34] = 0;
-            network.Consensus.BuriedDeployments[BuriedDeployments.BIP65] = 0;
-            network.Consensus.BuriedDeployments[BuriedDeployments.BIP66] = 0;
+            network.Consensus.BuriedDeployments[BuriedDeployments.BIP34] = 227931;
+            network.Consensus.BuriedDeployments[BuriedDeployments.BIP65] = 388381;
+            network.Consensus.BuriedDeployments[BuriedDeployments.BIP66] = 363725;
             network.Consensus.BIP34Hash = new uint256("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
             network.Consensus.PowLimit = new Target(new uint256("0000ffff00000000000000000000000000000000000000000000000000000000"));
             network.Consensus.PowTargetTimespan = TimeSpan.FromSeconds(14 * 24 * 60 * 60); // two weeks
