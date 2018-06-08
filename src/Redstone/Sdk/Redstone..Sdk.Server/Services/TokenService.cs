@@ -33,7 +33,7 @@ namespace Redstone.Sdk.Server.Services
         {
             try
             {
-                var transaction = Transaction.Load(GetHex(), _network); ;
+                var transaction = Transaction.Load(GetHex(), _network);
 
                 // TODO any other checks
                 return minPayment <= transaction.TotalOut.Satoshi;
@@ -81,15 +81,24 @@ namespace Redstone.Sdk.Server.Services
             return this._requestHeaderService.GetRedstoneHeader(RedstoneContants.RedstoneTokenScheme);
         }
 
-        public bool ValidateToken(string key)
+        public async Task<bool> ValidateTokenAsync(string key)
         {
+            // TODO: better error handling
+            if (string.IsNullOrEmpty(key))
+                return false;
             try
             {
+                var token = GetToken();
+
+                if (string.IsNullOrEmpty(token))
+                    return false;
+
                 var transactionId = EncryptDecrypt.DecryptString(GetToken(), key);
 
-                // TODO validate transaction id
-
-                return true;
+                var transaction = await this._walletService.GetTransactionAsync(new GetTransactionRequest {TransactionId = transactionId});
+                
+                // TODO: how many confirmations are required - configurable
+                return transaction?.Confirmations >= 1;
             }
             catch (Exception)
             {

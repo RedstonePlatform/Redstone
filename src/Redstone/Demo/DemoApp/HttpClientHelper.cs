@@ -28,13 +28,13 @@ namespace Redstone.DemoApp
                 throw new ApplicationException("Failed to connect to api, is it running.");
             }
 
-            if (!response.IsSuccessStatusCode)
-                throw new ApplicationException($"Request produced error code {response.StatusCode} from the node, with reason {response.ReasonPhrase}.");
-
             if (response.Content == null)
                 throw new ApplicationException("Response api contained no content.");
 
             var jsonResponse = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+                throw new ApplicationException($"Request was not successful {jsonResponse}.");
 
             return jsonResponse;
         }

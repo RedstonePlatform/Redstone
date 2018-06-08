@@ -70,5 +70,32 @@ namespace Redstone.Sdk.Services
 
             return JsonConvert.DeserializeObject<WalletSendTransactionModel>(jsonResponse);
         }
+
+        public async Task<TransactionModel> GetTransactionAsync(GetTransactionRequest request)
+        {
+            this.client.DefaultRequestHeaders.Accept.Clear();
+            this.client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            HttpResponseMessage response;
+            try
+            {
+                response = await this.client.GetAsync(
+                    $"http://localhost:38222/api/RPC/callbyname?methodName=getrawtransaction&txid={request.TransactionId}&verbose=1");
+            }
+            catch (Exception e)
+            {
+                throw new WalletServiceException("Failed to connect to node, is it running.");
+            }
+
+            if (!response.IsSuccessStatusCode)
+                throw new WalletServiceException($"Request produced error code {response.StatusCode} from the node, with reason {response.ReasonPhrase}.");
+
+            if (response.Content == null)
+                throw new WalletServiceException("Response from node contained no content.");
+
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+
+            return JsonConvert.DeserializeObject<TransactionModel>(jsonResponse);
+        }
     }
 }

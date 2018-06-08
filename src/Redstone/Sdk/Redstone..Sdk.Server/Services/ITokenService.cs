@@ -8,6 +8,6 @@ namespace Redstone.Sdk.Server.Services
         bool ValidateHex(long minPayment);
         Task<string> AcceptHex(long minPayment, string key);
         string GetToken();
-        bool ValidateToken(string key);
+       Task<bool> ValidateTokenAsync(string key);
     }
 }

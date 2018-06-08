@@ -7,5 +7,6 @@ namespace Redstone.Sdk.Services
     {
         Task<WalletBuildTransactionModel> BuildTransactionAsync(BuildTransactionRequest request);
         Task<WalletSendTransactionModel> SendTransactionAsync(SendTransactionRequest request);
+        Task<TransactionModel> GetTransactionAsync(GetTransactionRequest request);
     }
 }

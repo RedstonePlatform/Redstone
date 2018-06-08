@@ -16,13 +16,20 @@ namespace Redstone.DemoApp
         public static async Task MainAsync(string[] args)
         {
             var token = "";
-
+            var result = "";
             // try api without token
             Console.WriteLine("Press a key to call API (before payment)");
             Console.ReadKey();
-            var result = await CallApiAsync(token);
-            Console.WriteLine($"Result: {result}");
 
+            try
+            {
+                result = await CallApiAsync(token);
+                Console.WriteLine($"Result: {result}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Failed : {e.Message}");
+            }
 
             var transaction = await BuildTransactionAsync(args);
             while (token == "")
@@ -31,22 +38,33 @@ namespace Redstone.DemoApp
                 {
                     Console.WriteLine("Press a key to make a payment");
                     Console.ReadKey();
-                   
+
                     var tokenResponse = await GetApiTokenAsync(transaction.Hex);
                     token = JsonConvert.DeserializeAnonymousType(tokenResponse, new { token = "" }).token;
                 }
                 catch (Exception e)
                 {
-
+                    Console.WriteLine($"Failed : {e.Message}");
                 }
             }
 
             Console.WriteLine($"Token: {token}");
 
-            Console.WriteLine("Press a key to make to call API (after payment)");
-            Console.ReadKey();
-            result = await CallApiAsync(token);
-            Console.WriteLine($"Result: {result}");
+            while (result == "")
+            {
+                try
+                {
+                    Console.WriteLine("Press a key to make to call API (after payment)");
+                    Console.ReadKey();
+
+                    result = await CallApiAsync(token);
+                    Console.WriteLine($"Result: {result}");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Failed : {e.Message}");
+                }
+            }
 
             Console.WriteLine("Press a key to quit");
             Console.ReadKey();
@@ -79,14 +97,7 @@ namespace Redstone.DemoApp
 
         public static async Task<string> CallApiAsync(string token)
         {
-            try
-            {
-                return await HttpClientHelper.HttpGet("http://localhost:55888/v1/demo", new[] { ("Redstone", $"token {token}") });
-            }
-            catch(Exception e)
-            {
-                return e.Message;
-            }            
+            return await HttpClientHelper.HttpGet("http://localhost:55888/v1/demo", new[] { ("Redstone", $"token {token}") });
         }
     }
 }

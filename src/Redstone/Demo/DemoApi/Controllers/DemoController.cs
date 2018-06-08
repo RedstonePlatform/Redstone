@@ -1,27 +1,19 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Redstone.Sdk.Server.Filters;
 using Redstone.Sdk.Server.Services;
 
 namespace DemoApi.Controllers
 {
     [Route("v1/[controller]")]
-    //[Authorize(AuthenticationSchemes = RedstoneAuthenticationSchemes.Token)]
+    [ServiceFilter(typeof(TokenResourceFilter))]
     public class DemoController : Controller
     {
-        private readonly ITokenService _tokenService;
-
-        public DemoController(ITokenService tokenService)
-        {
-            this._tokenService = tokenService;
-        }
-
         // GET api/values
         [HttpGet]
         public IActionResult Get()
         {
-            if (!this._tokenService.ValidateToken("redstoneredstone"))
-                return BadRequest(new { error = "redstone token not valid" });
-
             return Ok(new string[] { "value1", "value2" });
         }
 
@@ -29,9 +21,6 @@ namespace DemoApi.Controllers
         [HttpGet("{id}")]
         public IActionResult Get(int id)
         {
-            if (!this._tokenService.ValidateToken("redstoneredstone"))
-                return BadRequest(new { error = "redstone token not valid" });
-
             return Ok("value");
         }
 

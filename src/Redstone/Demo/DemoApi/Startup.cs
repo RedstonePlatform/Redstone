@@ -2,8 +2,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Redstone.Sdk.Server.Services;
-using Redstone.Sdk.Services;
+using Redstone.Sdk.Server.Configuration;
 
 namespace DemoApi
 {
@@ -21,11 +20,7 @@ namespace DemoApi
         {
             services.AddMvc();
 
-            //TODO: need to implement services.AddRedstoneServer();
-            services.AddTransient<ITokenService, TokenService>();
-            services.AddTransient<IWalletService, WalletService>();
-            services.AddTransient<INetworkService, NetworkService>();
-            services.AddTransient<IRequestHeaderService, RequestHeaderService>();
+            services.AddRedstoneServer();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

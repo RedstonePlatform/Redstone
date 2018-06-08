@@ -6,6 +6,21 @@ using Stratis.Bitcoin.Utilities.ValidationAttributes;
 
 namespace Redstone.Sdk.Models
 {
+    public class GetTransactionRequest : RequestModel
+    {
+        public GetTransactionRequest()
+        {
+        }
+
+        public GetTransactionRequest(string transactionId)
+        {
+            this.TransactionId = transactionId;
+        }
+
+        [Required(ErrorMessage = "A transaction id hash is required.")]
+        public string TransactionId { get; set; }
+    }
+
     public class BuildTransactionRequest : TxFeeEstimateRequest
     {
         [MoneyFormat(isRequired: false, ErrorMessage = "The fee is not inL the correct format.")]
