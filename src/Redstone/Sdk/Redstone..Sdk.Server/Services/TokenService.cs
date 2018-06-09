@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 using NBitcoin;
 using Redstone.Sdk.Models;
 using Redstone.Sdk.Server.Configuration;
@@ -14,13 +15,15 @@ namespace Redstone.Sdk.Server.Services
     public class TokenService : ITokenService
     {
         private readonly Network _network;
-        private readonly IRedstoneServerOptions _options;
+        private readonly RedstoneServerOptions _options;
+        private readonly IPaymentPolicy _paymentPolicy;
         private readonly IWalletService _walletService;
         private readonly IRequestHeaderService _requestHeaderService;
 
-        public TokenService(IRedstoneServerOptions options, INetworkService networkService, IWalletService walletService, IRequestHeaderService requestHeaderService)
+        public TokenService(IOptions<RedstoneServerOptions> options, IPaymentPolicy paymentPolicy, INetworkService networkService, IWalletService walletService, IRequestHeaderService requestHeaderService)
         {
-            _options = options;
+            _options = options.Value;
+            _paymentPolicy = paymentPolicy;
             _network = networkService.InitializeNetwork(true);
             _walletService = walletService;
             _requestHeaderService = requestHeaderService;
@@ -39,7 +42,7 @@ namespace Redstone.Sdk.Server.Services
                 var transaction = Transaction.Load(GetHex(), _network);
 
                 // TODO any other checks
-                return this._options.PaymentPolicy.IsPaymentValid(transaction.TotalOut);
+                return _paymentPolicy.IsPaymentValid(transaction.TotalOut);
             }
             catch (Exception)
             {
@@ -98,7 +101,7 @@ namespace Redstone.Sdk.Server.Services
 
                 var transaction = await this._walletService.GetTransactionAsync(new GetTransactionRequest {TransactionId = transactionId});
                 
-                return _options.PaymentPolicy.IsTransactionValid(transaction);
+                return _paymentPolicy.IsTransactionValid(transaction);
             }
             catch (Exception)
             {

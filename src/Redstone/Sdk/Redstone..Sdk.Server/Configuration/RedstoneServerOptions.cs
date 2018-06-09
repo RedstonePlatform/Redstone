@@ -2,16 +2,9 @@
 
 namespace Redstone.Sdk.Server.Configuration
 {
-    public class RedstoneServerOptions : IRedstoneServerOptions
+    public class RedstoneServerOptions
     {
-        public RedstoneServerOptions(IPaymentPolicy paymentPolicy)
-        {
-            PaymentPolicy = paymentPolicy;
-        }
-
         public string PrivateKey { get; set; }
-        public int RequiredConfirmations { get; set; } = 1;
-        public IPaymentPolicy PaymentPolicy { get; set; }
 
         public void Validate()
         {

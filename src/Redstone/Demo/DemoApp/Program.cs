@@ -18,18 +18,21 @@ namespace Redstone.DemoApp
             var token = "";
             var result = "";
             // try api without token
-            Console.WriteLine("Press a key to call API (before payment)");
-            Console.ReadKey();
+            //Console.WriteLine("Press a key to call API (before payment)");
+            //Console.ReadKey();
 
-            try
-            {
-                result = await CallApiAsync(token);
-                Console.WriteLine($"Result: {result}");
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Failed : {e.Message}");
-            }
+            //try
+            //{
+            //    result = await CallApiAsync(token);
+            //    Console.WriteLine($"Result: {result}");
+            //}
+            //catch (Exception e)
+            //{
+            //    Console.WriteLine($"Failed : {e.Message}");
+            //}
+
+            Console.WriteLine("Press a key to build transaction");
+            Console.ReadKey();
 
             var transaction = await BuildTransactionAsync(args);
             while (token == "")

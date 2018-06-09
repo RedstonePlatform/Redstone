@@ -1,5 +1,4 @@
 ﻿using System;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Redstone.Sdk.Server.Filters;
 using Redstone.Sdk.Server.Services;
@@ -9,7 +8,7 @@ namespace Redstone.Sdk.Server.Configuration
 {
     public static class RedstoneServerConfiguration
     {
-        public static RedstoneServiceBuilder AddRedstoneServer(this IServiceCollection services, Action<IRedstoneServerOptions> configureOptions)
+        public static RedstoneServiceBuilder AddRedstoneServer(this IServiceCollection services, Action<RedstoneServerOptions> configureOptions)
         {
             if (services == null)
                 throw new ArgumentNullException(nameof(services));
@@ -17,8 +16,6 @@ namespace Redstone.Sdk.Server.Configuration
                 throw new ArgumentNullException(nameof(configureOptions));
 
             services.Configure(configureOptions);
-
-            services.AddSingleton<IRedstoneServerOptions, RedstoneServerOptions>();
 
             services.AddScoped<HexResourceFilter>();
             services.AddScoped<TokenResourceFilter>();
