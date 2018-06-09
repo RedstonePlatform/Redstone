@@ -19,7 +19,7 @@ namespace Redstone.Sdk.Server.Filters
 
         public async Task OnResourceExecutionAsync(ResourceExecutingContext context, ResourceExecutionDelegate next)
         {
-            if (!await this._tokenService.ValidateTokenAsync("redstoneredstone").ConfigureAwait(false))
+            if (!await this._tokenService.ValidateTokenAsync().ConfigureAwait(false))
                 context.Result = new BadRequestObjectResult("Redstone token not valid");
             else
                 await next();

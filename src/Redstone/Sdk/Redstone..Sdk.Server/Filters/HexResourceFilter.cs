@@ -22,7 +22,7 @@ namespace Redstone.Sdk.Server.Filters
             try
             {
                 // TODO: key needs to be configurable - perhaps through a service
-                var token = await this._tokenService.AcceptHex(1, "redstoneredstone");
+                var token = await this._tokenService.AcceptHex();
                 context.Result = new OkObjectResult(new { token });
             }
             catch (Exception e)

@@ -8,6 +8,8 @@ namespace DemoApi
 {
     public class Startup
     {
+        private const string PrivateKey = "redstoneredstone";
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -20,7 +22,8 @@ namespace DemoApi
         {
             services.AddMvc();
 
-            services.AddRedstoneServer();
+            services.AddRedstoneServer(options => { options.PrivateKey = PrivateKey; })
+                    .AddDefaultPaymentPolicy();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

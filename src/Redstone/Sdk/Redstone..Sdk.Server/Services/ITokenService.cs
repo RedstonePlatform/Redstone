@@ -5,9 +5,9 @@ namespace Redstone.Sdk.Server.Services
     public interface ITokenService
     {
         string GetHex();
-        bool ValidateHex(long minPayment);
-        Task<string> AcceptHex(long minPayment, string key);
+        bool ValidateHex();
+        Task<string> AcceptHex();
         string GetToken();
-       Task<bool> ValidateTokenAsync(string key);
+        Task<bool> ValidateTokenAsync();
     }
 }

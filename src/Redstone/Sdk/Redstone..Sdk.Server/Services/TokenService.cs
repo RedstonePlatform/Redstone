@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using NBitcoin;
 using Redstone.Sdk.Models;
+using Redstone.Sdk.Server.Configuration;
 using Redstone.Sdk.Server.Exceptions;
 using Redstone.Sdk.Server.Utils;
 using Redstone.Sdk.Services;
@@ -13,11 +14,13 @@ namespace Redstone.Sdk.Server.Services
     public class TokenService : ITokenService
     {
         private readonly Network _network;
+        private readonly IRedstoneServerOptions _options;
         private readonly IWalletService _walletService;
         private readonly IRequestHeaderService _requestHeaderService;
 
-        public TokenService(INetworkService networkService, IWalletService walletService, IRequestHeaderService requestHeaderService)
+        public TokenService(IRedstoneServerOptions options, INetworkService networkService, IWalletService walletService, IRequestHeaderService requestHeaderService)
         {
+            _options = options;
             _network = networkService.InitializeNetwork(true);
             _walletService = walletService;
             _requestHeaderService = requestHeaderService;
@@ -29,14 +32,14 @@ namespace Redstone.Sdk.Server.Services
         }
 
         // TODO coin units?
-        public bool ValidateHex(long minPayment)
+        public bool ValidateHex()
         {
             try
             {
                 var transaction = Transaction.Load(GetHex(), _network);
 
                 // TODO any other checks
-                return minPayment <= transaction.TotalOut.Satoshi;
+                return this._options.PaymentPolicy.IsPaymentValid(transaction.TotalOut);
             }
             catch (Exception)
             {
@@ -44,10 +47,10 @@ namespace Redstone.Sdk.Server.Services
             }
         }
 
-        public async Task<string> AcceptHex(long minPayment, string key)
+        public async Task<string> AcceptHex()
         {
             // TODO: break this out to be more specific
-            if (!ValidateHex(minPayment))
+            if (!ValidateHex())
                 throw new TokenServiceException("Hex not valid or payment too low");
 
             WalletSendTransactionModel transactionModel;
@@ -68,7 +71,7 @@ namespace Redstone.Sdk.Server.Services
             // is generated without error.
             try
             {
-                return EncryptDecrypt.EncryptString(transactionModel.TransactionId, key);
+                return EncryptDecrypt.EncryptString(transactionModel.TransactionId, _options.PrivateKey);
             }
             catch (Exception e)
             {
@@ -81,11 +84,9 @@ namespace Redstone.Sdk.Server.Services
             return this._requestHeaderService.GetRedstoneHeader(RedstoneContants.RedstoneTokenScheme);
         }
 
-        public async Task<bool> ValidateTokenAsync(string key)
+        public async Task<bool> ValidateTokenAsync()
         {
             // TODO: better error handling
-            if (string.IsNullOrEmpty(key))
-                return false;
             try
             {
                 var token = GetToken();
@@ -93,12 +94,11 @@ namespace Redstone.Sdk.Server.Services
                 if (string.IsNullOrEmpty(token))
                     return false;
 
-                var transactionId = EncryptDecrypt.DecryptString(GetToken(), key);
+                var transactionId = EncryptDecrypt.DecryptString(GetToken(), _options.PrivateKey);
 
                 var transaction = await this._walletService.GetTransactionAsync(new GetTransactionRequest {TransactionId = transactionId});
                 
-                // TODO: how many confirmations are required - configurable
-                return transaction?.Confirmations >= 1;
+                return _options.PaymentPolicy.IsTransactionValid(transaction);
             }
             catch (Exception)
             {
