@@ -7,10 +7,6 @@
       "commandName": "Project",
       "commandLineArgs": "-testnet"
     },
-    "Redstone.RedstoneFullNodeD Test Mine": {
-      "commandName": "Project",
-      "commandLineArgs": "-testnet -mine=true -mineaddress=TMLY1SCmxRokqr3bRjQv18bYCXsUbLsmiA -txindex=1 -walletname=redstone1 -walletpassword=redstone1"
-    },
     "Redstone.RedstoneFullNodeD Test with RPC": {
       "commandName": "Project",
       "commandLineArgs": "-testnet -server -rpcpassword=password -rpcuser=user"

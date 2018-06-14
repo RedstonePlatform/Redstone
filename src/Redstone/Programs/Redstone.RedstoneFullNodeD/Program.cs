@@ -33,13 +33,13 @@ namespace Redstone.RedstoneFullNodeD
                 // NOTES: running networks side by side is not possible yet as the flags for serialization are static
                 var node = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings)
-                    //.UsePosConsensus()
-                    .UsePowConsensus() //required for pow
+                    .UsePosConsensus()
+                    //.UsePowConsensus() 
                     .UseBlockStore()
                     .UseMempool()
                     .UseWallet()
-                    //.AddPowPosMining()
-                    .AddMining() // required for pow
+                    .AddPowPosMining()
+                    //.AddMining() 
                     .UseApi()
                     .AddRPC()
                     .Build();
