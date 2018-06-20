@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
-using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using NBitcoin;
+using NBitcoin.Protocol;
+using Stratis.Bitcoin.Base;
+using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.Consensus.CoinViews;
@@ -17,6 +18,7 @@ using Stratis.Bitcoin.Features.Consensus.Interfaces;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
+using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.Tests.Common;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
@@ -53,9 +55,9 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             return fullNode.NodeService<BlockStoreManager>();
         }
 
-        public static ChainedHeader HighestPersistedBlock(this FullNode fullNode)
+        public static ChainedHeader GetBlockStoreTip(this FullNode fullNode)
         {
-            return fullNode.NodeService<IBlockRepository>().HighestPersistedBlock;
+            return fullNode.NodeService<IChainState>().BlockStoreTip;
         }
     }
 
@@ -71,7 +73,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
     {
         public void Import(NodeConfigParameters configParameters)
         {
-            foreach (var kv in configParameters)
+            foreach (KeyValuePair<string, string> kv in configParameters)
             {
                 if (!this.ContainsKey(kv.Key))
                     this.Add(kv.Key, kv.Value);
@@ -80,8 +82,8 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         public override string ToString()
         {
-            StringBuilder builder = new StringBuilder();
-            foreach (var kv in this)
+            var builder = new StringBuilder();
+            foreach (KeyValuePair<string, string> kv in this)
                 builder.AppendLine(kv.Key + "=" + kv.Value);
             return builder.ToString();
         }
@@ -109,28 +111,28 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         public static NodeBuilder Create(object caller, [CallerMemberName] string callingMethod = null)
         {
             KillAnyBitcoinInstances();
-            var testFolderPath = TestBase.CreateTestDir(caller, callingMethod);
+            string testFolderPath = TestBase.CreateTestDir(caller, callingMethod);
             return new NodeBuilder(testFolderPath);
         }
 
         public static NodeBuilder Create(string testDirectory)
         {
             KillAnyBitcoinInstances();
-            var testFolderPath = TestBase.CreateTestDir(testDirectory);
+            string testFolderPath = TestBase.CreateTestDir(testDirectory);
             return new NodeBuilder(testFolderPath);
         }
 
         private static string GetBitcoinCorePath(string version)
         {
             string path;
-            
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 path = $"../../../../External Libs/Bitcoin Core/{version}/Windows/bitcoind.exe";
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 path = $"../../../../External Libs/Bitcoin Core/{version}/Linux/bitcoind";
             else
                 path = $"../../../../External Libs/Bitcoin Core/{version}/OSX/bitcoind";
-            
+
             if (File.Exists(path))
                 return path;
 
@@ -179,16 +181,39 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             return node;
         }
 
-        private string GetNextDataFolderName()
+        /// <summary>A helper method to create a node instance with a non-standard set of features enabled. The node can be PoW or PoS, as long as the appropriate features are provided.</summary>
+        /// <param name="dataDir">The node's data directory where downloaded chain data gets stored.</param>
+        /// <param name="callback">A callback accepting an instance of <see cref="IFullNodeBuilder"/> that constructs a node with a custom feature set.</param>
+        /// <param name="network">The network the node will be running on.</param>
+        /// <param name="protocolVersion">Use <see cref="ProtocolVersion.PROTOCOL_VERSION"/> for BTC PoW-like networks and <see cref="ProtocolVersion.ALT_PROTOCOL_VERSION"/> for Stratis PoS-like networks.</param>
+        /// <param name="configFileName">The name for the node's configuration file.</param>
+        /// <param name="agent">A user agent string to distinguish different node versions from each other.</param>
+        public CoreNode CreateCustomNode(bool start, Action<IFullNodeBuilder> callback, Network network, ProtocolVersion protocolVersion = ProtocolVersion.PROTOCOL_VERSION, IEnumerable<string> args = null, string agent = "Custom")
         {
-            var dataFolderName = Path.Combine(this.rootFolder, this.lastDataFolderIndex.ToString());
+            var argsList = args as List<string> ?? args?.ToList() ?? new List<string>();
+
+            string configFileName = "custom.conf";
+            if (!argsList.Any(a => a.StartsWith("-conf="))) argsList.Add($"-conf={configFileName}");
+            else configFileName = argsList.First(a => a.StartsWith("-conf=")).Replace("-conf=", "");
+
+            string dataDir = this.GetNextDataFolderName(agent);
+            if (!argsList.Any(a => a.StartsWith("-datadir="))) argsList.Add($"-datadir={dataDir}");
+            
+            return CreateNode(new CustomNodeRunner(dataDir, callback, network, protocolVersion, argsList, agent), network, start, configFileName);
+        }
+
+        private string GetNextDataFolderName(string folderName = null)
+        {
+            var numberedFolderName = string.Join(".",
+                new[] {this.lastDataFolderIndex.ToString(), folderName}.Where(s => s != null));
+            string dataFolderName = Path.Combine(this.rootFolder, numberedFolderName);
             this.lastDataFolderIndex++;
             return dataFolderName;
         }
 
         public void StartAll()
         {
-            foreach (var node in this.Nodes.Where(n => n.State == CoreNodeState.Stopped))
+            foreach (CoreNode node in this.Nodes.Where(n => n.State == CoreNodeState.Stopped))
             {
                 node.Start();
             }
@@ -196,7 +221,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         public void Dispose()
         {
-            foreach (var node in this.Nodes)
+            foreach (CoreNode node in this.Nodes)
                 node.Kill();
 
             KillAnyBitcoinInstances();
@@ -206,12 +231,12 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         {
             while (true)
             {
-                var bitcoinDProcesses = Process.GetProcessesByName("bitcoind");
-                var applicableBitcoinDProcesses = bitcoinDProcesses.Where(b => b.MainModule.FileName.Contains("External Libs"));
+                Process[] bitcoinDProcesses = Process.GetProcessesByName("bitcoind");
+                IEnumerable<Process> applicableBitcoinDProcesses = bitcoinDProcesses.Where(b => b.MainModule.FileName.Contains("External Libs"));
                 if (!applicableBitcoinDProcesses.Any())
                     break;
 
-                foreach (var process in applicableBitcoinDProcesses)
+                foreach (Process process in applicableBitcoinDProcesses)
                 {
                     process.Kill();
                     Thread.Sleep(1000);
