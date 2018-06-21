@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using NBitcoin;
 using NBitcoin.Protocol;
+using Redstone.Features.Api;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.Api;
@@ -28,7 +29,7 @@ namespace Redstone.RedstoneLightWalletD
                 var isTestNet = args.Contains("-testnet");
                 var network = isTestNet ? Network.RedstoneTest : Network.RedstoneMain;            
 
-                var nodeSettings = new NodeSettings(network, ProtocolVersion.ALT_PROTOCOL_VERSION, agent, loadConfiguration:false);
+                var nodeSettings = new NodeSettings(network, ProtocolVersion.ALT_PROTOCOL_VERSION, agent);
 
                 var node = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings)

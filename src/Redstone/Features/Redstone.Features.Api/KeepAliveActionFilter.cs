@@ -3,7 +3,7 @@ using System.Timers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Stratis.Bitcoin.Utilities;
 
-namespace Stratis.Bitcoin.Features.Api
+namespace Redstone.Features.Api
 {
     /// <summary>
     /// An asynchronous action filter whose role is to reset the keepalive counter.

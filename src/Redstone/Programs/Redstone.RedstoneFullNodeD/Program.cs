@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using NBitcoin;
 using NBitcoin.Protocol;
+using Redstone.Features.Api;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.Api;
@@ -28,14 +29,14 @@ namespace Redstone.RedstoneFullNodeD
             try
             {
                 Network network = args.Contains("-testnet") ? Network.RedstoneTest : Network.RedstoneMain;
-                NodeSettings nodeSettings = new NodeSettings(network, ProtocolVersion.ALT_PROTOCOL_VERSION, args:args, loadConfiguration:false);
+                NodeSettings nodeSettings = new NodeSettings(network, ProtocolVersion.ALT_PROTOCOL_VERSION, args:args);
 
                 // NOTES: running networks side by side is not possible yet as the flags for serialization are static
                 var node = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings)
+                    .UseBlockStore()
                     .UsePosConsensus()
                     //.UsePowConsensus() 
-                    .UseBlockStore()
                     .UseMempool()
                     .UseWallet()
                     .AddPowPosMining()

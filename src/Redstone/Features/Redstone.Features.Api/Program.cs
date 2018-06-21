@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Redstone.Features.Api;
 using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Bitcoin.Features.Api

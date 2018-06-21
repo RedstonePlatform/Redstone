@@ -3,7 +3,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Stratis.Bitcoin.Features.Api
+namespace Redstone.Features.Api
 {
     public static class MvcBuilderExtensions
     {
@@ -21,7 +21,7 @@ namespace Stratis.Bitcoin.Features.Api
                 builder.AddApplicationPart(controllerType.ServiceType.GetTypeInfo().Assembly);
             }
 
-            builder.AddApplicationPart(typeof(Controllers.NodeController).Assembly);
+            builder.AddApplicationPart(typeof(Stratis.Bitcoin.Controllers.NodeController).Assembly);
             builder.AddControllersAsServices();
             return builder;
         }
