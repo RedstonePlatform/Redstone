@@ -31,16 +31,23 @@ namespace Redstone.RedstoneFullNodeD
                 Network network = args.Contains("-testnet") ? Network.RedstoneTest : Network.RedstoneMain;
                 NodeSettings nodeSettings = new NodeSettings(network, ProtocolVersion.ALT_PROTOCOL_VERSION, args:args);
 
-                // NOTES: running networks side by side is not possible yet as the flags for serialization are static
-                var node = new FullNodeBuilder()
+                var builder = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings)
-                    .UseBlockStore()
-                    //.UsePosConsensus()
-                    .UsePowConsensus() 
-                    .UseMempool()
+                    .UseBlockStore();
+
+                if (args.Contains("-pos"))
+                {
+                    builder = builder.UsePosConsensus()
+                        .AddPowPosMining();
+                }
+                else
+                {
+                    builder = builder.UsePowConsensus()
+                        .AddMining();
+                }
+
+                var node = builder.UseMempool()
                     .UseWallet()
-                    //.AddPowPosMining()
-                    .AddMining() 
                     .UseApi()
                     .AddRPC()
                     .Build();

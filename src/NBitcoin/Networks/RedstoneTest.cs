@@ -36,21 +36,14 @@ namespace NBitcoin.Networks
 
             this.Checkpoints = new Dictionary<int, CheckpointInfo>
             {
-                //{ 0, new CheckpointInfo(new uint256("0x00000e246d7b73b88c9ab55f2e5e94d9e22d471def3df5ea448f5576b1d156b9"), new uint256("0x0000000000000000000000000000000000000000000000000000000000000000")) },
-                //{ 163000, new CheckpointInfo(new uint256("0x4e44a9e0119a2e7cbf15e570a3c649a5605baa601d953a465b5ebd1c1982212a"), new uint256("0x0646fc7db8f3426eb209e1228c7d82724faa46a060f5bbbd546683ef30be245c")) },
             };
 
-            // TODO:Redstone - need seed 
             this.DNSSeeds = new List<DNSSeedData>()
-                /*
-                {
-                    //new DNSSeedData("seednode1.stratisplatform.com", "seednode1.stratisplatform.com"),
-                    //new DNSSeedData("seednode2.stratis.cloud", "seednode2.stratis.cloud"),
-                    //new DNSSeedData("seednode3.stratisplatform.com", "seednode3.stratisplatform.com"),
-                    //new DNSSeedData("seednode4.stratis.cloud", "seednode4.stratis.cloud")
-                })*/;
+            {
+                new DNSSeedData("seednode1", "18.130.33.99"),
+            };
 
-            this.SeedNodes = this.ConvertToNetworkAddresses(new string[] { /*"35.176.127.127", "35.176.127.127"*/}, this.DefaultPort).ToList();
+            this.SeedNodes = this.ConvertToNetworkAddresses(new[] { "35.176.127.127" }, this.DefaultPort).ToList();
 
             // Create the genesis block.
             this.GenesisTime = 1470467000;
