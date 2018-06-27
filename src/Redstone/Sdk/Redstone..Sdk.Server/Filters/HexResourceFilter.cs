@@ -25,7 +25,7 @@ namespace Redstone.Sdk.Server.Filters
                 var token = await this._tokenService.AcceptHex();
                 context.Result = new OkObjectResult(new { token });
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 context.Result = new BadRequestObjectResult("Redstone Hex wasn't accepted by the node");
             }

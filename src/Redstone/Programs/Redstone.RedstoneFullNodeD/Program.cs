@@ -35,16 +35,13 @@ namespace Redstone.RedstoneFullNodeD
                     .UseNodeSettings(nodeSettings)
                     .UseBlockStore();
 
-                if (args.Contains("-pos"))
-                {
-                    builder = builder.UsePosConsensus()
-                        .AddPowPosMining();
-                }
-                else
-                {
-                    builder = builder.UsePowConsensus()
-                        .AddMining();
-                }
+                builder = args.Contains("-pos")
+                    ? builder.UsePosConsensus()
+                    : builder.UsePowConsensus();
+
+                builder = args.Contains("-pos")
+                    ? builder.AddPowPosMining()
+                    : builder.AddMining();
 
                 var node = builder.UseMempool()
                     .UseWallet()

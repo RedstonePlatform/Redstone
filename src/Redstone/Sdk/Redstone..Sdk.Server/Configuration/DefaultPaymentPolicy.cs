@@ -10,13 +10,13 @@ namespace Redstone.Sdk.Server.Configuration
 
         public bool IsPaymentValid(Money money)
         {
-            return MinimumPayment <= money?.Satoshi;
+            return this.MinimumPayment <= money?.Satoshi;
         }
 
         // TODO : need better naming
         public bool IsTransactionValid(TransactionModel transaction)
         {
-            return RequiredConfirmations <= transaction?.Confirmations;
+            return this.RequiredConfirmations <= transaction?.Confirmations;
         }
     }
 }

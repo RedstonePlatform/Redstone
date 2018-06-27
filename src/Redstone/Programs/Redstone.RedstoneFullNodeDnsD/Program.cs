@@ -37,37 +37,39 @@ namespace Redstone.RedstoneFullNodeDnsD
                 if (string.IsNullOrWhiteSpace(dnsSettings.DnsHostName) || string.IsNullOrWhiteSpace(dnsSettings.DnsNameServer) || string.IsNullOrWhiteSpace(dnsSettings.DnsMailBox))
                     throw new ConfigurationException("When running as a DNS Seed service, the -dnshostname, -dnsnameserver and -dnsmailbox arguments must be specified on the command line.");
 
+
+                var builder = new FullNodeBuilder()
+                    .UseNodeSettings(nodeSettings);
+
                 // Run as a full node with DNS or just a DNS service?
-                IFullNode node;
                 if (dnsSettings.DnsFullNode)
                 {
-                    // Build the Dns full node.
-                    node = new FullNodeBuilder()
-                        .UseNodeSettings(nodeSettings)
-                        .UseBlockStore()
-                        //.UsePosConsensus()
-                        .UsePowConsensus()
+                    builder = builder.UseBlockStore();
+
+                    builder = args.Contains("-pos")
+                        ? builder.UsePosConsensus()
+                        : builder.UsePowConsensus();
+
+                    builder = args.Contains("-pos")
+                        ? builder.AddPowPosMining()
+                        : builder.AddMining();
+
+                    builder = builder
                         .UseMempool()
-                        .UseWallet()
-                        //.AddPowPosMining()
-                        .AddMining()
-                        .UseApi()
-                        .AddRPC()
-                        .UseDns()
-                        .Build();
+                        .UseWallet();
                 }
                 else
                 {
-                    // Build the Dns node.
-                    node = new FullNodeBuilder()
-                        .UseNodeSettings(nodeSettings)
-                        //.UsePosConsensus()
-                        .UsePowConsensus()
-                        .UseApi()
-                        .AddRPC()
-                        .UseDns()
-                        .Build();
+                    builder = args.Contains("-pos")
+                        ? builder.UsePosConsensus()
+                        : builder.UsePowConsensus();
                 }
+
+                var node = builder
+                    .UseApi()
+                    .AddRPC()
+                    .UseDns()
+                    .Build();
 
                 if (node != null)
                     await node.RunAsync();
