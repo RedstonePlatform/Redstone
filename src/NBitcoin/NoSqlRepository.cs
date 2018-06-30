@@ -27,11 +27,12 @@ namespace NBitcoin
         public async Task<T> GetAsync<T>(string key) where T : IBitcoinSerializable, new()
         {
             byte[] data = await GetBytes(key).ConfigureAwait(false);
-            if(data == null)
+            if (data == null)
                 return default(T);
-            if (!this.network.Consensus.ConsensusFactory.TryCreateNew<T>(out T obj))
+            T obj = this.network.Consensus.ConsensusFactory.TryCreateNew<T>();
+            if (obj == null)
                 obj = Activator.CreateInstance<T>();
-            obj.ReadWrite(data, network: this.network);
+            obj.ReadWrite(data, consensusFactory: this.network.Consensus.ConsensusFactory);
             return obj;
         }
 

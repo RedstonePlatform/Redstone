@@ -56,9 +56,14 @@ namespace NBitcoin
             }
         }
 
-        public BlockHeader()
+        internal BlockHeader()
         {
-            this.SetNull();
+            this.version = this.CurrentVersion;
+            this.hashPrevBlock = 0;
+            this.hashMerkleRoot = 0;
+            this.time = 0;
+            this.bits = 0;
+            this.nonce = 0;
         }
 
         public static BlockHeader Load(byte[] hex, Network network)
@@ -70,19 +75,9 @@ namespace NBitcoin
                 throw new ArgumentNullException(nameof(network));
 
             BlockHeader blockHeader = network.Consensus.ConsensusFactory.CreateBlockHeader();
-            blockHeader.ReadWrite(hex, network: network);
+            blockHeader.ReadWrite(hex, network.Consensus.ConsensusFactory);
 
             return blockHeader;
-        }
-
-        internal void SetNull()
-        {
-            this.version = this.CurrentVersion;
-            this.hashPrevBlock = 0;
-            this.hashMerkleRoot = 0;
-            this.time = 0;
-            this.bits = 0;
-            this.nonce = 0;
         }
 
         #region IBitcoinSerializable Members
