@@ -10,9 +10,9 @@ namespace NBitcoin
 {
     public partial class Network
     {
-        public static Network RedstoneMain => Network.GetNetwork("RedstoneMain") ?? Register(new RedstoneMain());
+        public static Network RedstoneMain => NetworksContainer.GetNetwork("RedstoneMain") ?? NetworksContainer.Register(new RedstoneMain());
 
-        public static Network RedstoneTest => Network.GetNetwork("RedstoneTest") ?? Register(new RedstoneTest());
+        public static Network RedstoneTest => NetworksContainer.GetNetwork("RedstoneTest") ?? NetworksContainer.Register(new RedstoneTest());
 
 
         protected static Block CreateRedstoneGenesisBlock(ConsensusFactory consensusFactory, uint nTime, uint nNonce, uint nBits, int nVersion, Money genesisReward)
