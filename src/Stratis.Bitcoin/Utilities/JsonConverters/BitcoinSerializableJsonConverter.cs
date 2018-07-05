@@ -1,34 +1,25 @@
-﻿#if !NOJSONNET
-using System;
+﻿using System;
 using System.IO;
 using System.Reflection;
+using NBitcoin;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
 
-namespace NBitcoin.JsonConverters
+namespace Stratis.Bitcoin.Utilities.JsonConverters
 {
-#if !NOJSONNET
-    public
-#else
-    internal
-#endif
-    class BitcoinSerializableJsonConverter : JsonConverter
+    /// <summary>
+    /// Converter used to convert an object implementing <see cref="IBitcoinSerializable"/> to and from JSON.
+    /// </summary>
+    /// <seealso cref="Newtonsoft.Json.JsonConverter" />
+    public sealed class BitcoinSerializableJsonConverter : JsonConverter
     {
-        private readonly Network network;
-
-        public BitcoinSerializableJsonConverter()
-        { }
-
-        public BitcoinSerializableJsonConverter(Network network)
-        {
-            this.network = network;
-        }
-
+        /// <inheritdoc />
         public override bool CanConvert(Type objectType)
         {
             return typeof(IBitcoinSerializable).GetTypeInfo().IsAssignableFrom(objectType.GetTypeInfo());
         }
 
+        /// <inheritdoc />
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             if (reader.TokenType == JsonToken.Null)
@@ -39,7 +30,7 @@ namespace NBitcoin.JsonConverters
 
                 var obj = (IBitcoinSerializable)Activator.CreateInstance(objectType);
                 byte[] bytes = Encoders.Hex.DecodeData((string)reader.Value);
-                obj.ReadWrite(bytes, consensusFactory: this.network.Consensus.ConsensusFactory);
+                obj.ReadWrite(bytes);
                 return obj;
             }
             catch (EndOfStreamException)
@@ -52,6 +43,7 @@ namespace NBitcoin.JsonConverters
             throw new JsonObjectException("Invalid bitcoin object of type " + objectType.Name, reader);
         }
 
+        /// <inheritdoc />
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             byte[] bytes = ((IBitcoinSerializable)value).ToBytes();
@@ -59,4 +51,3 @@ namespace NBitcoin.JsonConverters
         }
     }
 }
-#endif

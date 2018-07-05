@@ -1,22 +1,23 @@
-﻿#if !NOJSONNET
-using System;
+﻿using System;
 using System.Reflection;
+using NBitcoin;
 using Newtonsoft.Json;
 
-namespace NBitcoin.JsonConverters
+namespace Stratis.Bitcoin.Utilities.JsonConverters
 {
-#if !NOJSONNET
-    public
-#else
-    internal
-#endif
-    class KeyPathJsonConverter : JsonConverter
+    /// <summary>
+    /// Converter used to convert a <see cref="KeyPath"/> to and from JSON.
+    /// </summary>
+    /// <seealso cref="Newtonsoft.Json.JsonConverter" />
+    public class KeyPathJsonConverter : JsonConverter
     {
+        /// <inheritdoc />
         public override bool CanConvert(Type objectType)
         {
             return typeof(KeyPath).GetTypeInfo().IsAssignableFrom(objectType.GetTypeInfo());
         }
 
+        /// <inheritdoc />
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             try
@@ -29,6 +30,7 @@ namespace NBitcoin.JsonConverters
             }
         }
 
+        /// <inheritdoc />
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             var keyPath = value as KeyPath;
@@ -37,4 +39,3 @@ namespace NBitcoin.JsonConverters
         }
     }
 }
-#endif

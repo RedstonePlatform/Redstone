@@ -210,7 +210,6 @@ namespace NBitcoin.Tests
             Assert.Equal(expectedFork, fork);
         }
 
-#if !NOFILEIO
         [Fact]
         [Trait("UnitTest", "UnitTest")]
         public void CanCalculateDifficulty()
@@ -253,7 +252,6 @@ namespace NBitcoin.Tests
             }
             return File.ReadAllBytes("MainChain1.dat");
         }
-#endif
 
         [Fact]
         [Trait("UnitTest", "UnitTest")]
@@ -560,7 +558,7 @@ namespace NBitcoin.Tests
             uint nonce = RandomUtils.GetUInt32();
             foreach (ConcurrentChain chain in chains)
             {
-                Block block = TestUtils.CreateFakeBlock(this.network.Consensus.ConsensusFactory.CreateTransaction());
+                Block block = TestUtils.CreateFakeBlock(this.network.CreateTransaction());
                 block.Header.HashPrevBlock = previous == null ? chain.Tip.HashBlock : previous.HashBlock;
                 block.Header.Nonce = nonce;
                 if (!chain.TrySetTip(block.Header, out last))

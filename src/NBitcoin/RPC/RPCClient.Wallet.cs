@@ -1,5 +1,4 @@
-﻿#if !NOJSONNET
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -232,7 +231,7 @@ namespace NBitcoin.RPC
             var r = (JObject)response.Result;
             return new FundRawTransactionResponse()
             {
-                Transaction = new Transaction(r["hex"].Value<string>()),
+                Transaction = this.network.CreateTransaction(r["hex"].Value<string>()),
                 Fee = Money.Coins(r["fee"].Value<decimal>()),
                 ChangePos = r["changepos"].Value<int>()
             };
@@ -246,7 +245,7 @@ namespace NBitcoin.RPC
                 return tx.ToHex();
 
             // if there is, do this ACK so that NBitcoin does not change the version number
-            return Encoders.Hex.EncodeData(tx.ToBytes(Protocol.ProtocolVersion.WITNESS_VERSION - 1));
+            return Encoders.Hex.EncodeData(tx.ToBytes(version: Protocol.ProtocolVersion.WITNESS_VERSION - 1));
         }
 
         // getreceivedbyaddress
@@ -609,8 +608,7 @@ namespace NBitcoin.RPC
         public async Task<Transaction> SignRawTransactionAsync(Transaction tx)
         {
             RPCResponse result = await SendCommandAsync(RPCOperations.signrawtransaction, tx.ToHex()).ConfigureAwait(false);
-            return new Transaction(result.Result["hex"].Value<string>());
+            return this.network.CreateTransaction(result.Result["hex"].Value<string>());
         }
     }
 }
-#endif
