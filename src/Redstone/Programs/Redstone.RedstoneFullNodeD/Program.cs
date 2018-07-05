@@ -31,19 +31,12 @@ namespace Redstone.RedstoneFullNodeD
                 Network network = args.Contains("-testnet") ? Network.RedstoneTest : Network.RedstoneMain;
                 NodeSettings nodeSettings = new NodeSettings(network, ProtocolVersion.ALT_PROTOCOL_VERSION, args:args);
 
-                var builder = new FullNodeBuilder()
+                var node = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings)
-                    .UseBlockStore();
-
-                builder = args.Contains("-pos")
-                    ? builder.UsePosConsensus()
-                    : builder.UsePowConsensus();
-
-                builder = args.Contains("-pos")
-                    ? builder.AddPowPosMining()
-                    : builder.AddMining();
-
-                var node = builder.UseMempool()
+                    .UseBlockStore()
+                    .UsePosConsensus()
+                    .AddPowPosMining()
+                    .UseMempool()
                     .UseWallet()
                     .UseApi()
                     .AddRPC()

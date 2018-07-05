@@ -44,25 +44,15 @@ namespace Redstone.RedstoneFullNodeDnsD
                 // Run as a full node with DNS or just a DNS service?
                 if (dnsSettings.DnsFullNode)
                 {
-                    builder = builder.UseBlockStore();
-
-                    builder = args.Contains("-pos")
-                        ? builder.UsePosConsensus()
-                        : builder.UsePowConsensus();
-
-                    builder = args.Contains("-pos")
-                        ? builder.AddPowPosMining()
-                        : builder.AddMining();
-
-                    builder = builder
+                    builder = builder.UseBlockStore()                        
+                        .UsePowConsensus()
+                        .AddPowPosMining()
                         .UseMempool()
                         .UseWallet();
                 }
                 else
                 {
-                    builder = args.Contains("-pos")
-                        ? builder.UsePosConsensus()
-                        : builder.UsePowConsensus();
+                    builder = builder.UsePosConsensus();
                 }
 
                 var node = builder
