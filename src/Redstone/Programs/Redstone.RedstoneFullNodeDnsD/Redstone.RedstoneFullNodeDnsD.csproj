@@ -5,7 +5,7 @@
     <AssemblyName>Redstone.RedstoneFullNodeDnsD</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>Redstone.RedstoneFullNodeDnsD</PackageId>
-    <RuntimeFrameworkVersion>2.0.0</RuntimeFrameworkVersion>
+    <RuntimeFrameworkVersion>2.1.1</RuntimeFrameworkVersion>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
