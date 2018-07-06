@@ -2,6 +2,8 @@
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using NBitcoin;
+using NBitcoin.DataEncoders;
+using NBitcoin.Protocol;
 using Redstone.Sdk.Models;
 using Redstone.Sdk.Server.Configuration;
 using Redstone.Sdk.Server.Exceptions;
@@ -39,7 +41,7 @@ namespace Redstone.Sdk.Server.Services
         {
             try
             {
-                var transaction = Transaction.Load(GetHex(), _network);
+                var transaction = Helpers.Load(GetHex(), _network);
 
                 // TODO any other checks
                 return _paymentPolicy.IsPaymentValid(transaction.TotalOut);
@@ -107,6 +109,23 @@ namespace Redstone.Sdk.Server.Services
             {
                 return false;
             }
+        }
+    }
+
+
+    public static class Helpers
+    {
+        public static Transaction Load(string hex, Network network, ProtocolVersion version = ProtocolVersion.PROTOCOL_VERSION)
+        {
+            if (hex == null)
+                throw new ArgumentNullException(nameof(hex));
+
+            if (network == null)
+                throw new ArgumentNullException(nameof(network));
+
+            Transaction transaction = network.Consensus.ConsensusFactory.CreateTransaction();
+            transaction.FromBytes(Encoders.Hex.DecodeData(hex), network.Consensus.ConsensusFactory, version);
+            return transaction;
         }
     }
 }
