@@ -45,12 +45,12 @@ namespace NBitcoin.Networks
 
             this.DNSSeeds = new List<DNSSeedData>()
             {
-                new DNSSeedData("seednode1", "18.130.33.99"),
+                //new DNSSeedData("seednode1", "18.130.175.184"),
             };
 
             this.SeedNodes = this.ConvertToNetworkAddresses(new string[]
             {
-                //"18.130.175.184"
+                "18.130.175.184"
             }, this.DefaultPort).ToList();
 
             // Create the genesis block.
