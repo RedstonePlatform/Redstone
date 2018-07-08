@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using NBitcoin.BouncyCastle.Math;
 using NBitcoin.Protocol;
 
 namespace NBitcoin.Networks
@@ -27,6 +28,8 @@ namespace NBitcoin.Networks
             this.CoinTicker = "TXRD";
 
             this.Consensus.PowLimit = new Target(new uint256("0000ffff00000000000000000000000000000000000000000000000000000000"));
+            this.Consensus.ProofOfStakeLimit = new BigInteger(uint256.Parse("0000ffff00000000000000000000000000000000000000000000000000000000").ToBytes(false));
+            this.Consensus.ProofOfStakeLimitV2 = new BigInteger(uint256.Parse("0000ffff00000000000000000000000000000000000000000000000000000000").ToBytes(false));
             this.Consensus.DefaultAssumeValid = new uint256("0x98fa6ef0bca5b431f15fd79dc6f879dc45b83ed4b1bbe933a383ef438321958e"); // 372652
             this.Consensus.CoinbaseMaturity = 10;
 
