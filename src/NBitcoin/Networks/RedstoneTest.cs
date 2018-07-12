@@ -53,7 +53,7 @@ namespace NBitcoin.Networks
 
             this.SeedNodes = this.ConvertToNetworkAddresses(new string[]
             {
-                "18.130.175.184"
+                //"80.211.88.201", "80.211.88.233", "80.211.88.244"
             }, this.DefaultPort).ToList();
 
             // Create the genesis block.
