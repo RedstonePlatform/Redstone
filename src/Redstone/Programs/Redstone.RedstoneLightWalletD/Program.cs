@@ -26,8 +26,11 @@ namespace Redstone.RedstoneLightWalletD
             {
                 const string agent = "RedstoneSpv";
 
-                var isTestNet = args.Contains("-testnet");
-                var network = isTestNet ? Network.RedstoneTest : Network.RedstoneMain;            
+                Network network = args.Contains("-testnet")
+                    ? Network.RedstoneTest
+                    : args.Contains("-regnet")
+                        ? Network.RegTest
+                        : Network.RedstoneMain;          
 
                 var nodeSettings = new NodeSettings(network, ProtocolVersion.ALT_PROTOCOL_VERSION, agent);
 

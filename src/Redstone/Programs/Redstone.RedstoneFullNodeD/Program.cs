@@ -28,8 +28,13 @@ namespace Redstone.RedstoneFullNodeD
         {
             try
             {
-                Network network = args.Contains("-testnet") ? Network.RedstoneTest : Network.RedstoneMain;
-                NodeSettings nodeSettings = new NodeSettings(network, ProtocolVersion.ALT_PROTOCOL_VERSION, args:args);
+                Network network = args.Contains("-testnet")
+                    ? Network.RedstoneTest
+                    : args.Contains("-regnet")
+                        ? Network.RegTest
+                        : Network.RedstoneMain;
+
+                NodeSettings nodeSettings = new NodeSettings(network, ProtocolVersion.ALT_PROTOCOL_VERSION, "Redstone", args:args);
 
                 var node = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings)
