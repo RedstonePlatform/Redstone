@@ -1,4 +1,6 @@
 ﻿using NBitcoin;
+using NBitcoin.Networks;
+using Redstone.Core.Networks;
 
 namespace Redstone.Sdk.Server.Services
 {
@@ -6,7 +8,8 @@ namespace Redstone.Sdk.Server.Services
     {
         public Network InitializeNetwork(bool testNet)
         {
-            return testNet ? Network.RedstoneTest : Network.RedstoneMain;
+            return testNet ? NetworkRegistration.Register(new RedstoneTest())
+                    : NetworkRegistration.Register(new RedstoneMain());
         }
     }
 }

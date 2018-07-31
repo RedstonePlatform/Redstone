@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\NBitcoin\NBitcoin.csproj" />
     <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.LightWallet\Stratis.Bitcoin.Features.LightWallet.csproj" />
+    <ProjectReference Include="..\..\Core\Redstone.Core\Redstone.Core.csproj" />
     <ProjectReference Include="..\..\Features\Redstone.Features.Api\Redstone.Features.Api.csproj" />
   </ItemGroup>
 

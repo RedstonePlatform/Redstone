@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\NBitcoin\NBitcoin.csproj" />
+    <ProjectReference Include="..\..\Core\Redstone.Core\Redstone.Core.csproj" />
     <ProjectReference Include="..\Redstone.Sdk.Common\Redstone.Sdk.csproj" />
   </ItemGroup>
 
