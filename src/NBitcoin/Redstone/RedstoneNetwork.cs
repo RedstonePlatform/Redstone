@@ -14,6 +14,8 @@ namespace NBitcoin
 
         public static Network RedstoneTest => NetworksContainer.GetNetwork("RedstoneTest") ?? NetworksContainer.Register(new RedstoneTest());
 
+        public static Network RedstoneRegTest => NetworksContainer.GetNetwork("RedstoneRegTest") ?? NetworksContainer.Register(new RedstoneRegTest());
+
 
         protected static Block CreateRedstoneGenesisBlock(ConsensusFactory consensusFactory, uint nTime, uint nNonce, uint nBits, int nVersion, Money genesisReward)
         {

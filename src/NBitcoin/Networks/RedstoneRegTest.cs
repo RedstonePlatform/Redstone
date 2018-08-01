@@ -5,7 +5,7 @@ using NBitcoin.Protocol;
 
 namespace NBitcoin.Networks
 {
-    public class RedstoneRegTest : StratisMain
+    public class RedstoneRegTest : RedstoneMain
     {
         public RedstoneRegTest()
         {
@@ -51,7 +51,7 @@ namespace NBitcoin.Networks
             this.Genesis.Header.Nonce = 1349369;
             this.Genesis.Header.Bits = this.Consensus.PowLimit;
             this.Consensus.HashGenesisBlock = this.Genesis.GetHash();
-            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("0x93925104d664314f581bc7ecb7b4bad07bcfabd1cfce4256dbd2faddcf53bd1f"));
+            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("62ee79ac25fb05b816bc55b96df4111ebe6383f4124856d5749228f91cc77ddc"));
         }
     }
 }
