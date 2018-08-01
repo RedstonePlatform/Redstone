@@ -6,16 +6,16 @@ namespace Redstone.Core.Networks
     public abstract class RedstoneBase : Network
     {
         /// <summary> Redstone maximal value for the calculated time offset. If the value is over this limit, the time syncing feature will be switched off. </summary>
-        protected const int RedstoneMaxTimeOffsetSeconds = 25 * 60;
+        public const int RedstoneMaxTimeOffsetSeconds = 25 * 60;
 
         /// <summary> Stratis default value for the maximum tip age in seconds to consider the node in initial block download (2 hours). </summary>
-        protected const int RedstoneDefaultMaxTipAgeInSeconds = 2 * 60 * 60;
+        public const int RedstoneDefaultMaxTipAgeInSeconds = 2 * 60 * 60;
 
         /// <summary> The name of the root folder containing the different Redstone blockchains (RedstoneMain, RedstoneTest, RedstoneRegTest). </summary>
-        protected const string RedstoneRootFolderName = "redstone";
+        public const string RedstoneRootFolderName = "redstone";
 
         /// <summary> The default name used for the Redstone configuration file. </summary>
-        protected const string RedstoneDefaultConfigFilename = "redstone.conf";
+        public const string RedstoneDefaultConfigFilename = "redstone.conf";
 
         protected static Block CreateRedstoneGenesisBlock(ConsensusFactory consensusFactory, uint nTime, uint nNonce, uint nBits, int nVersion, Money genesisReward)
         {
