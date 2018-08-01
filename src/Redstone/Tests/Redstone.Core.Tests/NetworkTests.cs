@@ -3,6 +3,7 @@ using NBitcoin;
 using NBitcoin.BouncyCastle.Math;
 using NBitcoin.DataEncoders;
 using NBitcoin.Networks;
+using Redstone.Core.Networks;
 using Xunit;
 
 namespace Redstone.Core.Tests
@@ -13,37 +14,37 @@ namespace Redstone.Core.Tests
         [Trait("UnitTest", "UnitTest")]
         public void CanGetNetworkFromName()
         {
-            Network redstoneMain = Network.RedstoneMain;
-            Network redstoneTest = Network.RedstoneTest;
-            Network redstoneRegtest = Network.RedstoneRegTest;
+            Network redstoneMain = RedstoneNetworks.RedstoneMain;
+            Network redstoneTest = RedstoneNetworks.RedstoneTest;
+            Network redstoneRegtest = RedstoneNetworks.RedstoneRegTest;
 
-            Assert.Equal(NetworksContainer.GetNetwork("redstoneMain"), redstoneMain);
-            Assert.Equal(NetworksContainer.GetNetwork("RedstoneMain"), redstoneMain);
-            Assert.Equal(NetworksContainer.GetNetwork("RedstoneTest"), redstoneTest);
-            Assert.Equal(NetworksContainer.GetNetwork("RedstoneTest"), redstoneTest);
-            Assert.Equal(NetworksContainer.GetNetwork("redstoneRegtest"), redstoneRegtest);
-            Assert.Equal(NetworksContainer.GetNetwork("RedstoneRegtest"), redstoneRegtest);
-            Assert.Null(NetworksContainer.GetNetwork("invalid"));
+            Assert.Equal(NetworkRegistration.GetNetwork("redstoneMain"), redstoneMain);
+            Assert.Equal(NetworkRegistration.GetNetwork("RedstoneMain"), redstoneMain);
+            Assert.Equal(NetworkRegistration.GetNetwork("RedstoneTest"), redstoneTest);
+            Assert.Equal(NetworkRegistration.GetNetwork("RedstoneTest"), redstoneTest);
+            Assert.Equal(NetworkRegistration.GetNetwork("redstoneRegtest"), redstoneRegtest);
+            Assert.Equal(NetworkRegistration.GetNetwork("RedstoneRegtest"), redstoneRegtest);
+            Assert.Null(NetworkRegistration.GetNetwork("invalid"));
         }
 
         [Fact]
         [Trait("UnitTest", "UnitTest")]
         public void RedstoneMainIsInitializedCorrectly()
         {
-            Network network = Network.RedstoneMain;
+            Network network = RedstoneNetworks.RedstoneMain;
 
             Assert.Equal(0, network.Checkpoints.Count);
             Assert.Equal(0, network.DNSSeeds.Count);
             Assert.Equal(0, network.SeedNodes.Count);
 
             Assert.Equal("RedstoneMain", network.Name);
-            Assert.Equal(RedstoneMain.RedstoneRootFolderName, network.RootFolderName);
-            Assert.Equal(RedstoneMain.RedstoneDefaultConfigFilename, network.DefaultConfigFilename);
+            Assert.Equal(RedstoneBase.RedstoneRootFolderName, network.RootFolderName);
+            Assert.Equal(RedstoneBase.RedstoneDefaultConfigFilename, network.DefaultConfigFilename);
             Assert.Equal(0x5223570.ToString(), network.Magic.ToString());
             Assert.Equal(19056, network.DefaultPort);
             Assert.Equal(19057, network.RPCPort);
-            Assert.Equal(RedstoneMain.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
-            Assert.Equal(RedstoneMain.RedstoneDefaultMaxTipAgeInSeconds, network.MaxTipAge);
+            Assert.Equal(RedstoneBase.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
+            Assert.Equal(RedstoneBase.RedstoneDefaultMaxTipAgeInSeconds, network.MaxTipAge);
             Assert.Equal(10000, network.MinTxFee);
             Assert.Equal(60000, network.FallbackFee);
             Assert.Equal(10000, network.MinRelayTxFee);
@@ -124,20 +125,20 @@ namespace Redstone.Core.Tests
         [Trait("UnitTest", "UnitTest")]
         public void RedstoneTestnetIsInitializedCorrectly()
         {
-            Network network = Network.RedstoneTest;
+            Network network = RedstoneNetworks.RedstoneTest;
 
             Assert.Equal(0, network.Checkpoints.Count);
             Assert.Equal(0, network.DNSSeeds.Count);
             Assert.Equal(4, network.SeedNodes.Count);
 
             Assert.Equal("RedstoneTest", network.Name);
-            Assert.Equal(RedstoneMain.RedstoneRootFolderName, network.RootFolderName);
-            Assert.Equal(RedstoneMain.RedstoneDefaultConfigFilename, network.DefaultConfigFilename);
+            Assert.Equal(RedstoneBase.RedstoneRootFolderName, network.RootFolderName);
+            Assert.Equal(RedstoneBase.RedstoneDefaultConfigFilename, network.DefaultConfigFilename);
             Assert.Equal(0x11233171.ToString(), network.Magic.ToString());
             Assert.Equal(19156, network.DefaultPort);
             Assert.Equal(19157, network.RPCPort);
-            Assert.Equal(RedstoneMain.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
-            Assert.Equal(RedstoneMain.RedstoneDefaultMaxTipAgeInSeconds, network.MaxTipAge);
+            Assert.Equal(RedstoneBase.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
+            Assert.Equal(RedstoneBase.RedstoneDefaultMaxTipAgeInSeconds, network.MaxTipAge);
             Assert.Equal(10000, network.MinTxFee);
             Assert.Equal(60000, network.FallbackFee);
             Assert.Equal(10000, network.MinRelayTxFee);
@@ -218,20 +219,20 @@ namespace Redstone.Core.Tests
         [Trait("UnitTest", "UnitTest")]
         public void RedstoneRegTestIsInitializedCorrectly()
         {
-            Network network = Network.RedstoneRegTest;
+            Network network = RedstoneNetworks.RedstoneRegTest;
 
             Assert.Empty(network.Checkpoints);
             Assert.Empty(network.DNSSeeds);
             Assert.Empty(network.SeedNodes);
 
             Assert.Equal("RedstoneRegTest", network.Name);
-            Assert.Equal(RedstoneMain.RedstoneRootFolderName, network.RootFolderName);
-            Assert.Equal(RedstoneMain.RedstoneDefaultConfigFilename, network.DefaultConfigFilename);
+            Assert.Equal(RedstoneBase.RedstoneRootFolderName, network.RootFolderName);
+            Assert.Equal(RedstoneBase.RedstoneDefaultConfigFilename, network.DefaultConfigFilename);
             Assert.Equal(0xefc0f2cd, network.Magic);
             Assert.Equal(19256, network.DefaultPort);
             Assert.Equal(19257, network.RPCPort);
-            Assert.Equal(RedstoneMain.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
-            Assert.Equal(RedstoneMain.RedstoneDefaultMaxTipAgeInSeconds, network.MaxTipAge);
+            Assert.Equal(RedstoneBase.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
+            Assert.Equal(RedstoneBase.RedstoneDefaultMaxTipAgeInSeconds, network.MaxTipAge);
             Assert.Equal(0, network.MinTxFee);
             Assert.Equal(0, network.FallbackFee);
             Assert.Equal(0, network.MinRelayTxFee);

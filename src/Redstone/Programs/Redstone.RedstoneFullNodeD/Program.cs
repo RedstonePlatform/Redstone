@@ -2,7 +2,9 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using NBitcoin;
+using NBitcoin.Networks;
 using NBitcoin.Protocol;
+using Redstone.Core.Networks;
 using Redstone.Features.Api;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
@@ -28,12 +30,13 @@ namespace Redstone.RedstoneFullNodeD
             try
             {
                 Network network = args.Contains("-testnet")
-                    ? Network.RedstoneTest
+                    ? NetworkRegistration.Register(new RedstoneTest())
                     : args.Contains("-regnet")
-                        ? Network.RegTest
-                        : Network.RedstoneMain;
+                    ? NetworkRegistration.Register(new RedstoneRegTest())
+                    : NetworkRegistration.Register(new RedstoneMain());
 
-                NodeSettings nodeSettings = new NodeSettings(network, ProtocolVersion.ALT_PROTOCOL_VERSION, "Redstone", args:args);
+
+                NodeSettings nodeSettings = new NodeSettings(network, ProtocolVersion.ALT_PROTOCOL_VERSION, "Redstone", args: args);
 
                 var node = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings)
