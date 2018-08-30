@@ -49,7 +49,7 @@ namespace Redstone.Core.Networks
             this.Consensus.PowNoRetargeting = false;
             this.Consensus.RuleChangeActivationThreshold = 1916; // 95% of 2016
             this.Consensus.MinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
-            this.Consensus.LastPOWBlock = 12500;
+            this.Consensus.LastPOWBlock = 500;
             this.Consensus.IsProofOfStake = true;
             this.Consensus.ConsensusFactory = new PosConsensusFactory();
             this.Consensus.ProofOfStakeLimit = new BigInteger(uint256.Parse("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false));
