@@ -24,6 +24,7 @@ using Stratis.Bitcoin.P2P.Protocol.Payloads;
 
 [assembly: InternalsVisibleTo("Stratis.Bitcoin.Features.Miner.Tests")]
 [assembly: InternalsVisibleTo("Stratis.Bitcoin.Features.Consensus.Tests")]
+[assembly: InternalsVisibleTo("Redstone.Core.Tests")]
 
 namespace Stratis.Bitcoin.Features.Consensus
 {

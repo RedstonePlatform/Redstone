@@ -19,6 +19,7 @@ using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Mining;
 
 [assembly: InternalsVisibleTo("Stratis.Bitcoin.Features.Miner.Tests")]
+[assembly: InternalsVisibleTo("Redstone.Core.Tests")]
 
 namespace Stratis.Bitcoin.Features.Miner
 {
