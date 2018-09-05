@@ -45,12 +45,12 @@ namespace Redstone.Core.Networks
 
             this.DNSSeeds = new List<DNSSeedData>()
             {
-                //new DNSSeedData("seednode1", "18.130.175.184"),
+                new DNSSeedData("seednode1", "80.211.88.201"),
             };
 
             this.SeedNodes = this.ConvertToNetworkAddresses(new string[]
             {
-                "80.211.88.189","80.211.88.201", "80.211.88.233", "80.211.88.244"
+                "80.211.88.201", "80.211.88.233", "80.211.88.244"
             }, this.DefaultPort).ToList();
 
             // Create the genesis block.
