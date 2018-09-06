@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\NBitcoin\NBitcoin.csproj" />
+    <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.Wallet\Stratis.Bitcoin.Features.Wallet.csproj" />
   </ItemGroup>
 
 </Project>

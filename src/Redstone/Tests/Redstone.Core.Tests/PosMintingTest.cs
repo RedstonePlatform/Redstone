@@ -51,7 +51,7 @@ namespace Redstone.Core.Tests
         public PosMintingTest()
         {
             this.consensusLoop = new Mock<IConsensusLoop>();
-            this.network = KnownNetworks.StratisTest;
+            this.network = RedstoneNetworks.RedstoneTest;
             this.network.Consensus.Options = new ConsensusOptions();
             this.chain = new ConcurrentChain(this.network);
             this.dateTimeProvider = new Mock<IDateTimeProvider>();
@@ -210,7 +210,7 @@ namespace Redstone.Core.Tests
             var wallet = new Wallet();
             var milliseconds550MinutesAgo = (uint)Math.Max(this.chain.Tip.Header.Time - TimeSpan.FromMinutes(550).Milliseconds, 0);
             this.AddAccountWithSpendableOutputs(wallet);
-            var spendableTransactions = wallet.GetAllSpendableTransactions(CoinType.Stratis, this.chain.Tip.Height, 0).ToList();
+            var spendableTransactions = wallet.GetAllSpendableTransactions(CoinType.Redstone, this.chain.Tip.Height, 0).ToList();
 
             this.walletManager.Setup(w => w.GetSpendableTransactionsInWallet(It.IsAny<string>(), It.IsAny<int>()))
                 .Returns(spendableTransactions);
@@ -266,7 +266,7 @@ namespace Redstone.Core.Tests
             account.ExternalAddresses.Add(new HdAddress { Index = 2, Transactions = new List<TransactionData> { new TransactionData { Id = new uint256(18), Index = 0, Amount = 2 * Money.CENT } } });
             account.ExternalAddresses.Add(new HdAddress { Index = 3, Transactions = new List<TransactionData> { new TransactionData { Id = new uint256(19), Index = 0, Amount = 1 * Money.NANO } } });
             account.ExternalAddresses.Add(new HdAddress { Index = 4, Transactions = null });
-            wallet.AccountsRoot.Add(new AccountRoot(){ Accounts = new [] { account }, CoinType = CoinType.Stratis});
+            wallet.AccountsRoot.Add(new AccountRoot(){ Accounts = new [] { account }, CoinType = CoinType.Redstone});
         }
 
         // the difficulty tests are ported from: https://github.com/bitcoin/bitcoin/blob/3e1ee310437f4c93113f6121425beffdc94702c2/src/test/blockchain_tests.cpp

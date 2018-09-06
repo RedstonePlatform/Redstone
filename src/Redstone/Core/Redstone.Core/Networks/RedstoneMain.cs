@@ -4,6 +4,7 @@ using System.Linq;
 using NBitcoin;
 using NBitcoin.BouncyCastle.Math;
 using NBitcoin.DataEncoders;
+using Stratis.Bitcoin.Features.Wallet;
 
 namespace Redstone.Core.Networks
 {
@@ -54,7 +55,7 @@ namespace Redstone.Core.Networks
             this.Consensus.ConsensusFactory = new PosConsensusFactory();
             this.Consensus.ProofOfStakeLimit = new BigInteger(uint256.Parse("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false));
             this.Consensus.ProofOfStakeLimitV2 = new BigInteger(uint256.Parse("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false));
-            this.Consensus.CoinType = 787264; // unique coin type TODO how do we get this added
+            this.Consensus.CoinType = (int)CoinType.Redstone; // unique coin type TODO how do we get this added
             this.Consensus.DefaultAssumeValid = new uint256("0x55a8205ae4bbf18f4d238c43f43005bd66e0b1f679b39e2c5c62cf6903693a5e"); // 795970
             this.Consensus.CoinbaseMaturity = 50;
             this.Consensus.PremineReward = Money.Coins(10000000);
