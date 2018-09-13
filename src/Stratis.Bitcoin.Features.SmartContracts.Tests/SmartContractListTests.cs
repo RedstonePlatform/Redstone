@@ -4,6 +4,7 @@ using Stratis.Bitcoin.Features.SmartContracts.Networks;
 using Stratis.Patricia;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Executor.Reflection;
+using Stratis.SmartContracts.Executor.Reflection.Serialization;
 using Xunit;
 
 namespace Stratis.Bitcoin.Features.SmartContracts.Tests
@@ -11,10 +12,12 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
     public class SmartContractListTests
     {
         private readonly Network network;
+        private readonly IContractPrimitiveSerializer contractPrimitiveSerializer;
 
         public SmartContractListTests()
         {
             this.network = new SmartContractsRegTest();
+            this.contractPrimitiveSerializer = new ContractPrimitiveSerializer(this.network);
         }
 
         [Fact]
@@ -23,15 +26,15 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             var listName = "testList";
 
             var source = new MemoryDictionarySource();
-            var root = new ContractStateRepositoryRoot(source);
+            var root = new ContractStateRoot(source);
 
-            IContractStateRepository state = root.StartTracking();
+            IContractState state = root.StartTracking();
             IPersistenceStrategy persistenceStrategy = new PersistenceStrategy(state);
 
             var persistentState = new PersistentState(
                 persistenceStrategy,
-                uint160.One,
-                this.network);
+                this.contractPrimitiveSerializer,
+                uint160.One);
 
             var list = new SmartContractList<string>(persistentState, listName);
 
@@ -46,15 +49,15 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             var listName = "testList";
 
             var source = new MemoryDictionarySource();
-            var root = new ContractStateRepositoryRoot(source);
+            var root = new ContractStateRoot(source);
 
-            IContractStateRepository state = root.StartTracking();
+            IContractState state = root.StartTracking();
             IPersistenceStrategy persistenceStrategy = new PersistenceStrategy(state);
 
             var persistentState = new PersistentState(
                 persistenceStrategy,
-                uint160.One,
-                this.network);
+                this.contractPrimitiveSerializer,
+                uint160.One);
 
             var list = new SmartContractList<string>(persistentState, listName);
 
@@ -72,15 +75,15 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             var listName = "testList";
 
             var source = new MemoryDictionarySource();
-            var root = new ContractStateRepositoryRoot(source);
+            var root = new ContractStateRoot(source);
 
-            IContractStateRepository state = root.StartTracking();
+            IContractState state = root.StartTracking();
             IPersistenceStrategy persistenceStrategy = new PersistenceStrategy(state);
 
             var persistentState = new PersistentState(
                 persistenceStrategy,
-                uint160.One,
-                this.network);
+                this.contractPrimitiveSerializer,
+                uint160.One);
 
             var list = new SmartContractList<string>(persistentState, listName);
 
@@ -112,14 +115,14 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             var listName = "testList";
 
             var source = new MemoryDictionarySource();
-            var root = new ContractStateRepositoryRoot(source);
+            var root = new ContractStateRoot(source);
 
-            IContractStateRepository state = root.StartTracking();
+            IContractState state = root.StartTracking();
             IPersistenceStrategy persistenceStrategy = new PersistenceStrategy(state);
             var persistentState = new PersistentState(
                 persistenceStrategy,
-                uint160.One,
-                this.network);
+                this.contractPrimitiveSerializer,
+                uint160.One);
 
             var list = new SmartContractList<string>(persistentState, listName);
 
@@ -148,14 +151,14 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             var listName = "testList";
 
             var source = new MemoryDictionarySource();
-            var root = new ContractStateRepositoryRoot(source);
+            var root = new ContractStateRoot(source);
 
-            IContractStateRepository state = root.StartTracking();
+            IContractState state = root.StartTracking();
             IPersistenceStrategy persistenceStrategy = new PersistenceStrategy(state);
             var persistentState = new PersistentState(
                 persistenceStrategy,
-                uint160.One,
-                this.network);
+                this.contractPrimitiveSerializer,
+                uint160.One);
 
             var list = new SmartContractList<string>(persistentState, listName);
 
@@ -185,9 +188,9 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
 
     public class PersistenceStrategy : IPersistenceStrategy
     {
-        private readonly IContractStateRepository stateDb;
+        private readonly IContractState stateDb;
 
-        public PersistenceStrategy(IContractStateRepository stateDb)
+        public PersistenceStrategy(IContractState stateDb)
         {
             this.stateDb = stateDb;
         }

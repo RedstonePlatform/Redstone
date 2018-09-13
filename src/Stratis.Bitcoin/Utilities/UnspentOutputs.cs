@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Text;
 using NBitcoin;
 using NBitcoin.BitcoinCore;
 
@@ -132,10 +133,6 @@ namespace Stratis.Bitcoin.Utilities
             }
         }
 
-        private static TxIn CoinbaseTxIn = TxIn.CreateCoinbase(0);
-
-        private static TxIn NonCoinbaseTxIn = new TxIn(new OutPoint(uint256.One, 0));
-
         public Coins ToCoins()
         {
             var coins = new Coins
@@ -150,6 +147,7 @@ namespace Stratis.Bitcoin.Utilities
             {
                 coins.Outputs.Add(output == null ? Coins.NullTxOut : output);
             }
+
             coins.ClearUnspendable();
             return coins;
         }
@@ -168,6 +166,25 @@ namespace Stratis.Bitcoin.Utilities
                 stream.ReadWrite(ref c);
                 this.SetCoins(c);
             }
+        }
+
+        public override string ToString()
+        {
+            var builder = new StringBuilder();
+
+            builder.AppendLine($"{nameof(this.transactionId)}={this.transactionId}");
+
+            builder.AppendLine($"{nameof(this.Height)}={this.Height}");
+            builder.AppendLine($"{nameof(this.Version)}={this.Version}");
+            builder.AppendLine($"{nameof(this.IsCoinbase)}={this.IsCoinbase}");
+            builder.AppendLine($"{nameof(this.IsCoinstake)}={this.IsCoinstake}");
+            builder.AppendLine($"{nameof(this.Time)}={this.Time}");
+            builder.AppendLine($"{nameof(this.Outputs)}.{nameof(this.Outputs.Length)}={this.Outputs.Length}");
+
+            foreach (TxOut output in this.Outputs)
+                builder.AppendLine(output == null ? "null" : output.ToString());
+
+            return builder.ToString();
         }
 
         public UnspentOutputs Clone()

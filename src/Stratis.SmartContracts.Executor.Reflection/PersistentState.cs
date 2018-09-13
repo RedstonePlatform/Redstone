@@ -7,7 +7,6 @@ namespace Stratis.SmartContracts.Executor.Reflection
     public class PersistentState : IPersistentState
     {
         public uint160 ContractAddress { get; }
-        private static readonly PersistentStateSerializer serializer = new PersistentStateSerializer();
         private readonly IPersistenceStrategy persistenceStrategy;
         private readonly Network network;
 
@@ -15,15 +14,17 @@ namespace Stratis.SmartContracts.Executor.Reflection
         /// Instantiate a new PersistentState instance. Each PersistentState object represents
         /// a slice of state for a particular contract address.
         /// </summary>
-        /// <param name="persistenceStrategy"></param>
-        /// <param name="contractAddress"></param>
-        /// <param name="network"></param>
-        public PersistentState(IPersistenceStrategy persistenceStrategy, uint160 contractAddress, Network network)
+        public PersistentState(
+            IPersistenceStrategy persistenceStrategy,
+            IContractPrimitiveSerializer contractPrimitiveSerializer,
+            uint160 contractAddress)
         {
             this.persistenceStrategy = persistenceStrategy;
+            this.Serializer = contractPrimitiveSerializer;
             this.ContractAddress = contractAddress;
-            this.network = network;
         }
+
+        internal IContractPrimitiveSerializer Serializer { get; }
 
         internal T GetObject<T>(string key)
         {
@@ -33,7 +34,7 @@ namespace Stratis.SmartContracts.Executor.Reflection
             if (bytes == null)
                 return default(T);
 
-            return serializer.Deserialize<T>(bytes, this.network);
+            return this.Serializer.Deserialize<T>(bytes);
         }
 
         public byte GetByte(string key)
@@ -99,7 +100,7 @@ namespace Stratis.SmartContracts.Executor.Reflection
         internal void SetObject<T>(string key, T obj)
         {
             byte[] keyBytes = Encoding.UTF8.GetBytes(key);
-            this.persistenceStrategy.StoreBytes(this.ContractAddress, keyBytes, serializer.Serialize(obj, this.network));
+            this.persistenceStrategy.StoreBytes(this.ContractAddress, keyBytes, this.Serializer.Serialize(obj));
         }
 
         public void SetByte(string key, byte value)

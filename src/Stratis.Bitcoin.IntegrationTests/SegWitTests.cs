@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Threading;
 using NBitcoin;
 using Stratis.Bitcoin.Base.Deployments;
-using Stratis.Bitcoin.Features.Consensus.Interfaces;
+using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
@@ -24,7 +25,8 @@ namespace Stratis.Bitcoin.IntegrationTests
                 coreNode.ConfigParameters.AddOrReplace("printtoconsole", "0");
                 coreNode.Start();
 
-                CoreNode stratisNode = builder.CreateStratisPowNode(start: true);
+                CoreNode stratisNode = builder.CreateStratisPowNode(KnownNetworks.RegTest);
+                stratisNode.Start();
 
                 RPCClient stratisNodeRpc = stratisNode.CreateRPCClient();
                 RPCClient coreRpc = coreNode.CreateRPCClient();
@@ -42,8 +44,8 @@ namespace Stratis.Bitcoin.IntegrationTests
                 {
                     // generate 450 blocks, block 431 will be segwit activated.
                     coreRpc.Generate(450);
-
-                    TestHelper.WaitLoop(() => stratisNode.CreateRPCClient().GetBestBlockHash() == coreNode.CreateRPCClient().GetBestBlockHash());
+                    var cancellationToken = new CancellationTokenSource(TimeSpan.FromMinutes(2)).Token;
+                    TestHelper.WaitLoop(() => stratisNode.CreateRPCClient().GetBestBlockHash() == coreNode.CreateRPCClient().GetBestBlockHash(), cancellationToken: cancellationToken);
 
                     // segwit activation on Bitcoin regtest.
                     // - On regtest deployment state changes every 144 block, the threshold for activating a rule is 108 blocks.
@@ -53,7 +55,7 @@ namespace Stratis.Bitcoin.IntegrationTests
                     // - LockedIn 287 (as segwit should already be signaled in blocks).
                     // - Active at block 431.
 
-                    var consensusLoop = stratisNode.FullNode.NodeService<IConsensusLoop>();
+                    var consensusLoop = stratisNode.FullNode.NodeService<IConsensusRuleEngine>() as ConsensusRuleEngine;
                     ThresholdState[] segwitDefinedState = consensusLoop.NodeDeployments.BIP9.GetStates(stratisNode.FullNode.Chain.GetBlock(142));
                     ThresholdState[] segwitStartedState = consensusLoop.NodeDeployments.BIP9.GetStates(stratisNode.FullNode.Chain.GetBlock(143));
                     ThresholdState[] segwitLockedInState = consensusLoop.NodeDeployments.BIP9.GetStates(stratisNode.FullNode.Chain.GetBlock(287));

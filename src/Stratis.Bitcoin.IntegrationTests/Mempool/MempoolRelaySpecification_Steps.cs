@@ -7,6 +7,7 @@ using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+using Stratis.Bitcoin.Tests.Common;
 using Xunit.Abstractions;
 
 namespace Stratis.Bitcoin.IntegrationTests.Mempool
@@ -37,14 +38,16 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
 
         protected void nodeA_nodeB_and_nodeC()
         {
-            this.nodeA = this.nodeBuilder.CreateStratisPowNode();
-            this.nodeB = this.nodeBuilder.CreateStratisPowNode();
-            this.nodeC = this.nodeBuilder.CreateStratisPowNode();
+            Network regTest = KnownNetworks.RegTest;
+
+            this.nodeA = this.nodeBuilder.CreateStratisPowNode(regTest);
+            this.nodeB = this.nodeBuilder.CreateStratisPowNode(regTest);
+            this.nodeC = this.nodeBuilder.CreateStratisPowNode(regTest);
 
             this.nodeBuilder.StartAll();
-            this.nodeA.NotInIBD();
-            this.nodeB.NotInIBD();
-            this.nodeC.NotInIBD();
+            this.nodeA.NotInIBD().WithWallet();
+            this.nodeB.NotInIBD().WithWallet();
+            this.nodeC.NotInIBD().WithWallet();
 
             this.coinbaseMaturity = (int)this.nodeA.FullNode.Network.Consensus.CoinbaseMaturity;
         }
@@ -78,7 +81,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
 
         protected void nodeA_creates_a_transaction_and_propagates_to_nodeB()
         {
-            Block block = this.nodeA.FullNode.BlockStoreManager().BlockRepository.GetAsync(this.nodeA.FullNode.Chain.GetBlock(1).HashBlock).Result;
+            Block block = this.nodeA.FullNode.BlockStore().GetBlockAsync(this.nodeA.FullNode.Chain.GetBlock(1).HashBlock).Result;
             Transaction prevTrx = block.Transactions.First();
             var dest = new BitcoinSecret(new Key(), this.nodeA.FullNode.Network);
 

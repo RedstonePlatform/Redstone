@@ -7,8 +7,9 @@
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <Version>1.1.12-beta</Version>
+    <Version>1.1.14-beta</Version>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+	<CodeAnalysisRuleSet>..\None.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

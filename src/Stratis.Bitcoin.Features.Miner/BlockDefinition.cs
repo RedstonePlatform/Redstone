@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Base.Deployments;
-using Stratis.Bitcoin.Features.Consensus;
+using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.Consensus.Interfaces;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.MemoryPool;
@@ -26,7 +24,7 @@ namespace Stratis.Bitcoin.Features.Miner
         protected ChainedHeader ChainTip;
 
         /// <summary>Manager of the longest fully validated chain of blocks.</summary>
-        protected readonly IConsensusLoop ConsensusLoop;
+        protected readonly IConsensusManager ConsensusManager;
 
         /// <summary>Provider of date time functions.</summary>
         protected readonly IDateTimeProvider DateTimeProvider;
@@ -82,8 +80,6 @@ namespace Stratis.Bitcoin.Features.Miner
         /// </summary>
         protected bool IncludeWitness;
 
-        protected uint BlockMaxWeight, BlockMaxSize;
-
         protected bool NeedSizeAccounting;
 
         protected FeeRate BlockMinFeeRate;
@@ -115,51 +111,28 @@ namespace Stratis.Bitcoin.Features.Miner
         protected Script scriptPubKey;
 
         protected BlockDefinition(
-            IConsensusLoop consensusLoop,
+            IConsensusManager consensusManager,
             IDateTimeProvider dateTimeProvider,
             ILoggerFactory loggerFactory,
             ITxMempool mempool,
             MempoolSchedulerLock mempoolLock,
-            Network network,
-            BlockDefinitionOptions options = null)
+            MinerSettings minerSettings,
+            Network network)
         {
-            this.ConsensusLoop = consensusLoop;
+            this.ConsensusManager = consensusManager;
             this.DateTimeProvider = dateTimeProvider;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.Mempool = mempool;
             this.MempoolLock = mempoolLock;
             this.Network = network;
 
-            this.Options = options ?? new BlockDefinitionOptions();
+            this.Options = minerSettings.BlockDefinitionOptions;
             this.BlockMinFeeRate = this.Options.BlockMinFeeRate;
 
-            // Limit weight to between 4K and MAX_BLOCK_WEIGHT-4K for sanity.
-            this.BlockMaxWeight = (uint)Math.Max(4000, Math.Min(PowMining.DefaultBlockMaxWeight - 4000, this.Options.BlockMaxWeight));
-
-            // Limit size to between 1K and MAX_BLOCK_SERIALIZED_SIZE-1K for sanity.
-            this.BlockMaxSize = (uint)Math.Max(1000, Math.Min(network.Consensus.Options.MaxBlockSerializedSize - 1000, this.Options.BlockMaxSize));
-
             // Whether we need to account for byte usage (in addition to weight usage).
-            this.NeedSizeAccounting = (this.BlockMaxSize < network.Consensus.Options.MaxBlockSerializedSize - 1000);
+            this.NeedSizeAccounting = (this.Options.BlockMaxSize < network.Consensus.Options.MaxBlockSerializedSize);
 
             this.Configure();
-        }
-
-        private int ComputeBlockVersion(ChainedHeader prevChainedHeader, NBitcoin.Consensus consensus)
-        {
-            uint version = ThresholdConditionCache.VersionbitsTopBits;
-            var thresholdConditionCache = new ThresholdConditionCache(consensus);
-
-            IEnumerable<BIP9Deployments> deployments = Enum.GetValues(typeof(BIP9Deployments)).OfType<BIP9Deployments>();
-
-            foreach (BIP9Deployments deployment in deployments)
-            {
-                ThresholdState state = thresholdConditionCache.GetState(prevChainedHeader, deployment);
-                if ((state == ThresholdState.LockedIn) || (state == ThresholdState.Started))
-                    version |= thresholdConditionCache.Mask(deployment);
-            }
-
-            return (int)version;
         }
 
         /// <summary>
@@ -168,7 +141,8 @@ namespace Stratis.Bitcoin.Features.Miner
         protected virtual void ComputeBlockVersion()
         {
             this.height = this.ChainTip.Height + 1;
-            this.block.Header.Version = this.ComputeBlockVersion(this.ChainTip, this.Network.Consensus);
+            var headerVersionRule = this.ConsensusManager.ConsensusRules.GetRule<HeaderVersionRule>();
+            this.block.Header.Version = headerVersionRule.ComputeBlockVersion(this.ChainTip);
         }
 
         /// <summary>
@@ -195,7 +169,7 @@ namespace Stratis.Bitcoin.Features.Miner
             this.BlockSize = 1000;
             this.BlockTemplate = new BlockTemplate(this.Network);
             this.BlockTx = 0;
-            this.BlockWeight = 4000;
+            this.BlockWeight = 1000 * this.Network.Consensus.Options.WitnessScaleFactor;
             this.BlockSigOpsCost = 400;
             this.fees = 0;
             this.inBlock = new TxMempool.SetEntries();
@@ -252,7 +226,7 @@ namespace Stratis.Bitcoin.Features.Miner
             // TODO: Implement Witness Code
             // pblocktemplate->CoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
 
-            var coinviewRule = this.ConsensusLoop.ConsensusRules.GetRule<CoinViewRule>();
+            var coinviewRule = this.ConsensusManager.ConsensusRules.GetRule<CoinViewRule>();
             this.coinbase.Outputs[0].Value = this.fees + coinviewRule.GetProofOfWorkReward(this.height);
             this.BlockTemplate.TotalFee = this.fees;
 
@@ -442,7 +416,7 @@ namespace Stratis.Bitcoin.Features.Miner
 
                     nConsecutiveFailed++;
 
-                    if ((nConsecutiveFailed > MaxConsecutiveAddTransactionFailures) && (this.BlockWeight > this.BlockMaxWeight - 4000))
+                    if ((nConsecutiveFailed > MaxConsecutiveAddTransactionFailures) && (this.BlockWeight > this.Options.BlockMaxWeight - 4000))
                     {
                         // Give up if we're close to full and haven't succeeded in a while
                         break;
@@ -514,7 +488,7 @@ namespace Stratis.Bitcoin.Features.Miner
         private bool TestPackage(long packageSize, long packageSigOpsCost)
         {
             // TODO: Switch to weight-based accounting for packages instead of vsize-based accounting.
-            if (this.BlockWeight + this.Network.Consensus.Options.WitnessScaleFactor * packageSize >= this.BlockMaxWeight)
+            if (this.BlockWeight + this.Network.Consensus.Options.WitnessScaleFactor * packageSize >= this.Options.BlockMaxWeight)
                 return false;
 
             if (this.BlockSigOpsCost + packageSigOpsCost >= this.Network.Consensus.Options.MaxBlockSigopsCost)
@@ -535,7 +509,6 @@ namespace Stratis.Bitcoin.Features.Miner
         /// </summary>
         private bool TestPackageTransactions(TxMempool.SetEntries package)
         {
-            long nPotentialBlockSize = this.BlockSize; // only used with needSizeAccounting
             foreach (TxMempoolEntry it in package)
             {
                 if (!it.Transaction.IsFinal(Utils.UnixTimeToDateTime(this.LockTimeCutoff), this.height))
@@ -546,8 +519,9 @@ namespace Stratis.Bitcoin.Features.Miner
 
                 if (this.NeedSizeAccounting)
                 {
+                    long nPotentialBlockSize = this.BlockSize; // only used with needSizeAccounting
                     int nTxSize = it.Transaction.GetSerializedSize();
-                    if (nPotentialBlockSize + nTxSize >= this.BlockMaxSize)
+                    if (nPotentialBlockSize + nTxSize >= this.Options.BlockMaxSize)
                         return false;
 
                     nPotentialBlockSize += nTxSize;

@@ -9,6 +9,7 @@
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+	<CodeAnalysisRuleSet>..\None.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -37,13 +38,11 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.1.1" />
-    <PackageReference Include="NLog" Version="5.0.0-beta09" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="1.0.0-rtm-beta5" />	
   </ItemGroup>
 
   <ItemGroup>
     <None Update="NLog.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

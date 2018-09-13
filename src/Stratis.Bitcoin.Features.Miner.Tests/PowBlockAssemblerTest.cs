@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
+using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Base.Deployments;
-using Stratis.Bitcoin.BlockPulling;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
@@ -16,6 +16,7 @@ using Stratis.Bitcoin.Features.Consensus.Rules;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Mining;
+using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Utilities;
@@ -26,27 +27,30 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
 {
     public class PowBlockAssemblerTest : LogsTestBase
     {
-        private readonly Mock<IConsensusLoop> consensusLoop;
-        private readonly Mock<IConsensusRules> consensusRules;
+        private readonly Mock<IConsensusManager> consensusManager;
+        private readonly Mock<IConsensusRuleEngine> consensusRules;
 
         private readonly Mock<ITxMempool> txMempool;
         private readonly Mock<IDateTimeProvider> dateTimeProvider;
         private RuleContext callbackRuleContext;
         private readonly Money powReward;
-        private readonly Network testNetwork;
+        private readonly Mock<MinerSettings> minerSettings;
+        private readonly Network testNet;
         private readonly Key key;
 
         public PowBlockAssemblerTest()
         {
-            this.consensusLoop = new Mock<IConsensusLoop>();
-            this.consensusRules = new Mock<IConsensusRules>();
+            this.consensusManager = new Mock<IConsensusManager>();
+            this.consensusRules = new Mock<IConsensusRuleEngine>();
             this.txMempool = new Mock<ITxMempool>();
             this.dateTimeProvider = new Mock<IDateTimeProvider>();
             this.powReward = Money.Coins(50);
-            this.testNetwork = KnownNetworks.TestNet;
+            this.testNet = KnownNetworks.TestNet;
+            new FullNodeBuilderConsensusExtension.PowConsensusRulesRegistration().RegisterRules(this.testNet.Consensus);
+            this.minerSettings = new Mock<MinerSettings>();
             this.key = new Key();
 
-            SetupConsensusLoop();
+            this.SetupConsensusManager();
         }
 
         [Fact]
@@ -54,19 +58,19 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
         {
             this.ExecuteWithConsensusOptions(new ConsensusOptions(), () =>
             {
-                ConcurrentChain chain = GenerateChainWithHeight(5, this.testNetwork, this.key);
+                ConcurrentChain chain = GenerateChainWithHeight(5, this.testNet, this.key);
                 this.SetupRulesEngine(chain);
-                this.consensusLoop.Setup(s => s.Tip).Returns(chain.Tip);
+                this.consensusManager.Setup(s => s.Tip).Returns(chain.Tip);
                 this.dateTimeProvider.Setup(d => d.GetAdjustedTimeAsUnixTimestamp())
                     .Returns(new DateTime(2017, 1, 7, 0, 0, 1, DateTimeKind.Utc).ToUnixTimestamp());
-                Transaction transaction = CreateTransaction(this.testNetwork, this.key, 5, new Money(400 * 1000 * 1000), new Key(), new uint256(124124));
+                Transaction transaction = CreateTransaction(this.testNet, this.key, 5, new Money(400 * 1000 * 1000), new Key(), new uint256(124124));
                 var txFee = new Money(1000);
-                SetupTxMempool(chain, this.testNetwork.Consensus.Options as ConsensusOptions, txFee, transaction);
+                SetupTxMempool(chain, this.testNet.Consensus.Options as ConsensusOptions, txFee, transaction);
                 this.consensusRules
-                    .Setup(s => s.CreateRuleContext(It.IsAny<ValidationContext>(), It.IsAny<ChainedHeader>()))
+                    .Setup(s => s.CreateRuleContext(It.IsAny<ValidationContext>()))
                     .Returns(new PowRuleContext());
 
-                var blockDefinition = new PowBlockDefinition(this.consensusLoop.Object, this.dateTimeProvider.Object, this.LoggerFactory.Object, this.txMempool.Object, new MempoolSchedulerLock(), this.testNetwork, this.consensusRules.Object);
+                var blockDefinition = new PowBlockDefinition(this.consensusManager.Object, this.dateTimeProvider.Object, this.LoggerFactory.Object, this.txMempool.Object, new MempoolSchedulerLock(), this.minerSettings.Object, this.testNet, this.consensusRules.Object);
 
                 BlockTemplate blockTemplate = blockDefinition.Build(chain.Tip, this.key.ScriptPubKey);
 
@@ -102,94 +106,62 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
         }
 
         [Fact]
-        public void CreateNewBlock_WithScript_ValidatesTemplateUsingRuleContext()
-        {
-            var newOptions = new ConsensusOptions() { MaxBlockWeight = 1500 };
-
-            this.ExecuteWithConsensusOptions(newOptions, () =>
-            {
-                ConcurrentChain chain = GenerateChainWithHeight(5, this.testNetwork, this.key);
-                this.SetupRulesEngine(chain);
-
-                this.dateTimeProvider.Setup(d => d.GetAdjustedTimeAsUnixTimestamp())
-                    .Returns(new DateTime(2017, 1, 7, 0, 0, 1, DateTimeKind.Utc).ToUnixTimestamp());
-                this.consensusLoop.Setup(c => c.Tip)
-                    .Returns(chain.GetBlock(5));
-
-                Transaction transaction = CreateTransaction(this.testNetwork, this.key, 5, new Money(400 * 1000 * 1000), new Key(), new uint256(124124));
-                var txFee = new Money(1000);
-                SetupTxMempool(chain, this.testNetwork.Consensus.Options as ConsensusOptions, txFee, transaction);
-                ValidationContext validationContext = null;
-                var powRuleContext = new PowRuleContext(new ValidationContext(), this.testNetwork.Consensus, chain.Tip, this.dateTimeProvider.Object.GetTimeOffset());
-                this.consensusRules
-                    .Setup(s => s.CreateRuleContext(It.IsAny<ValidationContext>(), It.IsAny<ChainedHeader>())).Callback<ValidationContext, ChainedHeader>((r, s) => validationContext = r)
-                    .Returns(powRuleContext);
-
-                var blockDefinition = new PowBlockDefinition(this.consensusLoop.Object, this.dateTimeProvider.Object, this.LoggerFactory.Object, this.txMempool.Object, new MempoolSchedulerLock(), this.testNetwork, this.consensusRules.Object);
-
-                BlockTemplate blockTemplate = blockDefinition.Build(chain.Tip, this.key.ScriptPubKey);
-                Assert.NotNull(this.callbackRuleContext);
-
-                Assert.True(this.callbackRuleContext.MinedBlock);
-                Assert.Equal(blockTemplate.Block.GetHash(), validationContext.Block.GetHash());
-                Assert.Equal(chain.GetBlock(5).HashBlock, powRuleContext.ConsensusTip.HashBlock);
-                Assert.Equal(1500, this.callbackRuleContext.Consensus.Options.MaxBlockWeight);
-                this.consensusLoop.Verify();
-            });
-        }
-
-        [Fact]
         public void ComputeBlockVersion_UsingChainTipAndConsensus_NoBip9DeploymentActive_UpdatesHeightAndVersion()
         {
             this.ExecuteWithConsensusOptions(new ConsensusOptions(), () =>
             {
-                ConcurrentChain chain = GenerateChainWithHeight(5, this.testNetwork, new Key());
+                ConcurrentChain chain = GenerateChainWithHeight(5, this.testNet, new Key());
+                this.SetupRulesEngine(chain);
 
-                var blockDefinition = new PowTestBlockDefinition(this.consensusLoop.Object, this.dateTimeProvider.Object, this.LoggerFactory.Object, this.txMempool.Object, new MempoolSchedulerLock(), this.testNetwork, this.consensusRules.Object);
+                var blockDefinition = new PowTestBlockDefinition(this.consensusManager.Object, this.dateTimeProvider.Object, this.LoggerFactory.Object, this.txMempool.Object, new MempoolSchedulerLock(), this.minerSettings.Object, this.testNet, this.consensusRules.Object);
 
                 (int Height, int Version) result = blockDefinition.ComputeBlockVersion(chain.GetBlock(4));
 
                 Assert.Equal(5, result.Height);
-                uint version = ThresholdConditionCache.VersionbitsTopBits;
-                Assert.Equal((int)version, result.Version);
+                Assert.Equal((int)ThresholdConditionCache.VersionbitsTopBits, result.Version);
             });
         }
 
         [Fact]
         public void ComputeBlockVersion_UsingChainTipAndConsensus_Bip9DeploymentActive_UpdatesHeightAndVersion()
         {
-            ConsensusOptions options = this.testNetwork.Consensus.Options;
-            int minerConfirmationWindow = this.testNetwork.Consensus.MinerConfirmationWindow;
-            int ruleChangeActivationThreshold = this.testNetwork.Consensus.RuleChangeActivationThreshold;
+            ConsensusOptions options = this.testNet.Consensus.Options;
+            int minerConfirmationWindow = this.testNet.Consensus.MinerConfirmationWindow;
+            int ruleChangeActivationThreshold = this.testNet.Consensus.RuleChangeActivationThreshold;
             try
             {
                 var newOptions = new ConsensusOptions();
-                this.testNetwork.Consensus.Options = newOptions;
-                this.testNetwork.Consensus.BIP9Deployments[0] = new BIP9DeploymentsParameters(19,
+                this.testNet.Consensus.Options = newOptions;
+                this.testNet.Consensus.BIP9Deployments[0] = new BIP9DeploymentsParameters(19,
                     new DateTimeOffset(new DateTime(2016, 1, 1, 0, 0, 0, DateTimeKind.Utc)),
                     new DateTimeOffset(new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc)));
-                this.testNetwork.Consensus.MinerConfirmationWindow = 2;
-                this.testNetwork.Consensus.RuleChangeActivationThreshold = 2;
 
-                ConcurrentChain chain = GenerateChainWithHeightAndActivatedBip9(5, this.testNetwork, new Key(), this.testNetwork.Consensus.BIP9Deployments[0]);
+                // As we are effectively using TestNet the other deployments need to be disabled
+                this.testNet.Consensus.BIP9Deployments[BIP9Deployments.CSV] = null;
+                this.testNet.Consensus.BIP9Deployments[BIP9Deployments.Segwit] = null;
 
-                var blockDefinition = new PowTestBlockDefinition(this.consensusLoop.Object, this.dateTimeProvider.Object, this.LoggerFactory.Object, this.txMempool.Object, new MempoolSchedulerLock(), this.testNetwork, this.consensusRules.Object);
+                this.testNet.Consensus.MinerConfirmationWindow = 2;
+                this.testNet.Consensus.RuleChangeActivationThreshold = 2;
+
+                ConcurrentChain chain = GenerateChainWithHeightAndActivatedBip9(5, this.testNet, new Key(), this.testNet.Consensus.BIP9Deployments[0]);
+                this.SetupRulesEngine(chain);
+
+                var blockDefinition = new PowTestBlockDefinition(this.consensusManager.Object, this.dateTimeProvider.Object, this.LoggerFactory.Object, this.txMempool.Object, new MempoolSchedulerLock(), this.minerSettings.Object, this.testNet, this.consensusRules.Object);
 
                 (int Height, int Version) result = blockDefinition.ComputeBlockVersion(chain.GetBlock(4));
 
                 Assert.Equal(5, result.Height);
-                uint version = ThresholdConditionCache.VersionbitsTopBits;
-                int expectedVersion = (int)(version |= (((uint)1) << 19));
-                //Assert.Equal(version, result.Version);
+                int expectedVersion = (int)(ThresholdConditionCache.VersionbitsTopBits | (((uint)1) << 19));
+                Assert.Equal(expectedVersion, result.Version);
                 Assert.NotEqual((int)ThresholdConditionCache.VersionbitsTopBits, result.Version);
             }
             finally
             {
                 // This is a static in the global context so be careful updating it. I'm resetting it after being done testing so I don't influence other tests.
-                this.testNetwork.Consensus.Options = options;
-                this.testNetwork.Consensus.BIP9Deployments[0] = null;
-                this.testNetwork.Consensus.MinerConfirmationWindow = minerConfirmationWindow;
-                this.testNetwork.Consensus.RuleChangeActivationThreshold = ruleChangeActivationThreshold;
+                this.testNet.Consensus.Options = options;
+                this.testNet.Consensus.BIP9Deployments[0] = null;
+                this.testNet.Consensus.MinerConfirmationWindow = minerConfirmationWindow;
+                this.testNet.Consensus.RuleChangeActivationThreshold = ruleChangeActivationThreshold;
             }
         }
 
@@ -198,11 +170,11 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
         {
             this.ExecuteWithConsensusOptions(new ConsensusOptions(), () =>
             {
-                ConcurrentChain chain = GenerateChainWithHeight(5, this.testNetwork, this.key);
+                ConcurrentChain chain = GenerateChainWithHeight(5, this.testNet, this.key);
                 this.dateTimeProvider.Setup(d => d.GetAdjustedTimeAsUnixTimestamp())
                     .Returns(new DateTime(2017, 1, 7, 0, 0, 1, DateTimeKind.Utc).ToUnixTimestamp());
 
-                var blockDefinition = new PowTestBlockDefinition(this.consensusLoop.Object, this.dateTimeProvider.Object, this.LoggerFactory.Object, this.txMempool.Object, new MempoolSchedulerLock(), this.testNetwork, this.consensusRules.Object);
+                var blockDefinition = new PowTestBlockDefinition(this.consensusManager.Object, this.dateTimeProvider.Object, this.LoggerFactory.Object, this.txMempool.Object, new MempoolSchedulerLock(), this.minerSettings.Object, this.testNet, this.consensusRules.Object);
 
                 BlockTemplate result = blockDefinition.CreateCoinBase(chain.Tip, this.key.ScriptPubKey);
 
@@ -230,9 +202,9 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
             {
                 this.dateTimeProvider.Setup(d => d.GetTimeOffset()).Returns(new DateTimeOffset(new DateTime(2017, 1, 7, 0, 0, 0, DateTimeKind.Utc)));
 
-                ConcurrentChain chain = GenerateChainWithHeight(5, this.testNetwork, new Key(), new Target(235325239));
+                ConcurrentChain chain = GenerateChainWithHeight(5, this.testNet, new Key(), new Target(235325239));
 
-                var blockDefinition = new PowTestBlockDefinition(this.consensusLoop.Object, this.dateTimeProvider.Object, this.LoggerFactory.Object, this.txMempool.Object, new MempoolSchedulerLock(), this.testNetwork, this.consensusRules.Object);
+                var blockDefinition = new PowTestBlockDefinition(this.consensusManager.Object, this.dateTimeProvider.Object, this.LoggerFactory.Object, this.txMempool.Object, new MempoolSchedulerLock(), this.minerSettings.Object, this.testNet, this.consensusRules.Object);
                 Block block = blockDefinition.UpdateHeaders(chain.Tip);
 
                 Assert.Equal(chain.Tip.HashBlock, block.Header.HashPrevBlock);
@@ -243,50 +215,21 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
         }
 
         [Fact]
-        public void TestBlockValidity_UsesRuleContextToValidateBlock()
-        {
-            var newOptions = new ConsensusOptions() { MaxBlockWeight = 1500 };
-
-            this.ExecuteWithConsensusOptions(newOptions, () =>
-            {
-                ConcurrentChain chain = GenerateChainWithHeight(5, this.testNetwork, new Key());
-                this.consensusLoop.Setup(c => c.Tip).Returns(chain.GetBlock(5));
-
-                ValidationContext validationContext = null;
-                var powRuleContext = new PowRuleContext(new ValidationContext(), this.testNetwork.Consensus, chain.Tip, this.dateTimeProvider.Object.GetTimeOffset());
-                this.consensusRules
-                    .Setup(s => s.CreateRuleContext(It.IsAny<ValidationContext>(), It.IsAny<ChainedHeader>())).Callback<ValidationContext, ChainedHeader>((r, s) => validationContext = r)
-                    .Returns(powRuleContext);
-
-                var powBlockAssembler = new PowTestBlockDefinition(this.consensusLoop.Object, this.dateTimeProvider.Object, this.LoggerFactory.Object, this.txMempool.Object, new MempoolSchedulerLock(), this.testNetwork, this.consensusRules.Object);
-                Block block = powBlockAssembler.TestBlockValidity();
-
-                Assert.NotNull(this.callbackRuleContext);
-
-                Assert.True(this.callbackRuleContext.MinedBlock);
-                Assert.Equal(block.GetHash(), validationContext.Block.GetHash());
-                Assert.Equal(chain.GetBlock(5).HashBlock, powRuleContext.ConsensusTip.HashBlock);
-                Assert.Equal(1500, this.callbackRuleContext.Consensus.Options.MaxBlockWeight);
-                this.consensusLoop.Verify();
-            });
-        }
-
-        [Fact]
         public void AddTransactions_WithoutTransactionsInMempool_DoesNotAddEntriesToBlock()
         {
-            var newOptions = new ConsensusOptions() { MaxBlockWeight = 1500 };
+            var newOptions = new ConsensusOptions();
 
             this.ExecuteWithConsensusOptions(newOptions, () =>
             {
-                ConcurrentChain chain = GenerateChainWithHeight(5, this.testNetwork, new Key());
-                this.consensusLoop.Setup(c => c.Tip)
+                ConcurrentChain chain = GenerateChainWithHeight(5, this.testNet, new Key());
+                this.consensusManager.Setup(c => c.Tip)
                     .Returns(chain.GetBlock(5));
                 var indexedTransactionSet = new TxMempool.IndexedTransactionSet();
                 this.txMempool.Setup(t => t.MapTx)
                     .Returns(indexedTransactionSet);
 
-                var blockDefinition = new PowTestBlockDefinition(this.consensusLoop.Object, this.dateTimeProvider.Object, this.LoggerFactory.Object, this.txMempool.Object,
-                    new MempoolSchedulerLock(), this.testNetwork, this.consensusRules.Object);
+                var blockDefinition = new PowTestBlockDefinition(this.consensusManager.Object, this.dateTimeProvider.Object, this.LoggerFactory.Object, this.txMempool.Object,
+                    new MempoolSchedulerLock(), this.minerSettings.Object, this.testNet, this.consensusRules.Object);
 
                 (Block Block, int Selected, int Updated) result = blockDefinition.AddTransactions();
 
@@ -299,18 +242,18 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
         [Fact]
         public void AddTransactions_TransactionNotInblock_AddsTransactionToBlock()
         {
-            var newOptions = new ConsensusOptions() { MaxBlockWeight = 1500 };
+            var newOptions = new ConsensusOptions();
 
             this.ExecuteWithConsensusOptions(newOptions, () =>
             {
-                ConcurrentChain chain = GenerateChainWithHeight(5, this.testNetwork, this.key);
-                this.consensusLoop.Setup(c => c.Tip).Returns(chain.GetBlock(5));
-                Transaction transaction = CreateTransaction(this.testNetwork, this.key, 5, new Money(400 * 1000 * 1000), new Key(), new uint256(124124));
+                ConcurrentChain chain = GenerateChainWithHeight(5, this.testNet, this.key);
+                this.consensusManager.Setup(c => c.Tip).Returns(chain.GetBlock(5));
+                Transaction transaction = CreateTransaction(this.testNet, this.key, 5, new Money(400 * 1000 * 1000), new Key(), new uint256(124124));
                 var txFee = new Money(1000);
                 SetupTxMempool(chain, newOptions, txFee, transaction);
 
-                var blockDefinition = new PowTestBlockDefinition(this.consensusLoop.Object, this.dateTimeProvider.Object, this.LoggerFactory.Object, this.txMempool.Object,
-                    new MempoolSchedulerLock(), this.testNetwork, this.consensusRules.Object);
+                var blockDefinition = new PowTestBlockDefinition(this.consensusManager.Object, this.dateTimeProvider.Object, this.LoggerFactory.Object, this.txMempool.Object,
+                    new MempoolSchedulerLock(), this.minerSettings.Object, this.testNet, this.consensusRules.Object);
 
                 (Block Block, int Selected, int Updated) result = blockDefinition.AddTransactions();
 
@@ -325,18 +268,18 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
         [Fact]
         public void AddTransactions_TransactionAlreadyInInblock_DoesNotAddTransactionToBlock()
         {
-            var newOptions = new ConsensusOptions() { MaxBlockWeight = 1500 };
+            var newOptions = new ConsensusOptions();
 
             this.ExecuteWithConsensusOptions(newOptions, () =>
             {
-                ConcurrentChain chain = GenerateChainWithHeight(5, this.testNetwork, this.key);
-                this.consensusLoop.Setup(c => c.Tip)
+                ConcurrentChain chain = GenerateChainWithHeight(5, this.testNet, this.key);
+                this.consensusManager.Setup(c => c.Tip)
                     .Returns(chain.GetBlock(5));
-                Transaction transaction = CreateTransaction(this.testNetwork, this.key, 5, new Money(400 * 1000 * 1000), new Key(), new uint256(124124));
+                Transaction transaction = CreateTransaction(this.testNet, this.key, 5, new Money(400 * 1000 * 1000), new Key(), new uint256(124124));
                 var txFee = new Money(1000);
                 TxMempoolEntry[] entries = SetupTxMempool(chain, newOptions, txFee, transaction);
 
-                var blockDefinition = new PowTestBlockDefinition(this.consensusLoop.Object, this.dateTimeProvider.Object, this.LoggerFactory.Object, this.txMempool.Object, new MempoolSchedulerLock(), this.testNetwork, this.consensusRules.Object);
+                var blockDefinition = new PowTestBlockDefinition(this.consensusManager.Object, this.dateTimeProvider.Object, this.LoggerFactory.Object, this.txMempool.Object, new MempoolSchedulerLock(), this.minerSettings.Object, this.testNet, this.consensusRules.Object);
                 blockDefinition.AddInBlockTxEntries(entries);
 
                 (Block Block, int Selected, int Updated) result = blockDefinition.AddTransactions();
@@ -349,18 +292,18 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
 
         private void ExecuteWithConsensusOptions(ConsensusOptions newOptions, Action action)
         {
-            ConsensusOptions options = this.testNetwork.Consensus.Options;
+            ConsensusOptions options = this.testNet.Consensus.Options;
             try
             {
-                this.testNetwork.Consensus.Options = newOptions;
+                this.testNet.Consensus.Options = newOptions;
 
                 action();
             }
             finally
             {
                 // This is a static in the global context so be careful updating it. I'm resetting it after being done testing so I don't influence other tests.
-                this.testNetwork.Consensus.Options = options;
-                this.testNetwork.Consensus.BIP9Deployments[0] = null;
+                this.testNet.Consensus.Options = options;
+                this.testNet.Consensus.BIP9Deployments[0] = null;
             }
         }
 
@@ -420,25 +363,26 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
             return coinbase;
         }
 
-        private void SetupConsensusLoop()
+        private void SetupConsensusManager()
         {
             this.callbackRuleContext = null;
 
-            this.consensusLoop.Setup(c => c.ValidateBlock(It.IsAny<RuleContext>())).Callback<RuleContext>(context =>
-            {
-                this.callbackRuleContext = context;
-            }).Verifiable();
+            this.consensusManager.Setup(c => c.ConsensusRules.PartialValidationAsync(It.IsAny<ChainedHeader>(), It.IsAny<Block>()))
+                .Callback((ChainedHeader ch, Block b) =>
+                {
+                    this.callbackRuleContext = new RuleContext();
+                });
         }
 
         private void SetupRulesEngine(ConcurrentChain chain)
         {
-            var powConsensusRules = new PowConsensusRules(this.testNetwork,
+            var powConsensusRules = new PowConsensusRuleEngine(this.testNet,
                     this.LoggerFactory.Object, this.dateTimeProvider.Object, chain,
-                    new NodeDeployments(this.testNetwork, chain), new ConsensusSettings(new NodeSettings(this.testNetwork)), new Checkpoints(),
-                    new Mock<ICoinView>().Object, new Mock<ILookaheadBlockPuller>().Object);
+                    new NodeDeployments(this.testNet, chain), new ConsensusSettings(new NodeSettings(this.testNet)), new Checkpoints(),
+                    new Mock<ICoinView>().Object, new Mock<IChainState>().Object, new InvalidBlockHashStore(new DateTimeProvider()));
 
-            powConsensusRules.Register(new FullNodeBuilderConsensusExtension.PowConsensusRulesRegistration());
-            this.consensusLoop.SetupGet(x => x.ConsensusRules).Returns(powConsensusRules);
+            powConsensusRules.Register();
+            this.consensusManager.SetupGet(x => x.ConsensusRules).Returns(powConsensusRules);
         }
 
         private TxMempoolEntry[] SetupTxMempool(ConcurrentChain chain, ConsensusOptions newOptions, Money txFee, params Transaction[] transactions)
@@ -470,15 +414,16 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
         private class PowTestBlockDefinition : PowBlockDefinition
         {
             public PowTestBlockDefinition(
-                IConsensusLoop consensusLoop,
+                IConsensusManager consensusLoop,
                 IDateTimeProvider dateTimeProvider,
                 ILoggerFactory loggerFactory,
                 ITxMempool mempool,
                 MempoolSchedulerLock mempoolLock,
+                MinerSettings minerSettings,
                 Network network,
-                IConsensusRules consensusRules,
+                IConsensusRuleEngine consensusRules,
                 BlockDefinitionOptions options = null)
-                : base(consensusLoop, dateTimeProvider, loggerFactory, mempool, mempoolLock, network, consensusRules)
+                : base(consensusLoop, dateTimeProvider, loggerFactory, mempool, mempoolLock, minerSettings, network, consensusRules)
             {
                 this.block = this.BlockTemplate.Block;
             }
@@ -521,12 +466,6 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
                 this.ChainTip = chainTip;
                 base.UpdateHeaders();
                 return this.BlockTemplate.Block;
-            }
-
-            public new Block TestBlockValidity()
-            {
-                base.TestBlockValidity();
-                return this.block;
             }
 
             public (Block Block, int Selected, int Updated) AddTransactions()

@@ -162,7 +162,7 @@ namespace NBitcoin.Tests
         {
             Network network = KnownNetworks.TestNet;
 
-            Assert.Equal(2, network.Checkpoints.Count);
+            Assert.Equal(12, network.Checkpoints.Count);
             Assert.Equal(3, network.DNSSeeds.Count);
             Assert.Empty(network.SeedNodes);
 
@@ -326,7 +326,7 @@ namespace NBitcoin.Tests
         {
             Network network = this.stratisMain;
 
-            Assert.Equal(25, network.Checkpoints.Count);
+            Assert.Equal(28, network.Checkpoints.Count);
             Assert.Equal(4, network.DNSSeeds.Count);
             Assert.Equal(3, network.SeedNodes.Count);
 
@@ -339,7 +339,7 @@ namespace NBitcoin.Tests
             Assert.Equal(StratisMain.StratisMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
             Assert.Equal(StratisMain.StratisDefaultMaxTipAgeInSeconds, network.MaxTipAge);
             Assert.Equal(10000, network.MinTxFee);
-            Assert.Equal(60000, network.FallbackFee);
+            Assert.Equal(10000, network.FallbackFee);
             Assert.Equal(10000, network.MinRelayTxFee);
             Assert.Equal("STRAT", network.CoinTicker);
 
@@ -418,7 +418,7 @@ namespace NBitcoin.Tests
             Assert.Equal(StratisMain.StratisMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
             Assert.Equal(StratisMain.StratisDefaultMaxTipAgeInSeconds, network.MaxTipAge);
             Assert.Equal(10000, network.MinTxFee);
-            Assert.Equal(60000, network.FallbackFee);
+            Assert.Equal(10000, network.FallbackFee);
             Assert.Equal(10000, network.MinRelayTxFee);
             Assert.Equal("TSTRAT", network.CoinTicker);
 

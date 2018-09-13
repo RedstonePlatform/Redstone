@@ -1,18 +1,17 @@
-﻿namespace Stratis.Bitcoin.Connection
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Threading.Tasks;
+using NBitcoin;
+using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Configuration.Settings;
+using Stratis.Bitcoin.Consensus;
+using Stratis.Bitcoin.P2P;
+using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Bitcoin.P2P.Protocol.Payloads;
+
+namespace Stratis.Bitcoin.Connection
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Net;
-    using System.Threading.Tasks;
-
-    using NBitcoin;
-
-    using Stratis.Bitcoin.Configuration;
-    using Stratis.Bitcoin.Configuration.Settings;
-    using Stratis.Bitcoin.P2P;
-    using Stratis.Bitcoin.P2P.Peer;
-    using Stratis.Bitcoin.P2P.Protocol.Payloads;
-
     public interface IConnectionManager : IDisposable
     {
         /// <summary>
@@ -44,12 +43,13 @@
 
         INetworkPeer FindNodeById(int peerId);
 
-        string GetNodeStats();
+        void RemoveConnectedPeer(INetworkPeer peer, string reason);
 
-        string GetStats();
+        /// <summary>Notifies other components about peer being disconnected.</summary>
+        void PeerDisconnected(int networkPeerId);
 
         /// <summary>Initializes and starts each peer connection as well as peer discovery.</summary>
-        void Initialize();
+        void Initialize(IConsensusManager consensusManager);
 
         /// <summary>The network the node is running on.</summary>
         Network Network { get; }
@@ -68,7 +68,7 @@
 
         /// <summary>Connection settings.</summary>
         ConnectionManagerSettings ConnectionSettings { get; }
-        
+
         /// <summary>
         /// Remove a peer from the address manager's collection as well as
         /// the connection manager's add node collection.

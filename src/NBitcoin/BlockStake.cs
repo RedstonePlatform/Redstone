@@ -173,6 +173,11 @@ namespace NBitcoin
         {
             this.FromBytes(bytes);
         }
+
+        public override bool IsProtocolTransaction()
+        {
+            return this.IsCoinStake || this.IsCoinBase;
+        }
     }
 
     /// <summary>
@@ -250,7 +255,7 @@ namespace NBitcoin
             return hash;
         }
 
-        /// /// <inheritdoc />
+        /// <inheritdoc />
         public override uint256 GetPoWHash()
         {
             return HashX13.Instance.Hash(this.ToBytes());
@@ -267,7 +272,7 @@ namespace NBitcoin
         /// </summary>
         private BlockSignature blockSignature = new BlockSignature();
 
-        internal PosBlock(BlockHeader blockHeader) : base(blockHeader)
+        public PosBlock(BlockHeader blockHeader) : base(blockHeader)
         {
         }
 

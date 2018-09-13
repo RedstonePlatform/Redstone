@@ -43,6 +43,9 @@ namespace Stratis.Bitcoin.P2P
         /// <summary>Peer selector instance, used to select peers to connect to.</summary>
         public IPeerSelector PeerSelector { get; private set; }
 
+        /// <summary>An object capable of storing a list of <see cref="PeerAddress"/>s to the file system.</summary>
+        private readonly FileStorage<List<PeerAddress>> fileStorage;
+
         /// <summary>Constructor used by dependency injection.</summary>
         public PeerAddressManager(IDateTimeProvider dateTimeProvider, DataFolder peerFilePath, ILoggerFactory loggerFactory, ISelfEndpointTracker selfEndpointTracker)
         {
@@ -52,14 +55,15 @@ namespace Stratis.Bitcoin.P2P
             this.peers = new ConcurrentDictionary<IPEndPoint, PeerAddress>();
             this.PeerFilePath = peerFilePath;
             this.PeerSelector = new PeerSelector(this.dateTimeProvider, this.loggerFactory, this.peers, selfEndpointTracker);
+            this.fileStorage = new FileStorage<List<PeerAddress>>(this.PeerFilePath.AddressManagerFilePath);
         }
 
         /// <inheritdoc />
         public void LoadPeers()
         {
-            var fileStorage = new FileStorage<List<PeerAddress>>(this.PeerFilePath.AddressManagerFilePath);
-            List<PeerAddress> peers = fileStorage.LoadByFileName(PeerFileName);
-            peers.ForEach(peer =>
+
+            List<PeerAddress> loadedPeers = this.fileStorage.LoadByFileName(PeerFileName);
+            loadedPeers.ForEach(peer =>
             {
                 // Ensure that any address already in store is mapped.
                 peer.Endpoint = peer.Endpoint.MapToIpv6();
@@ -85,11 +89,10 @@ namespace Stratis.Bitcoin.P2P
                 return;
 
             ICollection<PeerAddress> snapshotOfPeersToSave = this.peers.Values;
-            var fileStorage = new FileStorage<List<PeerAddress>>(this.PeerFilePath.AddressManagerFilePath);
-            fileStorage.SaveToFile(
+            this.fileStorage.SaveToFile(
                 snapshotOfPeersToSave
                     .OrderByDescending(p => p.LastConnectionSuccess)
-                    .ToList(), 
+                    .ToList(),
                 PeerFileName);
         }
 
@@ -98,7 +101,7 @@ namespace Stratis.Bitcoin.P2P
         {
             if (!endPoint.Address.IsRoutable(true))
                 return;
-            
+
             PeerAddress peerToAdd = PeerAddress.Create(endPoint, source);
             this.peers.TryAdd(peerToAdd.Endpoint, peerToAdd);
         }
@@ -108,7 +111,6 @@ namespace Stratis.Bitcoin.P2P
         {
            this.peers.TryRemove(endPoint.MapToIpv6(), out PeerAddress address);
         }
-
 
         /// <inheritdoc/>
         public void AddPeers(IPEndPoint[] endPoints, IPAddress source)
@@ -126,9 +128,9 @@ namespace Stratis.Bitcoin.P2P
             if (peer == null)
                 return;
 
-            //Reset the attempted count if:
-            //1: The last attempt was more than the threshold time ago.
-            //2: More than the threshold attempts was made.
+            // Reset the attempted count if:
+            // 1: The last attempt was more than the threshold time ago.
+            // 2: More than the threshold attempts was made.
             if (peer.Attempted &&
                 peer.LastAttempt < this.dateTimeProvider.GetUtcNow().AddHours(-PeerAddress.AttemptResetThresholdHours) &&
                 peer.ConnectionAttempts >= PeerAddress.AttemptThreshold)
