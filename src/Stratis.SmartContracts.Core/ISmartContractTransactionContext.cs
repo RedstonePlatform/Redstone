@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using NBitcoin;
+﻿using NBitcoin;
 
 namespace Stratis.SmartContracts.Core
 {
@@ -26,14 +25,9 @@ namespace Stratis.SmartContracts.Core
         uint Nvout { get; }
 
         /// <summary>
-        /// All of the bytes included in the script after the create or call opcode.
+        /// The raw data provided as part of the transaction.
         /// </summary>
-        IEnumerable<byte> ContractData { get; }
-
-        /// <summary>
-        /// The script pub key
-        /// </summary>
-        Script ScriptPubKey { get; }
+        byte[] Data { get; }
 
         /// <summary>
         /// Total fee for transaction.
@@ -51,13 +45,8 @@ namespace Stratis.SmartContracts.Core
         ulong BlockHeight { get; }
 
         /// <summary>
-        /// Whether this transaction is creating a new contract.
+        /// Time as set on transaction.
         /// </summary>
-        bool IsCreate { get; }
-
-        /// <summary>
-        /// Whether this transaction is calling a method on a contract.
-        /// </summary>
-        bool IsCall { get; }
+        uint Time { get; }
     }
 }

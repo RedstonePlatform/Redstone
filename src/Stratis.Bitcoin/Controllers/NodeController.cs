@@ -9,6 +9,7 @@ using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Connection;
+using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P.Peer;
@@ -134,14 +135,14 @@ namespace Stratis.Bitcoin.Controllers
             foreach (INetworkPeer peer in this.connectionManager.ConnectedPeers)
             {
                 var connectionManagerBehavior = peer.Behavior<IConnectionManagerBehavior>();
-                var chainHeadersBehavior = peer.Behavior<ChainHeadersBehavior>();
+                var chainHeadersBehavior = peer.Behavior<ConsensusManagerBehavior>();
 
                 var connectedPeer = new ConnectedPeerModel
                 {
                     Version = peer.PeerVersion != null ? peer.PeerVersion.UserAgent : "[Unknown]",
                     RemoteSocketEndpoint = peer.RemoteSocketEndpoint.ToString(),
                     TipHeight = chainHeadersBehavior.ExpectedPeerTip != null ? chainHeadersBehavior.ExpectedPeerTip.Height : peer.PeerVersion?.StartHeight ?? -1,
-                    IsInbound = connectionManagerBehavior.Inbound
+                    IsInbound = peer.Inbound
                 };
 
                 if (connectedPeer.IsInbound)
@@ -275,16 +276,19 @@ namespace Stratis.Bitcoin.Controllers
                 {
                     res.IsValid = true;
                 }
+
                 // P2WSH
                 else if (BitcoinWitScriptAddress.IsValid(address, this.network, out Exception _))
                 {
                     res.IsValid = true;
                 }
+
                 // P2PKH
                 else if (BitcoinPubKeyAddress.IsValid(address, this.network))
                 {
                     res.IsValid = true;
                 }
+
                 // P2SH
                 else if (BitcoinScriptAddress.IsValid(address, this.network))
                 {
@@ -351,11 +355,15 @@ namespace Stratis.Bitcoin.Controllers
         /// <summary>
         /// Triggers a shutdown of the currently running node.
         /// </summary>
+        /// <param name="corsProtection">This body parameter is here to prevent a CORS call from triggering method execution.</param>
+        /// <remarks>
+        /// <seealso cref="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#Simple_requests"/>
+        /// </remarks>
         /// <returns><see cref="OkResult"/></returns>
         [HttpPost]
         [Route("shutdown")]
         [Route("stop")]
-        public IActionResult Shutdown()
+        public IActionResult Shutdown([FromBody] bool corsProtection = true)
         {
             // Start the node shutdown process.
             this.fullNode?.Dispose();

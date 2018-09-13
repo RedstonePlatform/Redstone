@@ -1,22 +1,23 @@
-﻿using NBitcoin.Protocol;
+﻿using NBitcoin;
+using NBitcoin.Protocol;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Features.Api;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Tests.Common;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.Runners
 {
     public sealed class StratisBitcoinPosRunner : NodeRunner
     {
-        public StratisBitcoinPosRunner(string dataDir)
+        public StratisBitcoinPosRunner(string dataDir, Network network)
             : base(dataDir)
         {
-            this.Network = KnownNetworks.StratisRegTest;
+            this.Network = network;
         }
 
         public override void BuildNode()
@@ -31,14 +32,10 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.Runners
                 .UseWallet()
                 .AddPowPosMining()
                 .AddRPC()
+                .UseApi()
                 .MockIBD()
                 .SubstituteDateTimeProviderFor<MiningFeature>()
                 .Build();
-        }
-
-        public override void OnStart()
-        {
-            this.FullNode.Start();
         }
 
         /// <summary>
@@ -50,7 +47,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.Runners
         /// but all the features required for it are enabled.</remarks>
         public static IFullNode BuildStakingNode(string dataDir, bool staking = true)
         {
-            var nodeSettings = new NodeSettings(args: new string[] { $"-datadir={dataDir}", $"-stake={(staking ? 1 : 0)}", "-walletname=dummy", "-walletpassword=dummy" });
+            var nodeSettings = new NodeSettings(protocolVersion: ProtocolVersion.ALT_PROTOCOL_VERSION, args: new string[] { $"-datadir={dataDir}", $"-stake={(staking ? 1 : 0)}", "-walletname=dummy", "-walletpassword=dummy" });
             var fullNodeBuilder = new FullNodeBuilder(nodeSettings);
             IFullNode fullNode = fullNodeBuilder
                                 .UseBlockStore()

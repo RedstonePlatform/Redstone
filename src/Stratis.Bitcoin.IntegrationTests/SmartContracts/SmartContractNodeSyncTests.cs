@@ -12,9 +12,11 @@ namespace Stratis.Bitcoin.IntegrationTests.SmartContracts
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {
-                var node1 = builder.CreateSmartContractNode();
-                var node2 = builder.CreateSmartContractNode();
+                var node1 = builder.CreateSmartContractPowNode();
+                var node2 = builder.CreateSmartContractPowNode();
                 builder.StartAll();
+                node1.NotInIBD();
+                node2.NotInIBD();
                 Assert.Empty(node1.FullNode.ConnectionManager.ConnectedPeers);
                 Assert.Empty(node2.FullNode.ConnectionManager.ConnectedPeers);
                 var rpc1 = node1.CreateRPCClient();
@@ -22,11 +24,11 @@ namespace Stratis.Bitcoin.IntegrationTests.SmartContracts
                 Assert.Single(node1.FullNode.ConnectionManager.ConnectedPeers);
                 Assert.Single(node2.FullNode.ConnectionManager.ConnectedPeers);
 
-                var behavior = node1.FullNode.ConnectionManager.ConnectedPeers.First().Behaviors.Find<IConnectionManagerBehavior>();
-                Assert.False(behavior.Inbound);
+                var behavior = node1.FullNode.ConnectionManager.ConnectedPeers.First().Behaviors.OfType<IConnectionManagerBehavior>().FirstOrDefault();
+                Assert.False(behavior.AttachedPeer.Inbound);
                 Assert.True(behavior.OneTry);
-                behavior = node2.FullNode.ConnectionManager.ConnectedPeers.First().Behaviors.Find<IConnectionManagerBehavior>();
-                Assert.True(behavior.Inbound);
+                behavior = node2.FullNode.ConnectionManager.ConnectedPeers.First().Behaviors.OfType<IConnectionManagerBehavior>().FirstOrDefault();
+                Assert.True(behavior.AttachedPeer.Inbound);
                 Assert.False(behavior.OneTry);
             }
         }

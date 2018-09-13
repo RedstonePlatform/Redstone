@@ -1,18 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Text;
+using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using RuntimeObserver;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.State;
-using Stratis.SmartContracts.Core.State.AccountAbstractionLayer;
 using Stratis.SmartContracts.Core.Validation;
 using Stratis.SmartContracts.Executor.Reflection.Compilation;
 using Stratis.SmartContracts.Executor.Reflection.Exceptions;
-using Stratis.SmartContracts.Executor.Reflection.Lifecycle;
-using Block = Stratis.SmartContracts.Core.Block;
+using Stratis.SmartContracts.Executor.Reflection.ILRewrite;
+using Stratis.SmartContracts.Executor.Reflection.Loader;
 
 namespace Stratis.SmartContracts.Executor.Reflection
 {
@@ -21,257 +19,190 @@ namespace Stratis.SmartContracts.Executor.Reflection
     /// </summary>
     public class ReflectionVirtualMachine : ISmartContractVirtualMachine
     {
-        private readonly InternalTransactionExecutorFactory internalTransactionExecutorFactory;
         private readonly ILogger logger;
         private readonly Network network;
         private readonly ISmartContractValidator validator;
+        private readonly ILoader assemblyLoader;
+        private readonly IContractModuleDefinitionReader moduleDefinitionReader;
         public static int VmVersion = 1;
 
         public ReflectionVirtualMachine(ISmartContractValidator validator,
-            InternalTransactionExecutorFactory internalTransactionExecutorFactory,
             ILoggerFactory loggerFactory,
-            Network network)
+            Network network,
+            ILoader assemblyLoader,
+            IContractModuleDefinitionReader moduleDefinitionReader)
         {
             this.validator = validator;
-            this.internalTransactionExecutorFactory = internalTransactionExecutorFactory;
             this.logger = loggerFactory.CreateLogger(this.GetType());
             this.network = network;
+            this.assemblyLoader = assemblyLoader;
+            this.moduleDefinitionReader = moduleDefinitionReader;
         }
 
         /// <summary>
         /// Creates a new instance of a smart contract by invoking the contract's constructor
         /// </summary>
-        public VmExecutionResult Create(IGasMeter gasMeter,
-            IContractStateRepository repository,
-            ICreateData createData,
-            ITransactionContext transactionContext)
+        public VmExecutionResult Create(IContractState repository, ISmartContractState contractState, byte[] contractCode, object[] parameters, string typeName = null)
         {
             this.logger.LogTrace("()");
 
-            gasMeter.Spend((Gas)GasPriceList.BaseCost);
-
+            string typeToInstantiate;
+            ContractByteCode code;
+            
             // Decompile the contract execution code and validate it.
-            SmartContractDecompilation decompilation = SmartContractDecompiler.GetModuleDefinition(createData.ContractExecutionCode);
-
-            SmartContractValidationResult validation = this.validator.Validate(decompilation);
-
-            // If validation failed, refund the sender any remaining gas.
-            if (!validation.IsValid)
+            using (IContractModuleDefinition moduleDefinition = this.moduleDefinitionReader.Read(contractCode))
             {
-                this.logger.LogTrace("(-)[CONTRACT_VALIDATION_FAILED]");
-                return VmExecutionResult.Error(gasMeter.GasConsumed, new SmartContractValidationException(validation.Errors));
+                SmartContractValidationResult validation = moduleDefinition.Validate(this.validator);
+
+                // If validation failed, refund the sender any remaining gas.
+                if (!validation.IsValid)
+                {
+                    this.logger.LogTrace("(-)[CONTRACT_VALIDATION_FAILED]");
+                    // TODO: List errors by string.
+                    return VmExecutionResult.Error(new ContractErrorMessage(new SmartContractValidationException(validation.Errors).ToString()));
+                }
+
+                typeToInstantiate = typeName ?? moduleDefinition.ContractType.Name;
+
+                var observer = new Observer(contractState.GasMeter);
+                var rewriter = new ObserverRewriter(observer); 
+                moduleDefinition.Rewrite(rewriter);
+
+                code = moduleDefinition.ToByteCode();
             }
 
-            byte[] gasInjectedCode = SmartContractGasInjector.AddGasCalculationToConstructor(createData.ContractExecutionCode, decompilation.ContractType.Name);
+            Result<IContract> contractLoadResult = this.Load(
+                code,
+                typeToInstantiate,
+                contractState.Message.ContractAddress.ToUint160(this.network),
+                contractState);
 
-            Type contractType = Load(gasInjectedCode, decompilation.ContractType.Name);
-            
-            uint160 contractAddress = Core.NewContractAddressExtension.GetContractAddressFromTransactionHash(transactionContext.TransactionHash);
+            if (!contractLoadResult.IsSuccess)
+            {
+                LogErrorMessage(contractLoadResult.Error);
 
-            // Create an account for the contract in the state repository.
-            repository.CreateAccount(contractAddress);
-            
-            IPersistenceStrategy persistenceStrategy = new MeteredPersistenceStrategy(repository, gasMeter, new BasicKeyEncodingStrategy());
+                this.logger.LogTrace("(-)[LOAD_CONTRACT_FAILED]");
 
-            var persistentState = new PersistentState(persistenceStrategy, contractAddress, this.network);
+                return VmExecutionResult.Error(new ContractErrorMessage(contractLoadResult.Error));
+            }
 
-            var internalTransferList = new List<TransferInfo>();
+            IContract contract = contractLoadResult.Value;
 
-            IInternalTransactionExecutor internalTransactionExecutor = this.internalTransactionExecutorFactory.Create(this, repository, internalTransferList, transactionContext);
+            LogExecutionContext(this.logger, contract.State.Block, contract.State.Message, contract.Address);
 
-            var balanceState = new BalanceState(repository, transactionContext.Amount, internalTransferList);
-
-            var contractState = new SmartContractState(
-                new Block(
-                    transactionContext.BlockHeight,
-                    transactionContext.Coinbase.ToAddress(this.network)
-                ),
-                new Message(
-                    contractAddress.ToAddress(this.network),
-                    transactionContext.From.ToAddress(this.network),
-                    transactionContext.Amount,
-                    createData.GasLimit
-                ),
-                persistentState,
-                gasMeter,
-                internalTransactionExecutor,
-                new InternalHashHelper(),
-                () => balanceState.GetBalance(contractAddress));
-
-            LogExecutionContext(this.logger, contractState.Block, contractState.Message, contractAddress, createData);
+            // Set the code and the Type before the method is invoked
+            repository.SetCode(contract.Address, contractCode);
+            repository.SetContractType(contract.Address, typeToInstantiate);
 
             // Invoke the constructor of the provided contract code
-            LifecycleResult result = SmartContractConstructor.Construct(contractType, contractState, createData.MethodParameters);
+            IContractInvocationResult invocationResult = contract.InvokeConstructor(parameters);
 
-            if (!result.Success)
+            if (!invocationResult.IsSuccess)
             {
-                LogException(result.Exception);
-
-                this.logger.LogTrace("(-)[CREATE_CONTRACT_INSTANTIATION_FAILED]:{0}={1}", nameof(gasMeter.GasConsumed), gasMeter.GasConsumed);
-
-                return VmExecutionResult.Error(gasMeter.GasConsumed, result.Exception.InnerException ?? result.Exception);
+                this.logger.LogTrace("[CREATE_CONTRACT_INSTANTIATION_FAILED]");
+                return VmExecutionResult.Error(invocationResult.ErrorMessage);
             }
 
             this.logger.LogTrace("[CREATE_CONTRACT_INSTANTIATION_SUCCEEDED]");
             
-            this.logger.LogTrace("(-):{0}={1}, {2}={3}", nameof(contractAddress), contractAddress, nameof(gasMeter.GasConsumed), gasMeter.GasConsumed);
-
-            repository.SetCode(contractAddress, createData.ContractExecutionCode);
-            repository.SetContractType(contractAddress, contractType.Name);
-
-            return VmExecutionResult.CreationSuccess(contractAddress, internalTransferList, gasMeter.GasConsumed, result.Object);
+            this.logger.LogTrace("(-):{0}={1}", nameof(contract.Address), contract.Address);
+            
+            return VmExecutionResult.Success(invocationResult.Return, typeToInstantiate);
         }
 
         /// <summary>
         /// Invokes a method on an existing smart contract
         /// </summary>
-        public VmExecutionResult ExecuteMethod(
-            IGasMeter gasMeter,
-            IContractStateRepository repository,
-            ICallData callData,
-            ITransactionContext transactionContext)
+        public VmExecutionResult ExecuteMethod(ISmartContractState contractState, MethodCall methodCall, byte[] contractCode, string typeName)
         {
-            this.logger.LogTrace("(){0}:{1}", nameof(callData.MethodName), callData.MethodName);
+            this.logger.LogTrace("(){0}:{1}", nameof(methodCall.Name), methodCall.Name);
 
-            gasMeter.Spend((Gas)GasPriceList.BaseCost);
+            ContractByteCode code;
 
-            if (callData.MethodName == null)
+            using (IContractModuleDefinition moduleDefinition = this.moduleDefinitionReader.Read(contractCode))
             {
-                this.logger.LogTrace("(-)[CALLCONTRACT_METHODNAME_NOT_GIVEN]");
-                return VmExecutionResult.Error(gasMeter.GasConsumed, null);
+                var observer = new Observer(contractState.GasMeter);
+                var rewriter = new ObserverRewriter(observer);
+                moduleDefinition.Rewrite(rewriter);
+                code = moduleDefinition.ToByteCode();
             }
 
-            byte[] contractExecutionCode = repository.GetCode(callData.ContractAddress);
-            string typeName = repository.GetContractType(callData.ContractAddress);
+            Result<IContract> contractLoadResult = this.Load(
+                code,
+                typeName,
+                contractState.Message.ContractAddress.ToUint160(this.network),
+                contractState);
 
-            if (contractExecutionCode == null)
+            if (!contractLoadResult.IsSuccess)
             {
-                return VmExecutionResult.Error(gasMeter.GasConsumed, new SmartContractDoesNotExistException(callData.MethodName));
+                LogErrorMessage(contractLoadResult.Error);
+
+                this.logger.LogTrace("(-)[LOAD_CONTRACT_FAILED]");
+
+                return VmExecutionResult.Error(new ContractErrorMessage(contractLoadResult.Error));
             }
 
-            byte[] gasInjectedCode = SmartContractGasInjector.AddGasCalculationToContractMethod(contractExecutionCode, typeName, callData.MethodName);
-            
-            Type contractType = Load(gasInjectedCode, typeName);
+            IContract contract = contractLoadResult.Value;
 
-            if (contractType == null)
+            LogExecutionContext(this.logger, contract.State.Block, contract.State.Message, contract.Address);
+
+            IContractInvocationResult invocationResult = contract.Invoke(methodCall);
+
+            if (!invocationResult.IsSuccess)
             {
-                this.logger.LogTrace("(-)[CALLCONTRACT_CONTRACTTYPE_NULL]");
-                return VmExecutionResult.Error(gasMeter.GasConsumed, null);
+                this.logger.LogTrace("(-)[CALLCONTRACT_INSTANTIATION_FAILED]");
+                return VmExecutionResult.Error(invocationResult.ErrorMessage);
             }
 
-            uint160 contractAddress = callData.ContractAddress;
+            this.logger.LogTrace("[CALL_CONTRACT_INSTANTIATION_SUCCEEDED]");
 
-            IPersistenceStrategy persistenceStrategy = new MeteredPersistenceStrategy(repository, gasMeter, new BasicKeyEncodingStrategy());
+            this.logger.LogTrace("(-)");
 
-            IPersistentState persistentState = new PersistentState(persistenceStrategy, contractAddress, this.network);
-
-            var internalTransferList = new List<TransferInfo>();
-
-            IInternalTransactionExecutor internalTransactionExecutor = this.internalTransactionExecutorFactory.Create(this, repository, internalTransferList, transactionContext);
-
-            var balanceState = new BalanceState(repository, transactionContext.Amount, internalTransferList);
-
-            var contractState = new SmartContractState(
-                new Block(
-                    transactionContext.BlockHeight,
-                    transactionContext.Coinbase.ToAddress(this.network)
-                ),
-                new Message(
-                    callData.ContractAddress.ToAddress(this.network),
-                    transactionContext.From.ToAddress(this.network),
-                    transactionContext.Amount,
-                    callData.GasLimit
-                ),
-                persistentState,
-                gasMeter,
-                internalTransactionExecutor,
-                new InternalHashHelper(),
-                () => balanceState.GetBalance(callData.ContractAddress));
-
-            LogExecutionContext(this.logger, contractState.Block, contractState.Message, contractAddress, callData);
-
-            LifecycleResult result = SmartContractRestorer.Restore(contractType, contractState);
-
-            if (!result.Success)
-            {
-                LogException(result.Exception);
-
-                this.logger.LogTrace("(-)[CALLCONTRACT_INSTANTIATION_FAILED]:{0}={1}", nameof(gasMeter.GasConsumed), gasMeter.GasConsumed);
-               
-                return VmExecutionResult.Error(gasMeter.GasConsumed, result.Exception.InnerException ?? result.Exception);
-            }
-            else
-                this.logger.LogTrace("[CALL_CONTRACT_INSTANTIATION_SUCCEEDED]");
-
-            object methodResult = null;
-
-            try
-            {
-                MethodInfo methodToInvoke = contractType.GetMethod(callData.MethodName);
-                if (methodToInvoke == null)
-                    throw new ArgumentException(string.Format("[CALLCONTRACT_METHODTOINVOKE_NULL_DOESNOT_EXIST]:{0}={1}", nameof(callData.MethodName), callData.MethodName));
-
-                if (methodToInvoke.IsConstructor)
-                    throw new ConstructorInvocationException("[CALLCONTRACT_CANNOT_INVOKE_CTOR]");
-
-                SmartContract smartContract = result.Object;
-                methodResult = methodToInvoke.Invoke(smartContract, callData.MethodParameters);
-            }
-            catch (ArgumentException argumentException)
-            {
-                LogException(argumentException);
-                return VmExecutionResult.Error(gasMeter.GasConsumed, argumentException);
-            }
-            catch (TargetInvocationException targetException)
-            {
-                LogException(targetException);
-                return VmExecutionResult.Error(gasMeter.GasConsumed, targetException.InnerException ?? targetException);
-            }
-            catch (TargetParameterCountException parameterException)
-            {
-                LogException(parameterException);
-            }
-            catch (ConstructorInvocationException constructorInvocationException)
-            {
-                LogException(constructorInvocationException);
-                return VmExecutionResult.Error(gasMeter.GasConsumed, constructorInvocationException);
-            }
-
-            this.logger.LogTrace("(-):{0}={1}", nameof(gasMeter.GasConsumed), gasMeter.GasConsumed);
-
-            return VmExecutionResult.Success(internalTransferList, gasMeter.GasConsumed, methodResult);
-        }
-
-        private void LogException(Exception exception)
-        {
-            this.logger.LogTrace("{0}", exception.Message);
-            if (exception.InnerException != null)
-                this.logger.LogTrace("{0}", exception.InnerException.Message);
+            return VmExecutionResult.Success(invocationResult.Return, typeName);
         }
 
         /// <summary>
-        /// Loads the Assembly bytecode into the current AppDomain.
-        /// <para>
-        /// The contract should always be the only exported type.
-        /// </para>
+        /// Loads the contract bytecode and returns an <see cref="IContract"/> representing an uninitialized contract instance.
         /// </summary>
-        private static Type Load(byte[] byteCode, string typeName)
+        private Result<IContract> Load(
+            ContractByteCode byteCode,
+            string typeName, 
+            uint160 address,
+            ISmartContractState contractState)
         {
-            Assembly contractAssembly = Assembly.Load(byteCode);
-            return contractAssembly.ExportedTypes.FirstOrDefault(x=>x.Name == typeName);
+            Result<IContractAssembly> assemblyLoadResult = this.assemblyLoader.Load(byteCode);
+
+            if (!assemblyLoadResult.IsSuccess)
+            {
+                return Result.Fail<IContract>(assemblyLoadResult.Error);
+            }
+
+            IContractAssembly contractAssembly = assemblyLoadResult.Value;
+
+            Type type = contractAssembly.GetType(typeName);
+
+            if (type == null)
+            {
+                return Result.Fail<IContract>("Type not found!");
+            }
+
+            IContract contract = Contract.CreateUninitialized(type, contractState, address);
+
+            return Result.Ok(contract);
         }
 
-        internal void LogExecutionContext(ILogger logger, IBlock block, IMessage message, uint160 contractAddress, IBaseContractTransactionData callData)
+        private void LogErrorMessage(string error)
+        {
+            this.logger.LogTrace("{0}", error);
+        }
+
+        internal void LogExecutionContext(ILogger logger, IBlock block, IMessage message, uint160 contractAddress)
         {
             var builder = new StringBuilder();
 
             builder.Append(string.Format("{0}:{1},{2}:{3},", nameof(block.Coinbase), block.Coinbase, nameof(block.Number), block.Number));
             builder.Append(string.Format("{0}:{1},", nameof(contractAddress), contractAddress.ToAddress(this.network)));
-            builder.Append(string.Format("{0}:{1},{2}:{3},{4}:{5},{6}:{7}", nameof(message.ContractAddress), message.ContractAddress, nameof(message.GasLimit), message.GasLimit, nameof(message.Sender), message.Sender, nameof(message.Value), message.Value));
-
-            if (callData.MethodParameters != null && callData.MethodParameters.Length > 0)
-                builder.Append(string.Format(",{0}:{1}", nameof(callData.MethodParameters), callData.MethodParameters));
-
+            builder.Append(string.Format("{0}:{1},{2}:{3},{4}:{5}", nameof(message.ContractAddress), message.ContractAddress, nameof(message.Sender), message.Sender, nameof(message.Value), message.Value));
             logger.LogTrace("{0}", builder.ToString());
         }
     }

@@ -2,12 +2,12 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
-using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Controllers;
 using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.TestFramework;
 using Stratis.Bitcoin.Utilities.JsonErrors;
 using Xunit.Abstractions;
@@ -17,11 +17,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
     public partial class SendingStakedCoinsBeforeMaturity : BddSpecification
     {
         private ProofOfStakeSteps proofOfStakeSteps;
-        private const string NodeReceiver = "nodereceiver";
         private const decimal OneMillion = 1_000_000;
         private CoreNode receiverNode;
         private const string WalletName = "mywallet";
         private const string WalletPassword = "123456";
+        private const string WalletPassphrase = "passphrase";
         private const string WalletAccountName = "account 0";
 
         public SendingStakedCoinsBeforeMaturity(ITestOutputHelper outputHelper)
@@ -35,43 +35,39 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
 
         protected override void AfterTest()
         {
-            this.proofOfStakeSteps.NodeGroupBuilder?.Dispose();
+            this.proofOfStakeSteps.nodeBuilder.Dispose();
         }
 
         private void two_pos_nodes_with_one_node_having_a_wallet_with_premined_coins()
         {
-            this.proofOfStakeSteps.GenerateCoins();
+            this.proofOfStakeSteps.PremineNodeWithWallet();
+            this.proofOfStakeSteps.MineGenesisAndPremineBlocks();
 
-            this.proofOfStakeSteps.PremineNodeWithCoins.FullNode.WalletManager()
-                .GetSpendableTransactionsInWallet(this.proofOfStakeSteps.PremineWallet)
-                .Sum(utxo => utxo.Transaction.Amount)
-                .Should().BeGreaterThan(Money.Coins(OneMillion));
+            this.receiverNode = this.proofOfStakeSteps.nodeBuilder.CreateStratisPosNode(KnownNetworks.StratisRegTest);
+            this.receiverNode.Start();
+            this.receiverNode.NotInIBD();
+            this.receiverNode.FullNode.WalletManager().CreateWallet(WalletPassword, WalletName, WalletPassphrase);
 
-            this.receiverNode = this.proofOfStakeSteps.NodeGroupBuilder
-                                    .CreateStratisPosNode(NodeReceiver)
-                                    .Start()
-                                    .NotInIBD()
-                                    .WithWallet(WalletName, WalletPassword)
-                                    .Build()[NodeReceiver];
+            TestHelper.ConnectAndSync(this.proofOfStakeSteps.PremineNodeWithCoins, this.receiverNode);
         }
 
         private void a_wallet_sends_coins_before_maturity()
         {
             this.the_wallet_history_does_not_include_the_transaction();
 
-            IActionResult sendTransactionResult = this.SendTransaction(this.BuildTransaction());
+            IActionResult buildTransactionResult = this.BuildTransaction();
 
-            sendTransactionResult.Should().BeOfType<ErrorResult>();
+            buildTransactionResult.Should().BeOfType<ErrorResult>();
 
-            if (!(sendTransactionResult is ErrorResult))
-                return;
-
-            var error = sendTransactionResult as ErrorResult;
+            var error = buildTransactionResult as ErrorResult;
             error.StatusCode.Should().Be(400);
 
             var errorResponse = error.Value as ErrorResponse;
             errorResponse?.Errors.Count.Should().Be(1);
-            errorResponse?.Errors[0].Message.Should().Be(ConsensusErrors.BadTransactionPrematureCoinstakeSpending.Message);
+            errorResponse?.Errors[0].Message.Should().Be("No spendable transactions found.");
+
+            IActionResult sendTransactionResult = this.SendTransaction(buildTransactionResult);
+            sendTransactionResult.Should().BeNull();
         }
 
         private IActionResult SendTransaction(IActionResult transactionResult)
@@ -122,7 +118,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
 
         private string GetReceiverUnusedAddressFromWallet()
         {
-            this.proofOfStakeSteps.NodeGroupBuilder.WithConnections().Connect(this.proofOfStakeSteps.PremineNode, NodeReceiver);
             return this.receiverNode.FullNode.WalletManager().GetUnusedAddress(new WalletAccountReference(WalletName, WalletAccountName)).Address;
         }
     }

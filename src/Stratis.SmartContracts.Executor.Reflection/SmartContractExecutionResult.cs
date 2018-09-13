@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NBitcoin;
 using Stratis.SmartContracts.Core;
-using Stratis.SmartContracts.Core.Validation;
-using Stratis.SmartContracts.Executor.Reflection.Exceptions;
+using Stratis.SmartContracts.Core.Receipts;
 
 namespace Stratis.SmartContracts.Executor.Reflection
 {
@@ -16,13 +14,13 @@ namespace Stratis.SmartContracts.Executor.Reflection
         public uint160 NewContractAddress { get; set; }
 
         /// <inheritdoc/>
-        public Exception Exception { get; set; }
+        public uint160 To { get; set; }
 
         /// <inheritdoc/>
-        public bool Revert
-        {
-            get { return this.Exception != null; }
-        }
+        public ContractErrorMessage ErrorMessage { get; set; }
+
+        /// <inheritdoc/>
+        public bool Revert { get; set; }
 
         /// <inheritdoc/>
         public ulong FutureRefund { get; set; }
@@ -40,41 +38,15 @@ namespace Stratis.SmartContracts.Executor.Reflection
         public ulong Fee { get; set; }
 
         /// <inheritdoc/>
-        public List<TxOut> Refunds { get; set; }
+        public TxOut Refund { get; set; }
+
+        /// <inheritdoc />
+        public IList<Log> Logs { get; set; }
 
         public SmartContractExecutionResult()
         {
-            this.Refunds = new List<TxOut>();
+            this.Logs = new List<Log>();
         }
 
-        /// <summary>
-        /// Contract does not exist, so set the gas units used to a value from the price list and set
-        /// a <see cref="SmartContractDoesNotExistException"/>.
-        /// </summary>
-        internal static ISmartContractExecutionResult ContractDoesNotExist(string methodName)
-        {
-            var executionResult = new SmartContractExecutionResult
-            {
-                Exception = new SmartContractDoesNotExistException(methodName),
-                GasConsumed = GasPriceList.ContractDoesNotExist()
-            };
-
-            return executionResult;
-        }
-
-        /// <summary>
-        /// Contract validation failed, so set the gas units used to a value from the price list and set
-        /// the validation errors in a <see cref="SmartContractValidationException"/>.
-        /// </summary>
-        public static SmartContractExecutionResult ValidationFailed(SmartContractValidationResult validationResult)
-        {
-            var executionResult = new SmartContractExecutionResult
-            {
-                Exception = new SmartContractValidationException(validationResult.Errors),
-                GasConsumed = GasPriceList.ContractValidationFailed()
-            };
-
-            return executionResult;
-        }
     }
 }

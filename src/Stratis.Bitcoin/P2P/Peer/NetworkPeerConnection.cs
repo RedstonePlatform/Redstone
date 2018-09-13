@@ -14,7 +14,7 @@ using Stratis.Bitcoin.Utilities;
 namespace Stratis.Bitcoin.P2P.Peer
 {
     /// <summary>
-    /// Represents a network connection to a peer. It is responsible for reading incoming messages 
+    /// Represents a network connection to a peer. It is responsible for reading incoming messages
     /// from the peer and sending messages from the node to the peer.
     /// </summary>
     public class NetworkPeerConnection : IDisposable
@@ -74,7 +74,7 @@ namespace Stratis.Bitcoin.P2P.Peer
         /// <summary>Queue of incoming messages distributed to message consumers.</summary>
         public MessageProducer<IncomingMessage> MessageProducer { get; private set; }
 
-        /// <summary>Set to <c>1</c> if the peer disposal has been initiated, <c>0</c> otherwise.</summary> 
+        /// <summary>Set to <c>1</c> if the peer disposal has been initiated, <c>0</c> otherwise.</summary>
         private int disposed;
 
         /// <summary>
@@ -356,9 +356,11 @@ namespace Stratis.Bitcoin.P2P.Peer
             int lengthOffset = Message.CommandSize;
             uint length = BitConverter.ToUInt32(messageHeader, lengthOffset);
 
-            // 32 MB limit on message size from Bitcoin Core.
-            if (length > 0x02000000)
-                throw new ProtocolViolationException("Message payload too big (over 0x02000000 bytes)");
+            // 4 MB limit on message size.
+            // Limit is based on the largest valid object that we can receive which is the block.
+            // Max size of a block on segwit-enabled network is 4mb.
+            if (length > 0x00400000)
+                throw new ProtocolViolationException("Message payload too big (over 0x00400000 bytes)");
 
             // Read the payload.
             int magicLength = this.network.MagicBytes.Length;
@@ -401,8 +403,8 @@ namespace Stratis.Bitcoin.P2P.Peer
                     // If we did not receive the next byte we expected
                     // we either received the first byte of the magic value
                     // or not. If yes, we set index to 0 here, which is then
-                    // incremented in for loop to 1 and we thus continue 
-                    // with the second byte. Otherwise, we set index to -1 
+                    // incremented in for loop to 1 and we thus continue
+                    // with the second byte. Otherwise, we set index to -1
                     // here, which means that after the loop incrementation,
                     // we will start from first byte of magic.
                     i = receivedByte == magic[0] ? 0 : -1;
@@ -481,7 +483,7 @@ namespace Stratis.Bitcoin.P2P.Peer
                 this.logger.LogTrace("(-)[DISPOSED]");
                 return;
             }
-            
+
             this.Disconnect();
 
             this.CancellationSource.Cancel();
@@ -493,7 +495,7 @@ namespace Stratis.Bitcoin.P2P.Peer
 
             this.CancellationSource.Dispose();
             this.writeLock.Dispose();
-            
+
             this.logger.LogTrace("(-)");
         }
 
@@ -509,7 +511,7 @@ namespace Stratis.Bitcoin.P2P.Peer
 
             this.stream = null;
             this.tcpClient = null;
-          
+
             disposeStream?.Dispose();
             disposeTcpClient?.Dispose();
 

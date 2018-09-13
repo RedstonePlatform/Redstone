@@ -1,17 +1,17 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
 {
     /// <inheritdoc />
-    [FullValidationRule]
     public sealed class PowCoinviewRule : CoinViewRule
     {
         /// <summary>Consensus parameters.</summary>
-        private NBitcoin.Consensus consensus;
+        private IConsensus consensus;
 
         /// <inheritdoc />
         public override void Initialize()

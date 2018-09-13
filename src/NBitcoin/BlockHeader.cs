@@ -67,16 +67,16 @@ namespace NBitcoin
             this.nonce = 0;
         }
 
-        public static BlockHeader Load(byte[] hex, Network network)
+        public static BlockHeader Load(byte[] bytes, Network network)
         {
-            if (hex == null)
-                throw new ArgumentNullException(nameof(hex));
+            if (bytes == null)
+                throw new ArgumentNullException(nameof(bytes));
 
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
 
             BlockHeader blockHeader = network.Consensus.ConsensusFactory.CreateBlockHeader();
-            blockHeader.ReadWrite(hex, network.Consensus.ConsensusFactory);
+            blockHeader.ReadWrite(bytes, network.Consensus.ConsensusFactory);
 
             return blockHeader;
         }
@@ -163,6 +163,7 @@ namespace NBitcoin
             return this.GetPoWHash() <= this.Bits.ToUInt256();
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             return this.GetHash().ToString();
@@ -174,7 +175,7 @@ namespace NBitcoin
         /// <param name="now">The expected date.</param>
         /// <param name="consensus">Consensus.</param>
         /// <param name="prev">Previous block.</param>
-        public void UpdateTime(DateTimeOffset now, Consensus consensus, ChainedHeader prev)
+        public void UpdateTime(DateTimeOffset now, IConsensus consensus, ChainedHeader prev)
         {
             DateTimeOffset nOldTime = this.BlockTime;
             DateTimeOffset mtp = prev.GetMedianTimePast() + TimeSpan.FromSeconds(1);
@@ -204,7 +205,7 @@ namespace NBitcoin
             return this.GetWorkRequired(network.Consensus, prev);
         }
 
-        public Target GetWorkRequired(Consensus consensus, ChainedHeader prev)
+        public Target GetWorkRequired(IConsensus consensus, ChainedHeader prev)
         {
             return new ChainedHeader(this, this.GetHash(), prev).GetWorkRequired(consensus);
         }

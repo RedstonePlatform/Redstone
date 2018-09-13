@@ -20,11 +20,10 @@ namespace Stratis.SmartContracts.Core.State.AccountAbstractionLayer
         /// </summary>
         private readonly Dictionary<uint160, uint> nVouts;
 
-
         /// <summary>
         /// Reference to the current smart contract state.
         /// </summary>
-        private readonly IContractStateRepository stateRepository;
+        private readonly IContractState stateRepository;
 
         /// <summary>
         /// Address of the contract that was just called or created.
@@ -39,7 +38,7 @@ namespace Stratis.SmartContracts.Core.State.AccountAbstractionLayer
         /// <summary>
         /// All of the transfers that happened internally inside of the contract execution.
         /// </summary>
-        private readonly IList<TransferInfo> transfers;
+        private readonly IReadOnlyList<TransferInfo> transfers;
 
         /// <summary>
         /// New balances for each address involved through all transfers made.
@@ -53,10 +52,10 @@ namespace Stratis.SmartContracts.Core.State.AccountAbstractionLayer
 
         private readonly Network network;
 
-        public TransactionCondenser(uint160 contractAddress, ILoggerFactory loggerFactory, IList<TransferInfo> transfers, IContractStateRepository stateRepository, Network network, ISmartContractTransactionContext transactionContext)
+        public TransactionCondenser(uint160 contractAddress, ILoggerFactory loggerFactory, IReadOnlyList<TransferInfo> transfers, IContractState stateRepository, Network network, ISmartContractTransactionContext transactionContext)
         {
             this.contractAddress = contractAddress;
-            this.logger = loggerFactory.CreateLogger(this.GetType());
+            this.logger = loggerFactory.CreateLogger(this.GetType().Name);
             this.network = network;
             this.transactionContext = transactionContext;
             this.stateRepository = stateRepository;
@@ -82,12 +81,13 @@ namespace Stratis.SmartContracts.Core.State.AccountAbstractionLayer
         /// </summary>
         private Transaction BuildTransaction()
         {
-            var tx = new Transaction();
+            Transaction tx = this.network.CreateTransaction();
+            tx.Time = this.transactionContext.Time; // set to time of actual transaction.
 
             foreach (ContractUnspentOutput vin in this.unspents)
             {
                 var outpoint = new OutPoint(vin.Hash, vin.Nvout);
-                tx.AddInput(new TxIn(outpoint, new Script(new [] { (byte) ScOpcodeType.OP_SPEND})));
+                tx.AddInput(new TxIn(outpoint, new Script(new[] { (byte)ScOpcodeType.OP_SPEND })));
             }
 
             foreach (TxOut txOut in this.GetOutputs())
