@@ -1,11 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using NBitcoin;
-using NBitcoin.BouncyCastle.Math;
+﻿using System.Linq;
+using Stratis.Bitcoin.Features.Wallet;
 
 namespace Redstone.Core.Networks
 {
+    using System;
+    using System.Collections.Generic;
+    using NBitcoin;
+    using NBitcoin.BouncyCastle.Math;
+
     public class RedstoneTest : RedstoneMain
     {
         public RedstoneTest()
@@ -26,11 +28,75 @@ namespace Redstone.Core.Networks
             this.RPCPort = 19157;
             this.CoinTicker = "TXRD";
 
-            this.Consensus.PowLimit = new Target(new uint256("0000ffff00000000000000000000000000000000000000000000000000000000"));
-            this.Consensus.ProofOfStakeLimit = new BigInteger(uint256.Parse("0000ffff00000000000000000000000000000000000000000000000000000000").ToBytes(false));
-            this.Consensus.ProofOfStakeLimitV2 = new BigInteger(uint256.Parse("0000ffff00000000000000000000000000000000000000000000000000000000").ToBytes(false));
-            this.Consensus.DefaultAssumeValid = new uint256("0x98fa6ef0bca5b431f15fd79dc6f879dc45b83ed4b1bbe933a383ef438321958e"); // 372652
-            this.Consensus.CoinbaseMaturity = 10;
+            var powLimit = new Target(new uint256("0000ffff00000000000000000000000000000000000000000000000000000000"));
+
+            var consensusFactory = new PosConsensusFactory();
+
+            // Create the genesis block.
+            this.GenesisTime = 1530256857;
+            this.GenesisNonce = 1349369;
+            this.GenesisBits = this.Consensus.PowLimit;
+            this.GenesisVersion = 1;
+            this.GenesisReward = Money.Zero;
+
+            Block genesisBlock = CreateRedstoneGenesisBlock(consensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion, this.GenesisReward);
+            
+            genesisBlock.Header.Time = 1493909211;
+            genesisBlock.Header.Nonce = 2433759;
+            genesisBlock.Header.Bits = powLimit;
+
+            this.Genesis = genesisBlock;
+
+            // Taken from StratisX.
+            var consensusOptions = new PosConsensusOptions(
+                maxBlockBaseSize: 1_000_000,
+                maxStandardVersion: 2,
+                maxStandardTxWeight: 100_000,
+                maxBlockSigopsCost: 20_000
+            );
+
+            var buriedDeployments = new BuriedDeploymentsArray
+            {
+                [BuriedDeployments.BIP34] = 0,
+                [BuriedDeployments.BIP65] = 0,
+                [BuriedDeployments.BIP66] = 0
+            };
+
+            var bip9Deployments = new BIP9DeploymentsArray();
+
+            this.Consensus = new Consensus(
+                consensusFactory: consensusFactory,
+                consensusOptions: consensusOptions,
+                coinType: (int)CoinType.Redstone, // unique coin type TODO how do we get this added
+                hashGenesisBlock: genesisBlock.GetHash(),
+                subsidyHalvingInterval: 210000,
+                majorityEnforceBlockUpgrade: 750,
+                majorityRejectBlockOutdated: 950,
+                majorityWindow: 1000,
+                buriedDeployments: buriedDeployments,
+                bip9Deployments: bip9Deployments,
+                bip34Hash: new uint256("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"),
+                ruleChangeActivationThreshold: 1916, // 95% of 2016
+                minerConfirmationWindow: 2016, // nPowTargetTimespan / nPowTargetSpacing
+                maxReorgLength: 500,
+                defaultAssumeValid: new uint256("0x98fa6ef0bca5b431f15fd79dc6f879dc45b83ed4b1bbe933a383ef438321958e"), // 372652
+                maxMoney: long.MaxValue,
+                coinbaseMaturity: 10,
+                premineHeight: 2,
+                premineReward: Money.Coins(10000000),
+                proofOfWorkReward: Money.Coins(10),
+                powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
+                powTargetSpacing: TimeSpan.FromSeconds(10 * 60),
+                powAllowMinDifficultyBlocks: false,
+                powNoRetargeting: false,
+                powLimit: powLimit,
+                minimumChainWork: null,
+                isProofOfStake: true,
+                lastPowBlock: 500,
+                proofOfStakeLimit: new BigInteger(uint256.Parse("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false)),
+                proofOfStakeLimitV2: new BigInteger(uint256.Parse("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false)),
+                proofOfStakeReward: Money.COIN
+            );
 
             this.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS] = new byte[] { (65) };
             this.Base58Prefixes[(int)Base58Type.SCRIPT_ADDRESS] = new byte[] { (196) };
@@ -48,21 +114,12 @@ namespace Redstone.Core.Networks
                 new DNSSeedData("seednode1", "80.211.88.201"),
             };
 
-            this.SeedNodes = this.ConvertToNetworkAddresses(new string[]
+            this.SeedNodes = this.ConvertToNetworkAddresses(new []
             {
                 "80.211.88.201", "80.211.88.233", "80.211.88.244"
             }, this.DefaultPort).ToList();
 
-            // Create the genesis block.
-            this.GenesisTime = 1530256857;
-            this.GenesisNonce = 1349369;
-            this.GenesisBits = this.Consensus.PowLimit;
-            this.GenesisVersion = 1;
-            this.GenesisReward = Money.Zero;
-
-            this.Genesis = CreateRedstoneGenesisBlock(this.Consensus.ConsensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion, this.GenesisReward);
-            this.Consensus.HashGenesisBlock = this.Genesis.GetHash();
-            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("0ecac183d0f31c87aee57f8fd0a49a9ac185ce0a9f649c777823180ebf7efe2a"));
+            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("6076e1f485f447ee49cc8d808cb3c71480d1451f3dc749325aa4ff20eb7b5538"));
         }
     }
 }

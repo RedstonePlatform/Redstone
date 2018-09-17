@@ -161,6 +161,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redstone.Core", "Redstone\C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redstone.Core.Tests", "Redstone\Tests\Redstone.Core.Tests\Redstone.Core.Tests.csproj", "{509608B1-9FE1-46A3-A3E0-D2FCB1140C12}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RuntimeObserver", "RuntimeObserver\RuntimeObserver.csproj", "{B7D209D4-C998-421D-834D-189F3C42699F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -411,6 +413,10 @@ Global
 		{509608B1-9FE1-46A3-A3E0-D2FCB1140C12}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{509608B1-9FE1-46A3-A3E0-D2FCB1140C12}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{509608B1-9FE1-46A3-A3E0-D2FCB1140C12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7D209D4-C998-421D-834D-189F3C42699F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7D209D4-C998-421D-834D-189F3C42699F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7D209D4-C998-421D-834D-189F3C42699F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7D209D4-C998-421D-834D-189F3C42699F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -475,6 +481,7 @@ Global
 		{907B4ED0-445F-48EB-9A94-F2EE25E5137D} = {14FAE76E-2EE8-44AF-B322-35B8D59301CF}
 		{E92AFBC7-E451-4780-879D-DA29952E8218} = {907B4ED0-445F-48EB-9A94-F2EE25E5137D}
 		{509608B1-9FE1-46A3-A3E0-D2FCB1140C12} = {E95F76D5-5391-4F7B-88E4-4FF69606CF54}
+		{B7D209D4-C998-421D-834D-189F3C42699F} = {1B9A916F-DDAC-4675-B424-EDEDC1A58231}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6C780ABA-5872-4B83-AD3F-A5BD423AD907}

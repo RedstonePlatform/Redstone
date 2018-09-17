@@ -1,15 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using NBitcoin;
-using NBitcoin.BouncyCastle.Math;
-using NBitcoin.DataEncoders;
-using Stratis.Bitcoin.Features.Wallet;
-
-namespace Redstone.Core.Networks
+﻿namespace Redstone.Core.Networks
 {
-    public class RedstoneMain : RedstoneBase
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using NBitcoin;
+    using NBitcoin.BouncyCastle.Math;
+    using NBitcoin.DataEncoders;
+    using Stratis.Bitcoin.Features.Wallet;
+
+    public class RedstoneMain : Network
     {
+        /// <summary> Redstone maximal value for the calculated time offset. If the value is over this limit, the time syncing feature will be switched off. </summary>
+        public const int RedstoneMaxTimeOffsetSeconds = 25 * 60;
+
+        /// <summary> Redstone default value for the maximum tip age in seconds to consider the node in initial block download (2 hours). </summary>
+        public const int RedstoneDefaultMaxTipAgeInSeconds = 2 * 60 * 60;
+
+        /// <summary> The name of the root folder containing the different Redstone blockchains (RedstoneMain, RedstoneTest, RedstoneRegTest). </summary>
+        public const string RedstoneRootFolderName = "redstone";
+
+        /// <summary> The default name used for the Redstone configuration file. </summary>
+        public const string RedstoneDefaultConfigFilename = "redstone.conf";
+
         public RedstoneMain()
         {
             // The message start string is designed to be unlikely to occur in normal data.
@@ -35,35 +47,69 @@ namespace Redstone.Core.Networks
             this.MaxTimeOffsetSeconds = RedstoneMaxTimeOffsetSeconds;
             this.CoinTicker = "XRD";
 
-            this.Consensus.SubsidyHalvingInterval = 210000;
-            this.Consensus.MajorityEnforceBlockUpgrade = 750;
-            this.Consensus.MajorityRejectBlockOutdated = 950;
-            this.Consensus.MajorityWindow = 1000;
-            this.Consensus.BuriedDeployments[BuriedDeployments.BIP34] = 0;
-            this.Consensus.BuriedDeployments[BuriedDeployments.BIP65] = 0;
-            this.Consensus.BuriedDeployments[BuriedDeployments.BIP66] = 0;
-            this.Consensus.BIP34Hash = new uint256("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
-            this.Consensus.PowLimit = new Target(new uint256("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
-            this.Consensus.PowTargetTimespan = TimeSpan.FromSeconds(14 * 24 * 60 * 60); // two weeks
-            this.Consensus.PowTargetSpacing = TimeSpan.FromSeconds(10 * 60);
-            this.Consensus.PowAllowMinDifficultyBlocks = false;
-            this.Consensus.PowNoRetargeting = false;
-            this.Consensus.RuleChangeActivationThreshold = 1916; // 95% of 2016
-            this.Consensus.MinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
-            this.Consensus.LastPOWBlock = 500;
-            this.Consensus.IsProofOfStake = true;
-            this.Consensus.ConsensusFactory = new PosConsensusFactory();
-            this.Consensus.ProofOfStakeLimit = new BigInteger(uint256.Parse("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false));
-            this.Consensus.ProofOfStakeLimitV2 = new BigInteger(uint256.Parse("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false));
-            this.Consensus.CoinType = (int)CoinType.Redstone; // unique coin type TODO how do we get this added
-            this.Consensus.DefaultAssumeValid = new uint256("0x55a8205ae4bbf18f4d238c43f43005bd66e0b1f679b39e2c5c62cf6903693a5e"); // 795970
-            this.Consensus.CoinbaseMaturity = 50;
-            this.Consensus.PremineReward = Money.Coins(10000000);
-            this.Consensus.PremineHeight = 2;
-            this.Consensus.ProofOfWorkReward = Money.Coins(10);
-            this.Consensus.ProofOfStakeReward = Money.COIN;
-            this.Consensus.MaxReorgLength = 500;
-            this.Consensus.MaxMoney = long.MaxValue;
+            var consensusFactory = new PosConsensusFactory();
+
+            // Create the genesis block.
+            this.GenesisTime = 1470467000;
+            this.GenesisNonce = 1831645;
+            this.GenesisBits = 0x1e0fffff;
+            this.GenesisVersion = 1;
+            this.GenesisReward = Money.Zero;
+
+            Block genesisBlock = CreateRedstoneGenesisBlock(consensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion, this.GenesisReward);
+
+            this.Genesis = genesisBlock;
+
+            // Taken from StratisX.
+            var consensusOptions = new PosConsensusOptions(
+                maxBlockBaseSize: 1_000_000,
+                maxStandardVersion: 2,
+                maxStandardTxWeight: 100_000,
+                maxBlockSigopsCost: 20_000
+            );
+
+            var buriedDeployments = new BuriedDeploymentsArray
+            {
+                [BuriedDeployments.BIP34] = 0,
+                [BuriedDeployments.BIP65] = 0,
+                [BuriedDeployments.BIP66] = 0
+            };
+
+            var bip9Deployments = new BIP9DeploymentsArray();
+
+            this.Consensus = new Consensus(
+                consensusFactory: consensusFactory,
+                consensusOptions: consensusOptions,
+                coinType: (int)CoinType.Redstone, // unique coin type TODO how do we get this added
+                hashGenesisBlock: genesisBlock.GetHash(),
+                subsidyHalvingInterval: 210000,
+                majorityEnforceBlockUpgrade: 750,
+                majorityRejectBlockOutdated: 950,
+                majorityWindow: 1000,
+                buriedDeployments: buriedDeployments,
+                bip9Deployments: bip9Deployments,
+                bip34Hash: new uint256("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"),
+                ruleChangeActivationThreshold: 1916, // 95% of 2016
+                minerConfirmationWindow: 2016, // nPowTargetTimespan / nPowTargetSpacing
+                maxReorgLength: 500,
+                defaultAssumeValid: new uint256("0x55a8205ae4bbf18f4d238c43f43005bd66e0b1f679b39e2c5c62cf6903693a5e"), // 795970
+                maxMoney: long.MaxValue,
+                coinbaseMaturity: 50,
+                premineHeight: 2,
+                premineReward: Money.Coins(10000000),
+                proofOfWorkReward: Money.Coins(10),
+                powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
+                powTargetSpacing: TimeSpan.FromSeconds(10 * 60),
+                powAllowMinDifficultyBlocks: false,
+                powNoRetargeting: false,
+                powLimit: new Target(new uint256("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")),
+                minimumChainWork: null,
+                isProofOfStake: true,
+                lastPowBlock: 500,
+                proofOfStakeLimit: new BigInteger(uint256.Parse("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false)),
+                proofOfStakeLimitV2: new BigInteger(uint256.Parse("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false)),
+                proofOfStakeReward: Money.COIN
+            );
 
             this.Base58Prefixes = new byte[12][];
             this.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS] = new byte[] { (63) };
@@ -82,6 +128,7 @@ namespace Redstone.Core.Networks
             this.Checkpoints = new Dictionary<int, CheckpointInfo>
             {
             };
+
             var encoder = new Bech32Encoder("bc");
             this.Bech32Encoders = new Bech32Encoder[2];
             this.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS] = encoder;
@@ -98,18 +145,37 @@ namespace Redstone.Core.Networks
             })*/;
 
             this.SeedNodes = this.ConvertToNetworkAddresses(new string[] { /*"35.176.127.127", "35.176.127.127"*/}, this.DefaultPort).ToList();
+            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("c25b823deb69fdc740c3142dfdfb155274655905e2120e82ebf88818a552a5a0"));
+            Assert(this.Genesis.Header.HashMerkleRoot == uint256.Parse("0ad80b454d4060b0f9bc821d94ec14da59ea7194a9fd3875b31c14873d202b7d"));
+        }
 
-            // Create the genesis block.
-            this.GenesisTime = 1470467000;
-            this.GenesisNonce = 1831645;
-            this.GenesisBits = 0x1e0fffff;
-            this.GenesisVersion = 1;
-            this.GenesisReward = Money.Zero;
-
-            this.Genesis = CreateRedstoneGenesisBlock(this.Consensus.ConsensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion, this.GenesisReward);
-            this.Consensus.HashGenesisBlock = this.Genesis.GetHash();
-            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("f0df827e7b388fc76cfe479abf10b7ee2769a16a94d0d1c3b6432d74a796f1e3"));
-            Assert(this.Genesis.Header.HashMerkleRoot == uint256.Parse("76417fee12594f59b7a15a7811b562736677557ec68aef76c5c758440017fb49"));
+        protected static Block CreateRedstoneGenesisBlock(ConsensusFactory consensusFactory, uint nTime, uint nNonce, uint nBits, int nVersion, Money genesisReward)
+        {
+            string pszTimestamp = "http://www.escapistmagazine.com/news/view/109385-Computer-Built-in-Minecraft-Has-RAM-Performs-Division";
+            Transaction txNew = consensusFactory.CreateTransaction();
+            txNew.Version = 1;
+            txNew.Time = nTime;
+            txNew.AddInput(new TxIn()
+            {
+                ScriptSig = new Script(Op.GetPushOp(0), new Op()
+                {
+                    Code = (OpcodeType)0x1,
+                    PushData = new[] { (byte)42 }
+                }, Op.GetPushOp(Encoders.ASCII.DecodeData(pszTimestamp)))
+            });
+            txNew.AddOutput(new TxOut()
+            {
+                Value = genesisReward,
+            });
+            Block genesis = consensusFactory.CreateBlock();
+            genesis.Header.BlockTime = Utils.UnixTimeToDateTime(nTime);
+            genesis.Header.Bits = nBits;
+            genesis.Header.Nonce = nNonce;
+            genesis.Header.Version = nVersion;
+            genesis.Transactions.Add(txNew);
+            genesis.Header.HashPrevBlock = uint256.Zero;
+            genesis.UpdateMerkleRoot();
+            return genesis;
         }
     }
 }

@@ -38,13 +38,13 @@ namespace Redstone.Core.Tests
             Assert.Equal(0, network.SeedNodes.Count);
 
             Assert.Equal("RedstoneMain", network.Name);
-            Assert.Equal(RedstoneBase.RedstoneRootFolderName, network.RootFolderName);
-            Assert.Equal(RedstoneBase.RedstoneDefaultConfigFilename, network.DefaultConfigFilename);
+            Assert.Equal(RedstoneMain.RedstoneRootFolderName, network.RootFolderName);
+            Assert.Equal(RedstoneMain.RedstoneDefaultConfigFilename, network.DefaultConfigFilename);
             Assert.Equal(0x5223570.ToString(), network.Magic.ToString());
             Assert.Equal(19056, network.DefaultPort);
             Assert.Equal(19057, network.RPCPort);
-            Assert.Equal(RedstoneBase.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
-            Assert.Equal(RedstoneBase.RedstoneDefaultMaxTipAgeInSeconds, network.MaxTipAge);
+            Assert.Equal(RedstoneMain.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
+            Assert.Equal(RedstoneMain.RedstoneDefaultMaxTipAgeInSeconds, network.MaxTipAge);
             Assert.Equal(10000, network.MinTxFee);
             Assert.Equal(60000, network.FallbackFee);
             Assert.Equal(10000, network.MinRelayTxFee);
@@ -52,27 +52,27 @@ namespace Redstone.Core.Tests
 
             Assert.Equal(2, network.Bech32Encoders.Length);
             Assert.Equal(new Bech32Encoder("bc").ToString(),
-                network.Bech32Encoders[(int) Bech32Type.WITNESS_PUBKEY_ADDRESS].ToString());
+                network.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS].ToString());
             Assert.Equal(new Bech32Encoder("bc").ToString(),
-                network.Bech32Encoders[(int) Bech32Type.WITNESS_SCRIPT_ADDRESS].ToString());
+                network.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS].ToString());
 
             Assert.Equal(12, network.Base58Prefixes.Length);
-            Assert.Equal(new byte[] {(63)}, network.Base58Prefixes[(int) Base58Type.PUBKEY_ADDRESS]);
-            Assert.Equal(new byte[] {(125)}, network.Base58Prefixes[(int) Base58Type.SCRIPT_ADDRESS]);
-            Assert.Equal(new byte[] {(63 + 128)}, network.Base58Prefixes[(int) Base58Type.SECRET_KEY]);
-            Assert.Equal(new byte[] {0x01, 0x42}, network.Base58Prefixes[(int) Base58Type.ENCRYPTED_SECRET_KEY_NO_EC]);
-            Assert.Equal(new byte[] {0x01, 0x43}, network.Base58Prefixes[(int) Base58Type.ENCRYPTED_SECRET_KEY_EC]);
-            Assert.Equal(new byte[] {(0x04), (0x88), (0xB2), (0x1E)},
-                network.Base58Prefixes[(int) Base58Type.EXT_PUBLIC_KEY]);
-            Assert.Equal(new byte[] {(0x04), (0x88), (0xAD), (0xE4)},
-                network.Base58Prefixes[(int) Base58Type.EXT_SECRET_KEY]);
-            Assert.Equal(new byte[] {0x2C, 0xE9, 0xB3, 0xE1, 0xFF, 0x39, 0xE2},
-                network.Base58Prefixes[(int) Base58Type.PASSPHRASE_CODE]);
-            Assert.Equal(new byte[] {0x64, 0x3B, 0xF6, 0xA8, 0x9A},
-                network.Base58Prefixes[(int) Base58Type.CONFIRMATION_CODE]);
-            Assert.Equal(new byte[] {0x2a}, network.Base58Prefixes[(int) Base58Type.STEALTH_ADDRESS]);
-            Assert.Equal(new byte[] {23}, network.Base58Prefixes[(int) Base58Type.ASSET_ID]);
-            Assert.Equal(new byte[] {0x13}, network.Base58Prefixes[(int) Base58Type.COLORED_ADDRESS]);
+            Assert.Equal(new byte[] { (63) }, network.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS]);
+            Assert.Equal(new byte[] { (125) }, network.Base58Prefixes[(int)Base58Type.SCRIPT_ADDRESS]);
+            Assert.Equal(new byte[] { (63 + 128) }, network.Base58Prefixes[(int)Base58Type.SECRET_KEY]);
+            Assert.Equal(new byte[] { 0x01, 0x42 }, network.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_NO_EC]);
+            Assert.Equal(new byte[] { 0x01, 0x43 }, network.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_EC]);
+            Assert.Equal(new byte[] { (0x04), (0x88), (0xB2), (0x1E) },
+                network.Base58Prefixes[(int)Base58Type.EXT_PUBLIC_KEY]);
+            Assert.Equal(new byte[] { (0x04), (0x88), (0xAD), (0xE4) },
+                network.Base58Prefixes[(int)Base58Type.EXT_SECRET_KEY]);
+            Assert.Equal(new byte[] { 0x2C, 0xE9, 0xB3, 0xE1, 0xFF, 0x39, 0xE2 },
+                network.Base58Prefixes[(int)Base58Type.PASSPHRASE_CODE]);
+            Assert.Equal(new byte[] { 0x64, 0x3B, 0xF6, 0xA8, 0x9A },
+                network.Base58Prefixes[(int)Base58Type.CONFIRMATION_CODE]);
+            Assert.Equal(new byte[] { 0x2a }, network.Base58Prefixes[(int)Base58Type.STEALTH_ADDRESS]);
+            Assert.Equal(new byte[] { 23 }, network.Base58Prefixes[(int)Base58Type.ASSET_ID]);
+            Assert.Equal(new byte[] { 0x13 }, network.Base58Prefixes[(int)Base58Type.COLORED_ADDRESS]);
 
             Assert.Equal(210000, network.Consensus.SubsidyHalvingInterval);
             Assert.Equal(750, network.Consensus.MajorityEnforceBlockUpgrade);
@@ -95,7 +95,7 @@ namespace Redstone.Core.Tests
             Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.TestDummy]);
             Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.CSV]);
             Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.Segwit]);
-            Assert.Equal(12500, network.Consensus.LastPOWBlock);
+            Assert.Equal(500, network.Consensus.LastPOWBlock);
             Assert.True(network.Consensus.IsProofOfStake);
             Assert.Equal(787264, network.Consensus.CoinType);
             Assert.Equal(
@@ -111,13 +111,13 @@ namespace Redstone.Core.Tests
             Assert.Equal(2, network.Consensus.PremineHeight);
             Assert.Equal(Money.Coins(10), network.Consensus.ProofOfWorkReward);
             Assert.Equal(Money.Coins(1), network.Consensus.ProofOfStakeReward);
-            Assert.Equal((uint) 500, network.Consensus.MaxReorgLength);
+            Assert.Equal((uint)500, network.Consensus.MaxReorgLength);
             Assert.Equal(long.MaxValue, network.Consensus.MaxMoney);
 
             Block genesis = network.GetGenesis();
-            Assert.Equal(uint256.Parse("0xf0df827e7b388fc76cfe479abf10b7ee2769a16a94d0d1c3b6432d74a796f1e3"),
+            Assert.Equal(uint256.Parse("0xc25b823deb69fdc740c3142dfdfb155274655905e2120e82ebf88818a552a5a0"),
                 genesis.GetHash());
-            Assert.Equal(uint256.Parse("0x76417fee12594f59b7a15a7811b562736677557ec68aef76c5c758440017fb49"),
+            Assert.Equal(uint256.Parse("0x0ad80b454d4060b0f9bc821d94ec14da59ea7194a9fd3875b31c14873d202b7d"),
                 genesis.Header.HashMerkleRoot);
         }
 
@@ -128,17 +128,17 @@ namespace Redstone.Core.Tests
             Network network = RedstoneNetworks.RedstoneTest;
 
             Assert.Equal(0, network.Checkpoints.Count);
-            Assert.Equal(0, network.DNSSeeds.Count);
-            Assert.Equal(4, network.SeedNodes.Count);
+            Assert.Equal(1, network.DNSSeeds.Count);
+            Assert.Equal(3, network.SeedNodes.Count);
 
             Assert.Equal("RedstoneTest", network.Name);
-            Assert.Equal(RedstoneBase.RedstoneRootFolderName, network.RootFolderName);
-            Assert.Equal(RedstoneBase.RedstoneDefaultConfigFilename, network.DefaultConfigFilename);
+            Assert.Equal(RedstoneMain.RedstoneRootFolderName, network.RootFolderName);
+            Assert.Equal(RedstoneMain.RedstoneDefaultConfigFilename, network.DefaultConfigFilename);
             Assert.Equal(0x11233171.ToString(), network.Magic.ToString());
             Assert.Equal(19156, network.DefaultPort);
             Assert.Equal(19157, network.RPCPort);
-            Assert.Equal(RedstoneBase.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
-            Assert.Equal(RedstoneBase.RedstoneDefaultMaxTipAgeInSeconds, network.MaxTipAge);
+            Assert.Equal(RedstoneMain.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
+            Assert.Equal(RedstoneMain.RedstoneDefaultMaxTipAgeInSeconds, network.MaxTipAge);
             Assert.Equal(10000, network.MinTxFee);
             Assert.Equal(60000, network.FallbackFee);
             Assert.Equal(10000, network.MinRelayTxFee);
@@ -146,27 +146,27 @@ namespace Redstone.Core.Tests
 
             Assert.Equal(2, network.Bech32Encoders.Length);
             Assert.Equal(new Bech32Encoder("bc").ToString(),
-                network.Bech32Encoders[(int) Bech32Type.WITNESS_PUBKEY_ADDRESS].ToString());
+                network.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS].ToString());
             Assert.Equal(new Bech32Encoder("bc").ToString(),
-                network.Bech32Encoders[(int) Bech32Type.WITNESS_SCRIPT_ADDRESS].ToString());
+                network.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS].ToString());
 
             Assert.Equal(12, network.Base58Prefixes.Length);
-            Assert.Equal(new byte[] {(65)}, network.Base58Prefixes[(int) Base58Type.PUBKEY_ADDRESS]);
-            Assert.Equal(new byte[] {(196)}, network.Base58Prefixes[(int) Base58Type.SCRIPT_ADDRESS]);
-            Assert.Equal(new byte[] {(65 + 128)}, network.Base58Prefixes[(int) Base58Type.SECRET_KEY]);
-            Assert.Equal(new byte[] {0x01, 0x42}, network.Base58Prefixes[(int) Base58Type.ENCRYPTED_SECRET_KEY_NO_EC]);
-            Assert.Equal(new byte[] {0x01, 0x43}, network.Base58Prefixes[(int) Base58Type.ENCRYPTED_SECRET_KEY_EC]);
-            Assert.Equal(new byte[] {(0x04), (0x88), (0xB2), (0x1E)},
-                network.Base58Prefixes[(int) Base58Type.EXT_PUBLIC_KEY]);
-            Assert.Equal(new byte[] {(0x04), (0x88), (0xAD), (0xE4)},
-                network.Base58Prefixes[(int) Base58Type.EXT_SECRET_KEY]);
-            Assert.Equal(new byte[] {0x2C, 0xE9, 0xB3, 0xE1, 0xFF, 0x39, 0xE2},
-                network.Base58Prefixes[(int) Base58Type.PASSPHRASE_CODE]);
-            Assert.Equal(new byte[] {0x64, 0x3B, 0xF6, 0xA8, 0x9A},
-                network.Base58Prefixes[(int) Base58Type.CONFIRMATION_CODE]);
-            Assert.Equal(new byte[] {0x2a}, network.Base58Prefixes[(int) Base58Type.STEALTH_ADDRESS]);
-            Assert.Equal(new byte[] {23}, network.Base58Prefixes[(int) Base58Type.ASSET_ID]);
-            Assert.Equal(new byte[] {0x13}, network.Base58Prefixes[(int) Base58Type.COLORED_ADDRESS]);
+            Assert.Equal(new byte[] { (65) }, network.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS]);
+            Assert.Equal(new byte[] { (196) }, network.Base58Prefixes[(int)Base58Type.SCRIPT_ADDRESS]);
+            Assert.Equal(new byte[] { (65 + 128) }, network.Base58Prefixes[(int)Base58Type.SECRET_KEY]);
+            Assert.Equal(new byte[] { 0x01, 0x42 }, network.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_NO_EC]);
+            Assert.Equal(new byte[] { 0x01, 0x43 }, network.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_EC]);
+            Assert.Equal(new byte[] { (0x04), (0x88), (0xB2), (0x1E) },
+                network.Base58Prefixes[(int)Base58Type.EXT_PUBLIC_KEY]);
+            Assert.Equal(new byte[] { (0x04), (0x88), (0xAD), (0xE4) },
+                network.Base58Prefixes[(int)Base58Type.EXT_SECRET_KEY]);
+            Assert.Equal(new byte[] { 0x2C, 0xE9, 0xB3, 0xE1, 0xFF, 0x39, 0xE2 },
+                network.Base58Prefixes[(int)Base58Type.PASSPHRASE_CODE]);
+            Assert.Equal(new byte[] { 0x64, 0x3B, 0xF6, 0xA8, 0x9A },
+                network.Base58Prefixes[(int)Base58Type.CONFIRMATION_CODE]);
+            Assert.Equal(new byte[] { 0x2a }, network.Base58Prefixes[(int)Base58Type.STEALTH_ADDRESS]);
+            Assert.Equal(new byte[] { 23 }, network.Base58Prefixes[(int)Base58Type.ASSET_ID]);
+            Assert.Equal(new byte[] { 0x13 }, network.Base58Prefixes[(int)Base58Type.COLORED_ADDRESS]);
 
             Assert.Equal(210000, network.Consensus.SubsidyHalvingInterval);
             Assert.Equal(750, network.Consensus.MajorityEnforceBlockUpgrade);
@@ -189,14 +189,14 @@ namespace Redstone.Core.Tests
             Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.TestDummy]);
             Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.CSV]);
             Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.Segwit]);
-            Assert.Equal(12500, network.Consensus.LastPOWBlock);
+            Assert.Equal(500, network.Consensus.LastPOWBlock);
             Assert.True(network.Consensus.IsProofOfStake);
             Assert.Equal(787264, network.Consensus.CoinType);
             Assert.Equal(
-                new BigInteger(uint256.Parse("0000ffff00000000000000000000000000000000000000000000000000000000")
+                new BigInteger(uint256.Parse("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
                     .ToBytes(false)), network.Consensus.ProofOfStakeLimit);
             Assert.Equal(
-                new BigInteger(uint256.Parse("0000ffff00000000000000000000000000000000000000000000000000000000")
+                new BigInteger(uint256.Parse("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff")
                     .ToBytes(false)), network.Consensus.ProofOfStakeLimitV2);
             Assert.Equal(new uint256("0x98fa6ef0bca5b431f15fd79dc6f879dc45b83ed4b1bbe933a383ef438321958e"),
                 network.Consensus.DefaultAssumeValid);
@@ -205,15 +205,16 @@ namespace Redstone.Core.Tests
             Assert.Equal(2, network.Consensus.PremineHeight);
             Assert.Equal(Money.Coins(10), network.Consensus.ProofOfWorkReward);
             Assert.Equal(Money.Coins(1), network.Consensus.ProofOfStakeReward);
-            Assert.Equal((uint) 500, network.Consensus.MaxReorgLength);
+            Assert.Equal((uint)500, network.Consensus.MaxReorgLength);
             Assert.Equal(long.MaxValue, network.Consensus.MaxMoney);
 
             Block genesis = network.GetGenesis();
-            Assert.Equal(uint256.Parse("0x0ecac183d0f31c87aee57f8fd0a49a9ac185ce0a9f649c777823180ebf7efe2a"),
+            Assert.Equal(uint256.Parse("0x6076e1f485f447ee49cc8d808cb3c71480d1451f3dc749325aa4ff20eb7b5538"),
                 genesis.GetHash());
-            Assert.Equal(uint256.Parse("0x54394efa4ecc9f3c88295b840eb9665a472c63ae58e880ed71f7b97cdcb5e40d"),
+            Assert.Equal(uint256.Parse("ad15198e3c12a1c342f346ca3a6e2faea6bfec7491e6143d636b8741a22ce2b9"),
                 genesis.Header.HashMerkleRoot);
         }
+
 
         [Fact]
         [Trait("UnitTest", "UnitTest")]
@@ -226,13 +227,13 @@ namespace Redstone.Core.Tests
             Assert.Empty(network.SeedNodes);
 
             Assert.Equal("RedstoneRegTest", network.Name);
-            Assert.Equal(RedstoneBase.RedstoneRootFolderName, network.RootFolderName);
-            Assert.Equal(RedstoneBase.RedstoneDefaultConfigFilename, network.DefaultConfigFilename);
+            Assert.Equal(RedstoneMain.RedstoneRootFolderName, network.RootFolderName);
+            Assert.Equal(RedstoneMain.RedstoneDefaultConfigFilename, network.DefaultConfigFilename);
             Assert.Equal(0xefc0f2cd, network.Magic);
             Assert.Equal(19256, network.DefaultPort);
             Assert.Equal(19257, network.RPCPort);
-            Assert.Equal(RedstoneBase.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
-            Assert.Equal(RedstoneBase.RedstoneDefaultMaxTipAgeInSeconds, network.MaxTipAge);
+            Assert.Equal(RedstoneMain.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
+            Assert.Equal(RedstoneMain.RedstoneDefaultMaxTipAgeInSeconds, network.MaxTipAge);
             Assert.Equal(0, network.MinTxFee);
             Assert.Equal(0, network.FallbackFee);
             Assert.Equal(0, network.MinRelayTxFee);
@@ -240,27 +241,27 @@ namespace Redstone.Core.Tests
 
             Assert.Equal(2, network.Bech32Encoders.Length);
             Assert.Equal(new Bech32Encoder("bc").ToString(),
-                network.Bech32Encoders[(int) Bech32Type.WITNESS_PUBKEY_ADDRESS].ToString());
+                network.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS].ToString());
             Assert.Equal(new Bech32Encoder("bc").ToString(),
-                network.Bech32Encoders[(int) Bech32Type.WITNESS_SCRIPT_ADDRESS].ToString());
+                network.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS].ToString());
 
             Assert.Equal(12, network.Base58Prefixes.Length);
-            Assert.Equal(new byte[] {(65)}, network.Base58Prefixes[(int) Base58Type.PUBKEY_ADDRESS]);
-            Assert.Equal(new byte[] {(196)}, network.Base58Prefixes[(int) Base58Type.SCRIPT_ADDRESS]);
-            Assert.Equal(new byte[] {(65 + 128)}, network.Base58Prefixes[(int) Base58Type.SECRET_KEY]);
-            Assert.Equal(new byte[] {0x01, 0x42}, network.Base58Prefixes[(int) Base58Type.ENCRYPTED_SECRET_KEY_NO_EC]);
-            Assert.Equal(new byte[] {0x01, 0x43}, network.Base58Prefixes[(int) Base58Type.ENCRYPTED_SECRET_KEY_EC]);
-            Assert.Equal(new byte[] {(0x04), (0x88), (0xB2), (0x1E)},
-                network.Base58Prefixes[(int) Base58Type.EXT_PUBLIC_KEY]);
-            Assert.Equal(new byte[] {(0x04), (0x88), (0xAD), (0xE4)},
-                network.Base58Prefixes[(int) Base58Type.EXT_SECRET_KEY]);
-            Assert.Equal(new byte[] {0x2C, 0xE9, 0xB3, 0xE1, 0xFF, 0x39, 0xE2},
-                network.Base58Prefixes[(int) Base58Type.PASSPHRASE_CODE]);
-            Assert.Equal(new byte[] {0x64, 0x3B, 0xF6, 0xA8, 0x9A},
-                network.Base58Prefixes[(int) Base58Type.CONFIRMATION_CODE]);
-            Assert.Equal(new byte[] {0x2a}, network.Base58Prefixes[(int) Base58Type.STEALTH_ADDRESS]);
-            Assert.Equal(new byte[] {23}, network.Base58Prefixes[(int) Base58Type.ASSET_ID]);
-            Assert.Equal(new byte[] {0x13}, network.Base58Prefixes[(int) Base58Type.COLORED_ADDRESS]);
+            Assert.Equal(new byte[] { (65) }, network.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS]);
+            Assert.Equal(new byte[] { (196) }, network.Base58Prefixes[(int)Base58Type.SCRIPT_ADDRESS]);
+            Assert.Equal(new byte[] { (65 + 128) }, network.Base58Prefixes[(int)Base58Type.SECRET_KEY]);
+            Assert.Equal(new byte[] { 0x01, 0x42 }, network.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_NO_EC]);
+            Assert.Equal(new byte[] { 0x01, 0x43 }, network.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_EC]);
+            Assert.Equal(new byte[] { (0x04), (0x88), (0xB2), (0x1E) },
+                network.Base58Prefixes[(int)Base58Type.EXT_PUBLIC_KEY]);
+            Assert.Equal(new byte[] { (0x04), (0x88), (0xAD), (0xE4) },
+                network.Base58Prefixes[(int)Base58Type.EXT_SECRET_KEY]);
+            Assert.Equal(new byte[] { 0x2C, 0xE9, 0xB3, 0xE1, 0xFF, 0x39, 0xE2 },
+                network.Base58Prefixes[(int)Base58Type.PASSPHRASE_CODE]);
+            Assert.Equal(new byte[] { 0x64, 0x3B, 0xF6, 0xA8, 0x9A },
+                network.Base58Prefixes[(int)Base58Type.CONFIRMATION_CODE]);
+            Assert.Equal(new byte[] { 0x2a }, network.Base58Prefixes[(int)Base58Type.STEALTH_ADDRESS]);
+            Assert.Equal(new byte[] { 23 }, network.Base58Prefixes[(int)Base58Type.ASSET_ID]);
+            Assert.Equal(new byte[] { 0x13 }, network.Base58Prefixes[(int)Base58Type.COLORED_ADDRESS]);
 
             Assert.Equal(210000, network.Consensus.SubsidyHalvingInterval);
             Assert.Equal(750, network.Consensus.MajorityEnforceBlockUpgrade);
@@ -283,7 +284,7 @@ namespace Redstone.Core.Tests
             Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.TestDummy]);
             Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.CSV]);
             Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.Segwit]);
-            Assert.Equal(12500, network.Consensus.LastPOWBlock);
+            Assert.Equal(500, network.Consensus.LastPOWBlock);
             Assert.True(network.Consensus.IsProofOfStake);
             Assert.Equal(787264, network.Consensus.CoinType);
             Assert.Equal(
@@ -298,14 +299,14 @@ namespace Redstone.Core.Tests
             Assert.Equal(2, network.Consensus.PremineHeight);
             Assert.Equal(Money.Coins(10), network.Consensus.ProofOfWorkReward);
             Assert.Equal(Money.Coins(1), network.Consensus.ProofOfStakeReward);
-            Assert.Equal((uint) 500, network.Consensus.MaxReorgLength);
+            Assert.Equal((uint)500, network.Consensus.MaxReorgLength);
             Assert.Equal(long.MaxValue, network.Consensus.MaxMoney);
 
             Block genesis = network.GetGenesis();
-            Assert.Equal(uint256.Parse("0x62ee79ac25fb05b816bc55b96df4111ebe6383f4124856d5749228f91cc77ddc"),
+            Assert.Equal(uint256.Parse("0x4442244290302b76a11951ba648e40bcdc6cc3965a99c30018ade95a4bc6e6bd"),
                 genesis.GetHash());
-            Assert.Equal(uint256.Parse("0x76417fee12594f59b7a15a7811b562736677557ec68aef76c5c758440017fb49"),
+            Assert.Equal(uint256.Parse("0x0ad80b454d4060b0f9bc821d94ec14da59ea7194a9fd3875b31c14873d202b7d"),
                 genesis.Header.HashMerkleRoot);
-        }    
+        }
     }
 }
