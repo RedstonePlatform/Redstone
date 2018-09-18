@@ -96,8 +96,8 @@
                 maxMoney: long.MaxValue,
                 coinbaseMaturity: 50,
                 premineHeight: 2,
-                premineReward: Money.Coins(10000000),
-                proofOfWorkReward: Money.Coins(10),
+                premineReward: Money.Coins(134217728),
+                proofOfWorkReward: Money.Coins(8),
                 powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
                 powTargetSpacing: TimeSpan.FromSeconds(10 * 60),
                 powAllowMinDifficultyBlocks: false,

@@ -83,8 +83,8 @@ namespace Redstone.Core.Networks
                 maxMoney: long.MaxValue,
                 coinbaseMaturity: 10,
                 premineHeight: 2,
-                premineReward: Money.Coins(10000000),
-                proofOfWorkReward: Money.Coins(10),
+                premineReward: Money.Coins(134217728),
+                proofOfWorkReward: Money.Coins(8),
                 powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
                 powTargetSpacing: TimeSpan.FromSeconds(10 * 60),
                 powAllowMinDifficultyBlocks: false,
@@ -111,13 +111,13 @@ namespace Redstone.Core.Networks
 
             this.DNSSeeds = new List<DNSSeedData>()
             {
-                new DNSSeedData("seednode1", "80.211.88.201"),
+                //new DNSSeedData("seednode1", "80.211.88.201"),
             };
 
-            this.SeedNodes = this.ConvertToNetworkAddresses(new []
+            this.SeedNodes = this.ConvertToNetworkAddresses(new List<string>()
             {
-                "80.211.88.201", "80.211.88.233", "80.211.88.244"
-            }, this.DefaultPort).ToList();
+                //"80.211.88.201", "80.211.88.233", "80.211.88.244"
+            }.ToArray(), this.DefaultPort).ToList();
 
             Assert(this.Consensus.HashGenesisBlock == uint256.Parse("6076e1f485f447ee49cc8d808cb3c71480d1451f3dc749325aa4ff20eb7b5538"));
         }
