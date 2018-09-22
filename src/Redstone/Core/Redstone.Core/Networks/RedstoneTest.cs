@@ -1,12 +1,11 @@
-﻿using System.Linq;
-using Stratis.Bitcoin.Features.Wallet;
-
-namespace Redstone.Core.Networks
+﻿namespace Redstone.Core.Networks
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using NBitcoin;
     using NBitcoin.BouncyCastle.Math;
+    using Stratis.Bitcoin.Features.Wallet;
 
     public class RedstoneTest : RedstoneMain
     {
@@ -40,7 +39,7 @@ namespace Redstone.Core.Networks
             this.GenesisReward = Money.Zero;
 
             Block genesisBlock = CreateRedstoneGenesisBlock(consensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion, this.GenesisReward);
-            
+
             genesisBlock.Header.Time = 1493909211;
             genesisBlock.Header.Nonce = 2433759;
             genesisBlock.Header.Bits = powLimit;
@@ -83,8 +82,8 @@ namespace Redstone.Core.Networks
                 maxMoney: long.MaxValue,
                 coinbaseMaturity: 10,
                 premineHeight: 2,
-                premineReward: Money.Coins(134217728),
-                proofOfWorkReward: Money.Coins(8),
+                premineReward: Money.Coins(50000),
+                proofOfWorkReward: Money.Coins(30),
                 powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
                 powTargetSpacing: TimeSpan.FromSeconds(10 * 60),
                 powAllowMinDifficultyBlocks: false,
@@ -95,12 +94,15 @@ namespace Redstone.Core.Networks
                 lastPowBlock: 500,
                 proofOfStakeLimit: new BigInteger(uint256.Parse("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false)),
                 proofOfStakeLimitV2: new BigInteger(uint256.Parse("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false)),
-                proofOfStakeReward: Money.COIN
+                proofOfStakeReward: Money.Coins(15),
+                posRewardReduction: true,
+                posRewardReductionBlockInterval: 525_600,
+                posRewardReductionPercentage: 7.5m
             );
 
-            this.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS] = new byte[] { (65) };
+            this.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS] = new byte[] { (63) };
             this.Base58Prefixes[(int)Base58Type.SCRIPT_ADDRESS] = new byte[] { (196) };
-            this.Base58Prefixes[(int)Base58Type.SECRET_KEY] = new byte[] { (65 + 128) };
+            this.Base58Prefixes[(int)Base58Type.SECRET_KEY] = new byte[] { (63 + 128) };
 
             this.Checkpoints = new Dictionary<int, CheckpointInfo>
             {
@@ -111,12 +113,12 @@ namespace Redstone.Core.Networks
 
             this.DNSSeeds = new List<DNSSeedData>()
             {
-                //new DNSSeedData("seednode1", "80.211.88.201"),
+                new DNSSeedData("seednode1", "80.211.88.201"),
             };
 
             this.SeedNodes = this.ConvertToNetworkAddresses(new List<string>()
             {
-                //"80.211.88.201", "80.211.88.233", "80.211.88.244"
+                "80.211.88.201", "80.211.88.233", "80.211.88.244"
             }.ToArray(), this.DefaultPort).ToList();
 
             Assert(this.Consensus.HashGenesisBlock == uint256.Parse("6076e1f485f447ee49cc8d808cb3c71480d1451f3dc749325aa4ff20eb7b5538"));

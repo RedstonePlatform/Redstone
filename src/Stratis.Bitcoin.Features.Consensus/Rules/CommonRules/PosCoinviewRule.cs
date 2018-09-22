@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
@@ -217,7 +218,16 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
             if (this.IsPremine(height))
                 return this.consensus.PremineReward;
 
-            return this.consensus.ProofOfStakeReward;
+            if (this.consensus.PosRewardReduction)
+            {
+                int blockIntervals = height / this.consensus.PosRewardReductionBlockInterval;
+                double reductionRate = (double) ((100 - this.consensus.PosRewardReductionPercentage) / 100);
+                double reward = this.consensus.ProofOfStakeReward.Satoshi * Math.Pow(reductionRate, blockIntervals);
+                return new Money((long) reward);
+
+            }
+            else
+                return this.consensus.ProofOfStakeReward;
         }
     }
 }

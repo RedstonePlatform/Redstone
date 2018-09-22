@@ -1,13 +1,13 @@
-﻿using System;
-using NBitcoin;
-using NBitcoin.BouncyCastle.Math;
-using NBitcoin.DataEncoders;
-using NBitcoin.Networks;
-using Redstone.Core.Networks;
-using Xunit;
-
-namespace Redstone.Core.Tests
+﻿namespace Redstone.Core.Tests
 {
+    using System;
+    using NBitcoin;
+    using NBitcoin.BouncyCastle.Math;
+    using NBitcoin.DataEncoders;
+    using NBitcoin.Networks;
+    using Networks;
+    using Xunit;
+
     public class NetworkTests
     {
         [Fact]
@@ -57,9 +57,9 @@ namespace Redstone.Core.Tests
                 network.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS].ToString());
 
             Assert.Equal(12, network.Base58Prefixes.Length);
-            Assert.Equal(new byte[] { (63) }, network.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS]);
-            Assert.Equal(new byte[] { (125) }, network.Base58Prefixes[(int)Base58Type.SCRIPT_ADDRESS]);
-            Assert.Equal(new byte[] { (63 + 128) }, network.Base58Prefixes[(int)Base58Type.SECRET_KEY]);
+            Assert.Equal(new byte[] { (60) }, network.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS]);
+            Assert.Equal(new byte[] { (122) }, network.Base58Prefixes[(int)Base58Type.SCRIPT_ADDRESS]);
+            Assert.Equal(new byte[] { (60 + 128) }, network.Base58Prefixes[(int)Base58Type.SECRET_KEY]);
             Assert.Equal(new byte[] { 0x01, 0x42 }, network.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_NO_EC]);
             Assert.Equal(new byte[] { 0x01, 0x43 }, network.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_EC]);
             Assert.Equal(new byte[] { (0x04), (0x88), (0xB2), (0x1E) },
@@ -107,10 +107,13 @@ namespace Redstone.Core.Tests
             Assert.Equal(new uint256("0x55a8205ae4bbf18f4d238c43f43005bd66e0b1f679b39e2c5c62cf6903693a5e"),
                 network.Consensus.DefaultAssumeValid);
             Assert.Equal(50, network.Consensus.CoinbaseMaturity);
-            Assert.Equal(Money.Coins(10000000), network.Consensus.PremineReward);
+            Assert.Equal(Money.Coins(50000), network.Consensus.PremineReward);
             Assert.Equal(2, network.Consensus.PremineHeight);
-            Assert.Equal(Money.Coins(10), network.Consensus.ProofOfWorkReward);
-            Assert.Equal(Money.Coins(1), network.Consensus.ProofOfStakeReward);
+            Assert.Equal(Money.Coins(30), network.Consensus.ProofOfWorkReward);
+            Assert.Equal(Money.Coins(15), network.Consensus.ProofOfStakeReward);
+            Assert.True(network.Consensus.PosRewardReduction);
+            Assert.Equal(525_600, network.Consensus.PosRewardReductionBlockInterval);
+            Assert.Equal(7.5m, network.Consensus.PosRewardReductionPercentage);
             Assert.Equal((uint)500, network.Consensus.MaxReorgLength);
             Assert.Equal(long.MaxValue, network.Consensus.MaxMoney);
 
@@ -151,9 +154,9 @@ namespace Redstone.Core.Tests
                 network.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS].ToString());
 
             Assert.Equal(12, network.Base58Prefixes.Length);
-            Assert.Equal(new byte[] { (65) }, network.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS]);
+            Assert.Equal(new byte[] { (63) }, network.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS]);
             Assert.Equal(new byte[] { (196) }, network.Base58Prefixes[(int)Base58Type.SCRIPT_ADDRESS]);
-            Assert.Equal(new byte[] { (65 + 128) }, network.Base58Prefixes[(int)Base58Type.SECRET_KEY]);
+            Assert.Equal(new byte[] { (63 + 128) }, network.Base58Prefixes[(int)Base58Type.SECRET_KEY]);
             Assert.Equal(new byte[] { 0x01, 0x42 }, network.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_NO_EC]);
             Assert.Equal(new byte[] { 0x01, 0x43 }, network.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_EC]);
             Assert.Equal(new byte[] { (0x04), (0x88), (0xB2), (0x1E) },
@@ -201,10 +204,13 @@ namespace Redstone.Core.Tests
             Assert.Equal(new uint256("0x98fa6ef0bca5b431f15fd79dc6f879dc45b83ed4b1bbe933a383ef438321958e"),
                 network.Consensus.DefaultAssumeValid);
             Assert.Equal(10, network.Consensus.CoinbaseMaturity);
-            Assert.Equal(Money.Coins(10000000), network.Consensus.PremineReward);
+            Assert.Equal(Money.Coins(50000), network.Consensus.PremineReward);
             Assert.Equal(2, network.Consensus.PremineHeight);
-            Assert.Equal(Money.Coins(10), network.Consensus.ProofOfWorkReward);
-            Assert.Equal(Money.Coins(1), network.Consensus.ProofOfStakeReward);
+            Assert.Equal(Money.Coins(30), network.Consensus.ProofOfWorkReward);
+            Assert.Equal(Money.Coins(15), network.Consensus.ProofOfStakeReward);
+            Assert.True(network.Consensus.PosRewardReduction);
+            Assert.Equal(525_600, network.Consensus.PosRewardReductionBlockInterval);
+            Assert.Equal(7.5m, network.Consensus.PosRewardReductionPercentage);
             Assert.Equal((uint)500, network.Consensus.MaxReorgLength);
             Assert.Equal(long.MaxValue, network.Consensus.MaxMoney);
 
@@ -246,9 +252,9 @@ namespace Redstone.Core.Tests
                 network.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS].ToString());
 
             Assert.Equal(12, network.Base58Prefixes.Length);
-            Assert.Equal(new byte[] { (65) }, network.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS]);
+            Assert.Equal(new byte[] { (63) }, network.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS]);
             Assert.Equal(new byte[] { (196) }, network.Base58Prefixes[(int)Base58Type.SCRIPT_ADDRESS]);
-            Assert.Equal(new byte[] { (65 + 128) }, network.Base58Prefixes[(int)Base58Type.SECRET_KEY]);
+            Assert.Equal(new byte[] { (63 + 128) }, network.Base58Prefixes[(int)Base58Type.SECRET_KEY]);
             Assert.Equal(new byte[] { 0x01, 0x42 }, network.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_NO_EC]);
             Assert.Equal(new byte[] { 0x01, 0x43 }, network.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_EC]);
             Assert.Equal(new byte[] { (0x04), (0x88), (0xB2), (0x1E) },
@@ -295,10 +301,13 @@ namespace Redstone.Core.Tests
                     .ToBytes(false)), network.Consensus.ProofOfStakeLimitV2);
             Assert.Null(network.Consensus.DefaultAssumeValid);
             Assert.Equal(10, network.Consensus.CoinbaseMaturity);
-            Assert.Equal(Money.Coins(10000000), network.Consensus.PremineReward);
+            Assert.Equal(Money.Coins(50000), network.Consensus.PremineReward);
             Assert.Equal(2, network.Consensus.PremineHeight);
-            Assert.Equal(Money.Coins(10), network.Consensus.ProofOfWorkReward);
-            Assert.Equal(Money.Coins(1), network.Consensus.ProofOfStakeReward);
+            Assert.Equal(Money.Coins(30), network.Consensus.ProofOfWorkReward);
+            Assert.Equal(Money.Coins(15), network.Consensus.ProofOfStakeReward);
+            Assert.True(network.Consensus.PosRewardReduction);
+            Assert.Equal(525_600, network.Consensus.PosRewardReductionBlockInterval);
+            Assert.Equal(7.5m, network.Consensus.PosRewardReductionPercentage);
             Assert.Equal((uint)500, network.Consensus.MaxReorgLength);
             Assert.Equal(long.MaxValue, network.Consensus.MaxMoney);
 

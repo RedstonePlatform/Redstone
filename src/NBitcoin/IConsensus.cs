@@ -35,6 +35,21 @@ namespace NBitcoin
         Money ProofOfStakeReward { get; }
 
         /// <summary>
+        /// Indicates whether the network block rewards are reduced
+        /// </summary>
+        bool PosRewardReduction { get; }
+
+        /// <summary>
+        /// The block interval to apply the <see cref="PosRewardReductionPercentage"/>
+        /// </summary>
+        int PosRewardReductionBlockInterval { get; }
+
+        /// <summary>
+        /// The percentage by which to reduce the block reward every <see cref="PosRewardReductionBlockInterval"/> blocks
+        /// </summary>
+        decimal PosRewardReductionPercentage { get; }
+
+        /// <summary>
         /// Maximal length of reorganization that the node is willing to accept, or 0 to disable long reorganization protection.
         /// </summary>
         uint MaxReorgLength { get; }

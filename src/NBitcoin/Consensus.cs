@@ -23,6 +23,15 @@ namespace NBitcoin
         public Money ProofOfStakeReward { get; }
 
         /// <inheritdoc />
+        public bool PosRewardReduction { get; }
+
+        /// <inheritdoc />
+        public int PosRewardReductionBlockInterval { get; }
+
+        /// <inheritdoc />
+        public decimal PosRewardReductionPercentage { get; }
+
+        /// <inheritdoc />
         public uint MaxReorgLength { get; }
 
         /// <inheritdoc />
@@ -125,7 +134,10 @@ namespace NBitcoin
             int lastPowBlock,
             BigInteger proofOfStakeLimit,
             BigInteger proofOfStakeLimitV2,
-            Money proofOfStakeReward)
+            Money proofOfStakeReward,
+            bool posRewardReduction = false,
+            int posRewardReductionBlockInterval = 0,
+            decimal posRewardReductionPercentage = 0m)
         {
             this.IntegrityValidationRules = new List<IIntegrityValidationConsensusRule>();
             this.HeaderValidationRules = new List<IHeaderValidationConsensusRule>();
@@ -136,6 +148,9 @@ namespace NBitcoin
             this.PremineHeight = premineHeight;
             this.ProofOfWorkReward = proofOfWorkReward;
             this.ProofOfStakeReward = proofOfStakeReward;
+            this.PosRewardReduction = posRewardReduction;
+            this.PosRewardReductionBlockInterval = posRewardReductionBlockInterval;
+            this.PosRewardReductionPercentage = posRewardReductionPercentage;
             this.MaxReorgLength = maxReorgLength;
             this.MaxMoney = maxMoney;
             this.Options = consensusOptions;
