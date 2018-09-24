@@ -82,7 +82,7 @@
                 maxMoney: long.MaxValue,
                 coinbaseMaturity: 10,
                 premineHeight: 2,
-                premineReward: Money.Coins(50000),
+                premineReward: Money.Coins(30000),
                 proofOfWorkReward: Money.Coins(30),
                 powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
                 powTargetSpacing: TimeSpan.FromSeconds(10 * 60),
@@ -96,7 +96,7 @@
                 proofOfStakeLimitV2: new BigInteger(uint256.Parse("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false)),
                 proofOfStakeReward: Money.Coins(15),
                 posRewardReduction: true,
-                posRewardReductionBlockInterval: 525_600,
+                posRewardReductionBlockInterval: 2_800,
                 posRewardReductionPercentage: 7.5m
             );
 
@@ -113,12 +113,12 @@
 
             this.DNSSeeds = new List<DNSSeedData>()
             {
-                new DNSSeedData("seednode1", "80.211.88.201"),
+                //new DNSSeedData("seednode1", "80.211.88.201"),
             };
 
             this.SeedNodes = this.ConvertToNetworkAddresses(new List<string>()
             {
-                "80.211.88.201", "80.211.88.233", "80.211.88.244"
+                //"80.211.88.201", "80.211.88.233", "80.211.88.244"
             }.ToArray(), this.DefaultPort).ToList();
 
             Assert(this.Consensus.HashGenesisBlock == uint256.Parse("6076e1f485f447ee49cc8d808cb3c71480d1451f3dc749325aa4ff20eb7b5538"));
