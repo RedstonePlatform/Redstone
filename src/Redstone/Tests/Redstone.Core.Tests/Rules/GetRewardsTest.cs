@@ -27,33 +27,6 @@ namespace Redstone.Core.Tests.Rules
             Assert.Equal(new Money(11.87179687m, MoneyUnit.BTC), posCoinviewRule.GetProofOfStakeReward(500 + (blockInterval * 3)));
             Assert.Equal(new Money(10.98141210m, MoneyUnit.BTC), posCoinviewRule.GetProofOfStakeReward(500 + (blockInterval * 4)));
             Assert.Equal(new Money(10.15780620m, MoneyUnit.BTC), posCoinviewRule.GetProofOfStakeReward(500 + (blockInterval * 5)));
-
-
-
-            //15.00
-            //13.88
-            //12.83
-            //11.87
-            //10.98
-            //10.16
-            //9.40
-            //8.69
-            //8.04
-            //7.44
-            //6.88
-            //6.36
-            //5.89
-            //5.44
-            //5.04
-            //4.66
-            //4.31
-            //3.99
-            //3.69
-            //3.41
-            //3.15
-            //2.92
-            //2.70
-            //2.50
         }
     }
 }

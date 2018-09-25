@@ -82,7 +82,7 @@
                 maxMoney: long.MaxValue,
                 coinbaseMaturity: 10,
                 premineHeight: 2,
-                premineReward: Money.Coins(50000),
+                premineReward: Money.Coins(30000),
                 proofOfWorkReward: Money.Coins(30),
                 powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
                 powTargetSpacing: TimeSpan.FromSeconds(10 * 60),
@@ -91,12 +91,12 @@
                 powLimit: powLimit,
                 minimumChainWork: null,
                 isProofOfStake: true,
-                lastPowBlock: 500,
+                lastPowBlock: 14400,
                 proofOfStakeLimit: new BigInteger(uint256.Parse("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false)),
                 proofOfStakeLimitV2: new BigInteger(uint256.Parse("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false)),
                 proofOfStakeReward: Money.Coins(15),
                 posRewardReduction: true,
-                posRewardReductionBlockInterval: 525_600,
+                posRewardReductionBlockInterval: 2880,
                 posRewardReductionPercentage: 7.5m
             );
 
