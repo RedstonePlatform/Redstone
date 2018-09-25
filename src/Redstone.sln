@@ -35,7 +35,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redstone.Features.Api", "Re
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redstone.RedstoneFullNodeDnsD", "Redstone\Programs\Redstone.RedstoneFullNodeDnsD\Redstone.RedstoneFullNodeDnsD.csproj", "{A6B88D61-4119-40D7-91C1-A4E289B53053}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Redstone.Core", "Redstone.Core\Redstone.Core.csproj", "{DA50AB86-82F7-4AB5-9408-B995F13AACCF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Redstone.Core", "Redstone\Core\Redstone.Core\Redstone.Core.csproj", "{DA50AB86-82F7-4AB5-9408-B995F13AACCF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
