@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using FluentAssertions;
 using NBitcoin;
 using Stratis.Bitcoin.Features.Miner.Interfaces;
 using Stratis.Bitcoin.Features.Miner.Staking;
@@ -14,21 +14,19 @@ namespace Stratis.Bitcoin.IntegrationTests
 {
     public class ProofOfStakeSteps
     {
-        private readonly SharedSteps sharedSteps;
         public readonly NodeBuilder nodeBuilder;
         public CoreNode PremineNodeWithCoins;
 
         public readonly string PremineNode = "PremineNode";
-        public readonly string PremineWallet = "preminewallet";
+        public readonly string PremineWallet = "mywallet";
         public readonly string PremineWalletAccount = "account 0";
-        public readonly string PremineWalletPassword = "preminewalletpassword";
-        public readonly string PremineWalletPassphrase = "";
+        public readonly string PremineWalletPassword = "password";
 
         private readonly HashSet<uint256> transactionsBeforeStaking = new HashSet<uint256>();
 
         public ProofOfStakeSteps(string displayName)
         {
-            this.sharedSteps = new SharedSteps();
+
             this.nodeBuilder = NodeBuilder.Create(Path.Combine(this.GetType().Name, displayName));
         }
 
@@ -46,24 +44,31 @@ namespace Stratis.Bitcoin.IntegrationTests
         {
             this.PremineNodeWithCoins = this.nodeBuilder.CreateStratisPosNode(KnownNetworks.StratisRegTest);
             this.PremineNodeWithCoins.Start();
-            this.PremineNodeWithCoins.NotInIBD();
-            this.PremineNodeWithCoins.FullNode.WalletManager().CreateWallet(this.PremineWalletPassword, this.PremineWallet, this.PremineWalletPassphrase);
+            this.PremineNodeWithCoins.NotInIBD().WithWallet();
         }
 
         public void MineGenesisAndPremineBlocks()
         {
-            this.sharedSteps.MinePremineBlocks(this.PremineNodeWithCoins, this.PremineWallet, this.PremineWalletAccount, this.PremineWalletPassword);
+            int premineBlockCount = 2;
+
+            var addressUsed = TestHelper.MineBlocks(this.PremineNodeWithCoins, premineBlockCount).AddressUsed;
+
+            // Since the pre-mine will not be immediately spendable, the transactions have to be counted directly from the address.
+            addressUsed.Transactions.Count().Should().Be(premineBlockCount);
+
+            IConsensus consensus = this.PremineNodeWithCoins.FullNode.Network.Consensus;
+
+            addressUsed.Transactions.Sum(s => s.Amount).Should().Be(consensus.PremineReward + consensus.ProofOfWorkReward);
         }
 
         public void MineCoinsToMaturity()
         {
-            this.PremineNodeWithCoins.GenerateStratisWithMiner(Convert.ToInt32(this.PremineNodeWithCoins.FullNode.Network.Consensus.CoinbaseMaturity));
-            this.sharedSteps.WaitForNodeToSync(this.PremineNodeWithCoins);
+            TestHelper.MineBlocks(this.PremineNodeWithCoins, (int)this.PremineNodeWithCoins.FullNode.Network.Consensus.CoinbaseMaturity);
         }
 
         public void PremineNodeMinesTenBlocksMoreEnsuringTheyCanBeStaked()
         {
-            this.PremineNodeWithCoins.GenerateStratisWithMiner(10);
+            TestHelper.MineBlocks(this.PremineNodeWithCoins, 10);
         }
 
         public void PremineNodeStartsStaking()

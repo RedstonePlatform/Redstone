@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using NBitcoin.Rules;
@@ -18,7 +18,6 @@ using Stratis.Bitcoin.Features.Consensus.Rules;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
-using Stratis.Bitcoin.Utilities;
 
 [assembly: InternalsVisibleTo("Stratis.Bitcoin.Features.Miner.Tests")]
 [assembly: InternalsVisibleTo("Stratis.Bitcoin.Features.Consensus.Tests")]
@@ -38,51 +37,31 @@ namespace Stratis.Bitcoin.Features.Consensus
 
         private readonly NodeDeployments nodeDeployments;
 
-        /// <summary>Consensus statistics logger.</summary>
-        private readonly ConsensusStats consensusStats;
-
         public ConsensusFeature(
             Network network,
             IChainState chainState,
             IConnectionManager connectionManager,
             Signals.Signals signals,
             IConsensusManager consensusManager,
-            NodeDeployments nodeDeployments,
-            ConsensusStats consensusStats,
-            INodeStats nodeStats)
+            NodeDeployments nodeDeployments)
         {
             this.chainState = chainState;
             this.connectionManager = connectionManager;
             this.signals = signals;
             this.consensusManager = consensusManager;
             this.nodeDeployments = nodeDeployments;
-            this.consensusStats = consensusStats;
 
             this.chainState.MaxReorgLength = network.Consensus.MaxReorgLength;
-
-            nodeStats.RegisterStats(this.AddInlineStats, StatsType.Inline, 1000);
-        }
-
-        private void AddInlineStats(StringBuilder benchLogs)
-        {
-            if (this.chainState?.ConsensusTip != null)
-            {
-                string log = "Consensus.Height: ".PadRight(LoggingConfiguration.ColumnLength + 1) +
-                    this.chainState.ConsensusTip.Height.ToString().PadRight(8) + " Consensus.Hash: ".PadRight(LoggingConfiguration.ColumnLength - 1) +
-                    this.chainState.ConsensusTip.HashBlock;
-
-                benchLogs.AppendLine(log);
-            }
         }
 
         /// <inheritdoc />
-        public override void Initialize()
+        public override Task InitializeAsync()
         {
             DeploymentFlags flags = this.nodeDeployments.GetFlags(this.consensusManager.Tip);
             if (flags.ScriptFlags.HasFlag(ScriptVerify.Witness))
                 this.connectionManager.AddDiscoveredNodesRequirement(NetworkPeerServices.NODE_WITNESS);
 
-            this.signals.SubscribeForBlocksConnected(this.consensusStats);
+            return Task.CompletedTask;
         }
 
         /// <inheritdoc />
@@ -99,7 +78,6 @@ namespace Stratis.Bitcoin.Features.Consensus
         public static IFullNodeBuilder UsePowConsensus(this IFullNodeBuilder fullNodeBuilder)
         {
             LoggingConfiguration.RegisterFeatureNamespace<ConsensusFeature>("consensus");
-            LoggingConfiguration.RegisterFeatureClass<ConsensusStats>("bench");
 
             fullNodeBuilder.ConfigureFeature(features =>
             {
@@ -111,7 +89,6 @@ namespace Stratis.Bitcoin.Features.Consensus
                     services.AddSingleton<DBreezeCoinView>();
                     services.AddSingleton<ICoinView, CachedCoinView>();
                     services.AddSingleton<ConsensusController>();
-                    services.AddSingleton<ConsensusStats>();
                     services.AddSingleton<IConsensusRuleEngine, PowConsensusRuleEngine>();
                     services.AddSingleton<IChainState, ChainState>();
                     services.AddSingleton<ConsensusQuery>()
@@ -127,7 +104,6 @@ namespace Stratis.Bitcoin.Features.Consensus
         public static IFullNodeBuilder UsePosConsensus(this IFullNodeBuilder fullNodeBuilder)
         {
             LoggingConfiguration.RegisterFeatureNamespace<ConsensusFeature>("consensus");
-            LoggingConfiguration.RegisterFeatureClass<ConsensusStats>("bench");
 
             fullNodeBuilder.ConfigureFeature(features =>
             {
@@ -140,7 +116,6 @@ namespace Stratis.Bitcoin.Features.Consensus
                         services.AddSingleton<StakeChainStore>().AddSingleton<IStakeChain, StakeChainStore>(provider => provider.GetService<StakeChainStore>());
                         services.AddSingleton<IStakeValidator, StakeValidator>();
                         services.AddSingleton<ConsensusController>();
-                        services.AddSingleton<ConsensusStats>();
                         services.AddSingleton<IConsensusRuleEngine, PosConsensusRuleEngine>();
                         services.AddSingleton<IChainState, ChainState>();
                         services.AddSingleton<ConsensusQuery>()
@@ -221,7 +196,6 @@ namespace Stratis.Bitcoin.Features.Consensus
                 {
                     new SetActivationDeploymentsPartialValidationRule(),
 
-                    new CheckDifficultyHybridRule(),
                     new PosTimeMaskRule(),
 
                     // rules that are inside the method ContextualCheckBlock
@@ -243,6 +217,8 @@ namespace Stratis.Bitcoin.Features.Consensus
                 consensus.FullValidationRules = new List<IFullValidationConsensusRule>()
                 {
                     new SetActivationDeploymentsFullValidationRule(),
+
+                    new CheckDifficultyHybridRule(),
 
                     // rules that require the store to be loaded (coinview)
                     new LoadCoinviewRule(),
