@@ -209,7 +209,7 @@
             Assert.Equal(Money.Coins(30), network.Consensus.ProofOfWorkReward);
             Assert.Equal(Money.Coins(15), network.Consensus.ProofOfStakeReward);
             Assert.True(network.Consensus.PosRewardReduction);
-            Assert.Equal(525_600, network.Consensus.PosRewardReductionBlockInterval);
+            Assert.Equal(2880, network.Consensus.PosRewardReductionBlockInterval);
             Assert.Equal(7.5m, network.Consensus.PosRewardReductionPercentage);
             Assert.Equal((uint)500, network.Consensus.MaxReorgLength);
             Assert.Equal(long.MaxValue, network.Consensus.MaxMoney);
@@ -301,12 +301,12 @@
                     .ToBytes(false)), network.Consensus.ProofOfStakeLimitV2);
             Assert.Null(network.Consensus.DefaultAssumeValid);
             Assert.Equal(10, network.Consensus.CoinbaseMaturity);
-            Assert.Equal(Money.Coins(50000), network.Consensus.PremineReward);
+            Assert.Equal(Money.Coins(30000), network.Consensus.PremineReward);
             Assert.Equal(2, network.Consensus.PremineHeight);
             Assert.Equal(Money.Coins(30), network.Consensus.ProofOfWorkReward);
             Assert.Equal(Money.Coins(15), network.Consensus.ProofOfStakeReward);
             Assert.True(network.Consensus.PosRewardReduction);
-            Assert.Equal(525_600, network.Consensus.PosRewardReductionBlockInterval);
+            Assert.Equal(2880, network.Consensus.PosRewardReductionBlockInterval);
             Assert.Equal(7.5m, network.Consensus.PosRewardReductionPercentage);
             Assert.Equal((uint)500, network.Consensus.MaxReorgLength);
             Assert.Equal(long.MaxValue, network.Consensus.MaxMoney);
