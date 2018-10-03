@@ -5,20 +5,20 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.PlatformAbstractions;
-using Redstone.Features.Api;
 using Swashbuckle.AspNetCore.Swagger;
 
-namespace Stratis.Bitcoin.Features.Api
+namespace Redstone.Features.Api
 {
     public class Startup
     {
         public Startup(IHostingEnvironment env)
         {
-            var builder = new ConfigurationBuilder()
+            IConfigurationBuilder builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
+
             this.Configuration = builder.Build();
         }
 
@@ -55,14 +55,14 @@ namespace Stratis.Bitcoin.Features.Api
                     options.Filters.Add(typeof(LoggingActionFilter));
 
                     ServiceProvider serviceProvider = services.BuildServiceProvider();
-                    ApiSettings apiSettings = (ApiSettings)serviceProvider.GetRequiredService(typeof(ApiSettings));
+                    var apiSettings = (ApiSettings)serviceProvider.GetRequiredService(typeof(ApiSettings));
                     if (apiSettings.KeepaliveTimer != null)
                     {
                         options.Filters.Add(typeof(KeepaliveActionFilter));
                     }
                 })
                 // add serializers for NBitcoin objects
-                .AddJsonOptions(options => Utilities.JsonConverters.Serializer.RegisterFrontConverters(options.SerializerSettings))
+                .AddJsonOptions(options => Stratis.Bitcoin.Utilities.JsonConverters.Serializer.RegisterFrontConverters(options.SerializerSettings))
                 .AddControllers(services);
 
             // Register the Swagger generator, defining one or more Swagger documents
@@ -71,9 +71,9 @@ namespace Stratis.Bitcoin.Features.Api
                 setup.SwaggerDoc("v1", new Info { Title = "Redstone Api", Version = "v1" });
 
                 //Set the comments path for the swagger json and ui.
-                var basePath = PlatformServices.Default.Application.ApplicationBasePath;
-                var apiXmlPath = Path.Combine(basePath, "Redstone.Api.xml");
-                var walletXmlPath = Path.Combine(basePath, "Redstone.LightWallet.xml");
+                string basePath = PlatformServices.Default.Application.ApplicationBasePath;
+                string apiXmlPath = Path.Combine(basePath, "Redstone.Api.xml");
+                string walletXmlPath = Path.Combine(basePath, "Redstone.LightWallet.xml");
 
                 if (File.Exists(apiXmlPath))
                 {
@@ -84,6 +84,8 @@ namespace Stratis.Bitcoin.Features.Api
                 {
                     setup.IncludeXmlComments(walletXmlPath);
                 }
+
+                setup.DescribeAllEnumsAsStrings();
             });
         }
 
@@ -103,6 +105,7 @@ namespace Stratis.Bitcoin.Features.Api
             // Enable middleware to serve swagger-ui (HTML, JS, CSS etc.), specifying the Swagger JSON endpoint.
             app.UseSwaggerUI(c =>
             {
+                c.DefaultModelRendering(ModelRendering.Model);
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Redstone.Api V1");
             });
         }

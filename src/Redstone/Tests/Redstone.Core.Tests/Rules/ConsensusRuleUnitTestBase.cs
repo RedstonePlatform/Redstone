@@ -105,7 +105,7 @@
                 Logger = this.logger.Object,
                 Parent = new TestPosConsensusRules(this.network, this.loggerFactory.Object, this.dateTimeProvider.Object, this.concurrentChain, this.nodeDeployments,
                     this.consensusSettings, this.checkpoints.Object, this.coinView.Object, this.stakeChain.Object, this.stakeValidator.Object, this.chainState.Object,
-                    new InvalidBlockHashStore(new DateTimeProvider()))
+                    new InvalidBlockHashStore(new DateTimeProvider()), new NodeStats(this.dateTimeProvider.Object))
             };
         }
     }
@@ -187,20 +187,20 @@
     }
 
 
-    //public class TestConsensusRulesUnitTestBase : ConsensusRuleUnitTestBase<TestConsensusRules>
-    //{
-    //    public TestConsensusRulesUnitTestBase() : base(KnownNetworks.TestNet)
-    //    {
-    //        this.network.Consensus.Options = new ConsensusOptions();
-    //        this.consensusRules = InitializeConsensusRules();
-    //    }
+    public class TestConsensusRulesUnitTestBase : ConsensusRuleUnitTestBase<TestConsensusRules>
+    {
+        public TestConsensusRulesUnitTestBase() : base(KnownNetworks.TestNet)
+        {
+            this.network.Consensus.Options = new ConsensusOptions();
+            this.consensusRules = InitializeConsensusRules();
+        }
 
-    //    public override TestConsensusRules InitializeConsensusRules()
-    //    {
-    //        return new TestConsensusRules(this.network, this.loggerFactory.Object, this.dateTimeProvider.Object, this.concurrentChain, this.nodeDeployments,
-    //            this.consensusSettings, this.checkpoints.Object, this.chainState.Object, new InvalidBlockHashStore(new DateTimeProvider()));
-    //    }
-    //}
+        public override TestConsensusRules InitializeConsensusRules()
+        {
+            return new TestConsensusRules(this.network, this.loggerFactory.Object, this.dateTimeProvider.Object, this.concurrentChain, this.nodeDeployments,
+                this.consensusSettings, this.checkpoints.Object, this.chainState.Object, new InvalidBlockHashStore(this.dateTimeProvider.Object), new NodeStats(this.dateTimeProvider.Object));
+        }
+    }
 
     public class TestPosConsensusRulesUnitTestBase : ConsensusRuleUnitTestBase<TestPosConsensusRules>
     {
@@ -222,7 +222,7 @@
         {
             return new TestPosConsensusRules(this.network, this.loggerFactory.Object, this.dateTimeProvider.Object, this.concurrentChain,
                 this.nodeDeployments, this.consensusSettings, this.checkpoints.Object, this.coinView.Object, this.stakeChain.Object,
-                this.stakeValidator.Object, this.chainState.Object, new InvalidBlockHashStore(new DateTimeProvider()));
+                this.stakeValidator.Object, this.chainState.Object, new InvalidBlockHashStore(this.dateTimeProvider.Object), new NodeStats(this.dateTimeProvider.Object));
         }
     }
 }

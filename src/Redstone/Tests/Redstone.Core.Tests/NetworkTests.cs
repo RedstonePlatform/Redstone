@@ -95,7 +95,7 @@
             Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.TestDummy]);
             Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.CSV]);
             Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.Segwit]);
-            Assert.Equal(500, network.Consensus.LastPOWBlock);
+            Assert.Equal(129600, network.Consensus.LastPOWBlock);
             Assert.True(network.Consensus.IsProofOfStake);
             Assert.Equal(787264, network.Consensus.CoinType);
             Assert.Equal(
@@ -107,7 +107,7 @@
             Assert.Equal(new uint256("0x55a8205ae4bbf18f4d238c43f43005bd66e0b1f679b39e2c5c62cf6903693a5e"),
                 network.Consensus.DefaultAssumeValid);
             Assert.Equal(50, network.Consensus.CoinbaseMaturity);
-            Assert.Equal(Money.Coins(50000), network.Consensus.PremineReward);
+            Assert.Equal(Money.Coins(5400000), network.Consensus.PremineReward);
             Assert.Equal(2, network.Consensus.PremineHeight);
             Assert.Equal(Money.Coins(30), network.Consensus.ProofOfWorkReward);
             Assert.Equal(Money.Coins(15), network.Consensus.ProofOfStakeReward);
@@ -131,8 +131,8 @@
             Network network = RedstoneNetworks.RedstoneTest;
 
             Assert.Equal(0, network.Checkpoints.Count);
-            Assert.Equal(1, network.DNSSeeds.Count);
-            Assert.Equal(3, network.SeedNodes.Count);
+            Assert.Equal(0, network.DNSSeeds.Count);
+            Assert.Equal(0, network.SeedNodes.Count);
 
             Assert.Equal("RedstoneTest", network.Name);
             Assert.Equal(RedstoneMain.RedstoneRootFolderName, network.RootFolderName);
@@ -192,7 +192,7 @@
             Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.TestDummy]);
             Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.CSV]);
             Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.Segwit]);
-            Assert.Equal(500, network.Consensus.LastPOWBlock);
+            Assert.Equal(1440, network.Consensus.LastPOWBlock);
             Assert.True(network.Consensus.IsProofOfStake);
             Assert.Equal(787264, network.Consensus.CoinType);
             Assert.Equal(
@@ -204,7 +204,7 @@
             Assert.Equal(new uint256("0x98fa6ef0bca5b431f15fd79dc6f879dc45b83ed4b1bbe933a383ef438321958e"),
                 network.Consensus.DefaultAssumeValid);
             Assert.Equal(10, network.Consensus.CoinbaseMaturity);
-            Assert.Equal(Money.Coins(50000), network.Consensus.PremineReward);
+            Assert.Equal(Money.Coins(30000), network.Consensus.PremineReward);
             Assert.Equal(2, network.Consensus.PremineHeight);
             Assert.Equal(Money.Coins(30), network.Consensus.ProofOfWorkReward);
             Assert.Equal(Money.Coins(15), network.Consensus.ProofOfStakeReward);
@@ -290,7 +290,7 @@
             Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.TestDummy]);
             Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.CSV]);
             Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.Segwit]);
-            Assert.Equal(500, network.Consensus.LastPOWBlock);
+            Assert.Equal(1440, network.Consensus.LastPOWBlock);
             Assert.True(network.Consensus.IsProofOfStake);
             Assert.Equal(787264, network.Consensus.CoinType);
             Assert.Equal(

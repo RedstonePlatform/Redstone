@@ -1,10 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
-using Moq;
-using NBitcoin;
-
-namespace Redstone.Core.Tests.Rules
+﻿namespace Redstone.Core.Tests.Rules
 {
-    using Stratis.Bitcoin.Features.Consensus.Rules;
+    using Microsoft.Extensions.Logging;
+    using Moq;
+    using NBitcoin;
     using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
     using Xunit;
 
