@@ -13,7 +13,7 @@ namespace Redstone.Core.Tests
         /// This class is not able to work concurrently because logs is a static class.
         /// The logs class needs to be refactored first before tests can run in parallel.
         /// </remarks>
-        public LogsTestBase() : base(KnownNetworks.Main)
+        public LogsTestBase() : base(RedstoneNetworks.RedstoneMain)
         {
             this.FullNodeLogger = new Mock<ILogger>();
             this.RPCLogger = new Mock<ILogger>();

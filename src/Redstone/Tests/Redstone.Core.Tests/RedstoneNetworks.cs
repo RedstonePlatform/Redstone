@@ -6,10 +6,10 @@ namespace Redstone.Core.Tests
 {
     public static class RedstoneNetworks
     {
-        public static Network RedstoneMain => NetworkRegistration.GetNetwork("Main") ?? NetworkRegistration.Register(new RedstoneMain());
+        public static Network RedstoneMain => NetworkRegistration.GetNetwork("RedstoneMain") ?? NetworkRegistration.Register(new RedstoneMain());
 
-        public static Network RedstoneTest => NetworkRegistration.GetNetwork("TestNet") ?? NetworkRegistration.Register(new RedstoneTest());
+        public static Network RedstoneTest => NetworkRegistration.GetNetwork("RedstoneTest") ?? NetworkRegistration.Register(new RedstoneTest());
 
-        public static Network RedstoneRegTest => NetworkRegistration.GetNetwork("RegTest") ?? NetworkRegistration.Register(new RedstoneRegTest());
+        public static Network RedstoneRegTest => NetworkRegistration.GetNetwork("RedstoneRegTest") ?? NetworkRegistration.Register(new RedstoneRegTest());
     }
 }

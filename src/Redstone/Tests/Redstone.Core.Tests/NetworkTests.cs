@@ -196,10 +196,10 @@
             Assert.True(network.Consensus.IsProofOfStake);
             Assert.Equal(787264, network.Consensus.CoinType);
             Assert.Equal(
-                new BigInteger(uint256.Parse("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+                new BigInteger(uint256.Parse("0000ffff00000000000000000000000000000000000000000000000000000000")
                     .ToBytes(false)), network.Consensus.ProofOfStakeLimit);
             Assert.Equal(
-                new BigInteger(uint256.Parse("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff")
+                new BigInteger(uint256.Parse("0000ffff00000000000000000000000000000000000000000000000000000000")
                     .ToBytes(false)), network.Consensus.ProofOfStakeLimitV2);
             Assert.Equal(new uint256("0x98fa6ef0bca5b431f15fd79dc6f879dc45b83ed4b1bbe933a383ef438321958e"),
                 network.Consensus.DefaultAssumeValid);

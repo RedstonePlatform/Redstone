@@ -426,9 +426,9 @@
 //        [Fact]
 //        public void CoinstakeAge_BeforeActivation_Testnet()
 //        {
-//            Assert.True(this.WasUtxoSelectedForStaking(KnownNetworks.StratisTest, 1000, 1000 - 8)); // utxo depth is 9, mining block at 10
+//            Assert.True(this.WasUtxoSelectedForStaking(RedstoneNetworks.RedstoneTest, 1000, 1000 - 8)); // utxo depth is 9, mining block at 10
 
-//            Assert.False(this.WasUtxoSelectedForStaking(KnownNetworks.StratisTest, 1000, 1000 - 7)); // utxo depth is 8, mining block at 9
+//            Assert.False(this.WasUtxoSelectedForStaking(RedstoneNetworks.RedstoneTest, 1000, 1000 - 7)); // utxo depth is 8, mining block at 9
 //        }
 
 //        /// <summary>This is a test of coinstake age softfork activation on testnet.</summary>
@@ -439,9 +439,9 @@
 //            int activationHeight = PosConsensusOptions.CoinstakeMinConfirmationActivationHeightTestnet;
 //            int afterActivationHeight = activationHeight + 1000;
 
-//            Assert.True(this.WasUtxoSelectedForStaking(KnownNetworks.StratisTest, afterActivationHeight, afterActivationHeight - 18));
+//            Assert.True(this.WasUtxoSelectedForStaking(RedstoneNetworks.RedstoneTest, afterActivationHeight, afterActivationHeight - 18));
 
-//            Assert.False(this.WasUtxoSelectedForStaking(KnownNetworks.StratisTest, afterActivationHeight, afterActivationHeight - 17));
+//            Assert.False(this.WasUtxoSelectedForStaking(RedstoneNetworks.RedstoneTest, afterActivationHeight, afterActivationHeight - 17));
 //        }
 
 //        /// <summary>This is a test of coinstake age softfork activation on testnet.</summary>
@@ -451,11 +451,11 @@
 //        {
 //            int activationHeight = PosConsensusOptions.CoinstakeMinConfirmationActivationHeightTestnet;
 
-//            Assert.True(this.WasUtxoSelectedForStaking(KnownNetworks.StratisTest, activationHeight - 2, activationHeight - 10)); // mining block before activation
+//            Assert.True(this.WasUtxoSelectedForStaking(RedstoneNetworks.RedstoneTest, activationHeight - 2, activationHeight - 10)); // mining block before activation
 
-//            Assert.True(this.WasUtxoSelectedForStaking(KnownNetworks.StratisTest, activationHeight - 1, activationHeight - 19)); // mining activation block
+//            Assert.True(this.WasUtxoSelectedForStaking(RedstoneNetworks.RedstoneTest, activationHeight - 1, activationHeight - 19)); // mining activation block
 
-//            Assert.False(this.WasUtxoSelectedForStaking(KnownNetworks.StratisTest, activationHeight - 1, activationHeight - 18)); // mining activation block
+//            Assert.False(this.WasUtxoSelectedForStaking(RedstoneNetworks.RedstoneTest, activationHeight - 1, activationHeight - 18)); // mining activation block
 //        }
 
 //        /// <summary>This is a test of coinstake age softfork activation on mainnet.</summary>
@@ -463,9 +463,9 @@
 //        [Fact]
 //        public void CoinstakeAge_BeforeActivation_Mainnet()
 //        {
-//            Assert.True(this.WasUtxoSelectedForStaking(KnownNetworks.StratisMain, 1000, 1000 - 48)); // utxo depth is 49, mining block at 50
+//            Assert.True(this.WasUtxoSelectedForStaking(RedstoneNetworks.RedstoneMain, 1000, 1000 - 48)); // utxo depth is 49, mining block at 50
 
-//            Assert.False(this.WasUtxoSelectedForStaking(KnownNetworks.StratisMain, 1000, 1000 - 47)); // utxo depth is 48, mining block at 49
+//            Assert.False(this.WasUtxoSelectedForStaking(RedstoneNetworks.RedstoneMain, 1000, 1000 - 47)); // utxo depth is 48, mining block at 49
 //        }
 
 //        /// <summary>This is a test of coinstake age softfork activation on mainnet.</summary>
@@ -476,9 +476,9 @@
 //            int activationHeight = PosConsensusOptions.CoinstakeMinConfirmationActivationHeightMainnet;
 //            int afterActivationHeight = activationHeight + 1000;
 
-//            Assert.True(this.WasUtxoSelectedForStaking(KnownNetworks.StratisMain, afterActivationHeight, afterActivationHeight - 498));
+//            Assert.True(this.WasUtxoSelectedForStaking(RedstoneNetworks.RedstoneMain, afterActivationHeight, afterActivationHeight - 498));
 
-//            Assert.False(this.WasUtxoSelectedForStaking(KnownNetworks.StratisMain, afterActivationHeight, afterActivationHeight - 497));
+//            Assert.False(this.WasUtxoSelectedForStaking(RedstoneNetworks.RedstoneMain, afterActivationHeight, afterActivationHeight - 497));
 //        }
 
 //        /// <summary>This is a test of coinstake age softfork activation on mainnet.</summary>
@@ -488,11 +488,11 @@
 //        {
 //            int activationHeight = PosConsensusOptions.CoinstakeMinConfirmationActivationHeightMainnet;
 
-//            Assert.True(this.WasUtxoSelectedForStaking(KnownNetworks.StratisMain, activationHeight - 2, activationHeight - 50)); // mining block before activation
+//            Assert.True(this.WasUtxoSelectedForStaking(RedstoneNetworks.RedstoneMain, activationHeight - 2, activationHeight - 50)); // mining block before activation
 
-//            Assert.True(this.WasUtxoSelectedForStaking(KnownNetworks.StratisMain, activationHeight - 1, activationHeight - 499)); // mining activation block
+//            Assert.True(this.WasUtxoSelectedForStaking(RedstoneNetworks.RedstoneMain, activationHeight - 1, activationHeight - 499)); // mining activation block
 
-//            Assert.False(this.WasUtxoSelectedForStaking(KnownNetworks.StratisMain, activationHeight - 1, activationHeight - 498)); // mining activation block
+//            Assert.False(this.WasUtxoSelectedForStaking(RedstoneNetworks.RedstoneMain, activationHeight - 1, activationHeight - 498)); // mining activation block
 //        }
 
 //        private bool WasUtxoSelectedForStaking(Network network, int chainTipHeight, int utxoHeight)

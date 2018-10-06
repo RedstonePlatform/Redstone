@@ -189,7 +189,7 @@
 
     public class TestConsensusRulesUnitTestBase : ConsensusRuleUnitTestBase<TestConsensusRules>
     {
-        public TestConsensusRulesUnitTestBase() : base(KnownNetworks.TestNet)
+        public TestConsensusRulesUnitTestBase() : base(RedstoneNetworks.RedstoneTest)
         {
             this.network.Consensus.Options = new ConsensusOptions();
             this.consensusRules = InitializeConsensusRules();
