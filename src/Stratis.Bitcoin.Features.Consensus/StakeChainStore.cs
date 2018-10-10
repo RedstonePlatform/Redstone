@@ -49,9 +49,8 @@ namespace Stratis.Bitcoin.Features.Consensus
 
         public async Task LoadAsync()
         {
-            /// TODO temp fix for now as per Sondreb code; perm fix needed
-			//uint256 hash = await this.dBreezeCoinView.GetTipHashAsync().ConfigureAwait(false);
-            ChainedHeader next = this.chain.Tip; // this.chain.GetBlock(hash);
+            uint256 hash = await this.dBreezeCoinView.GetTipHashAsync().ConfigureAwait(false);
+            ChainedHeader next = this.chain.GetBlock(hash);
             var load = new List<StakeItem>();
 
             while (next != this.chain.Genesis)
