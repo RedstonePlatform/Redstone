@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using NBitcoin.BouncyCastle.crypto.parameters;
 using NBitcoin.BouncyCastle.Math;
 using NBitcoin.DataEncoders;
 using NBitcoin.Protocol;
@@ -786,6 +787,71 @@ namespace NBitcoin
                 }
                 return hash;
             }
+        }
+
+        internal static BigInteger GenerateEncryptableInteger(RsaKeyParameters key)
+        {
+            while (true)
+            {
+                var bytes = RandomUtils.GetBytes(RsaKey.KeySize / 8);
+                BigInteger input = new BigInteger(1, bytes);
+                if (input.CompareTo(key.Modulus) >= 0)
+                    continue;
+                return input;
+            }
+        }
+        public static byte[] Combine(params byte[][] arrays)
+        {
+            var len = arrays.Select(a => a.Length).Sum();
+            int offset = 0;
+            var combined = new byte[len];
+            foreach (var array in arrays)
+            {
+                Array.Copy(array, 0, combined, offset, array.Length);
+                offset += array.Length;
+            }
+            return combined;
+        }
+
+        // http://stackoverflow.com/a/14933880/2061103
+        public static void DeleteRecursivelyWithMagicDust(string destinationDir)
+        {
+            const int magicDust = 10;
+            for (var gnomes = 1; gnomes <= magicDust; gnomes++)
+            {
+                try
+                {
+                    Directory.Delete(destinationDir, true);
+                }
+                catch (DirectoryNotFoundException)
+                {
+                    return;  // good!
+                }
+                catch (IOException)
+                {
+                    if (gnomes == magicDust)
+                        throw;
+                    // System.IO.IOException: The directory is not empty
+                    System.Diagnostics.Debug.WriteLine("Gnomes prevent deletion of {0}! Applying magic dust, attempt #{1}.", destinationDir, gnomes);
+
+                    // see http://stackoverflow.com/questions/329355/cannot-delete-directory-with-directory-deletepath-true for more magic
+                    Thread.Sleep(100);
+                    continue;
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    if (gnomes == magicDust)
+                        throw;
+                    // Wait, maybe another software make us authorized a little later
+                    System.Diagnostics.Debug.WriteLine("Gnomes prevent deletion of {0}! Applying magic dust, attempt #{1}.", destinationDir, gnomes);
+
+                    // see http://stackoverflow.com/questions/329355/cannot-delete-directory-with-directory-deletepath-true for more magic
+                    Thread.Sleep(100);
+                    continue;
+                }
+                return;
+            }
+            // depending on your use case, consider throwing an exception here
         }
     }
 }
