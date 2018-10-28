@@ -15,8 +15,12 @@ Redstone Core
 
 https://redstonecoin.com
 
-Bitcoin Implementation in C#
-----------------------------
+██████╗ ███████╗██████╗ ███████╗████████╗ ██████╗ ███╗   ██╗███████╗
+██╔══██╗██╔════╝██╔══██╗██╔════╝╚══██╔══╝██╔═══██╗████╗  ██║██╔════╝
+██████╔╝█████╗  ██║  ██║███████╗   ██║   ██║   ██║██╔██╗ ██║█████╗
+██╔══██╗██╔══╝  ██║  ██║╚════██║   ██║   ██║   ██║██║╚██╗██║██╔══╝
+██║  ██║███████╗██████╔╝███████║   ██║   ╚██████╔╝██║ ╚████║███████╗
+╚═╝  ╚═╝╚══════╝╚═════╝ ╚══════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═══╝╚══════╝
 
 Redstone is an implementation of the Bitcoin protocol in C# on the [.NET Core](https://dotnet.github.io/) platform.    
 Redstone is a Stratis fork based on the [NBitcoin](https://github.com/MetacoSA/NBitcoin) project.  
