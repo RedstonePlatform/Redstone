@@ -10,7 +10,7 @@
 [6]: https://travis-ci.org/stratisproject/StratisBitcoinFullNode
 
 
-Stratis Bitcoin
+Redstone Core
 ===============
 
 https://redstonecoin.com
