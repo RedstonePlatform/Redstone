@@ -14,9 +14,9 @@
         [Trait("UnitTest", "UnitTest")]
         public void CanGetNetworkFromName()
         {
-            Network redstoneMain = RedstoneNetworks.RedstoneMain;
-            Network redstoneTest = RedstoneNetworks.RedstoneTest;
-            Network redstoneRegtest = RedstoneNetworks.RedstoneRegTest;
+            Network redstoneMain = RedstoneNetworks.Main;
+            Network redstoneTest = RedstoneNetworks.TestNet;
+            Network redstoneRegtest = RedstoneNetworks.RegTest;
 
             Assert.Equal(NetworkRegistration.GetNetwork("redstoneMain"), redstoneMain);
             Assert.Equal(NetworkRegistration.GetNetwork("RedstoneMain"), redstoneMain);
@@ -31,7 +31,7 @@
         [Trait("UnitTest", "UnitTest")]
         public void RedstoneMainIsInitializedCorrectly()
         {
-            Network network = RedstoneNetworks.RedstoneMain;
+            Network network = RedstoneNetworks.Main;
 
             Assert.Equal(0, network.Checkpoints.Count);
             Assert.Equal(0, network.DNSSeeds.Count);
@@ -128,7 +128,7 @@
         [Trait("UnitTest", "UnitTest")]
         public void RedstoneTestnetIsInitializedCorrectly()
         {
-            Network network = RedstoneNetworks.RedstoneTest;
+            Network network = RedstoneNetworks.TestNet;
 
             Assert.Equal(0, network.Checkpoints.Count);
             Assert.Equal(0, network.DNSSeeds.Count);
@@ -226,7 +226,7 @@
         [Trait("UnitTest", "UnitTest")]
         public void RedstoneRegTestIsInitializedCorrectly()
         {
-            Network network = RedstoneNetworks.RedstoneRegTest;
+            Network network = RedstoneNetworks.RegTest;
 
             Assert.Empty(network.Checkpoints);
             Assert.Empty(network.DNSSeeds);

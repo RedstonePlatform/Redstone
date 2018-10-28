@@ -1,19 +1,20 @@
-﻿using System;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Internal;
-using Moq;
-using Stratis.Bitcoin;
-using Stratis.Bitcoin.Tests.Common;
+﻿using Redstone.Core.Networks;
 
 namespace Redstone.Core.Tests
 {
+    using System;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Internal;
+    using Moq;
+    using Stratis.Bitcoin;
+
     public class LogsTestBase : TestBase
     {
         /// <remarks>
         /// This class is not able to work concurrently because logs is a static class.
         /// The logs class needs to be refactored first before tests can run in parallel.
         /// </remarks>
-        public LogsTestBase() : base(RedstoneNetworks.RedstoneMain)
+        public LogsTestBase() : base(RedstoneNetworks.Main)
         {
             this.FullNodeLogger = new Mock<ILogger>();
             this.RPCLogger = new Mock<ILogger>();

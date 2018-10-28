@@ -1,8 +1,8 @@
-﻿using NBitcoin;
-using NBitcoin.Networks;
-
-namespace Redstone.Core.Networks
+﻿namespace Redstone.Core.Networks
 {
+    using NBitcoin;
+    using NBitcoin.Networks;
+
     public static class RedstoneNetworks
     {
         public static Network Main => NetworkRegistration.GetNetwork("RedstoneMain") ?? NetworkRegistration.Register(new RedstoneMain());

@@ -1,4 +1,6 @@
-﻿namespace Redstone.Core.Tests.Rules
+﻿using Redstone.Core.Networks;
+
+namespace Redstone.Core.Tests.Rules
 {
     using System;
     using System.Collections.Generic;
@@ -90,7 +92,7 @@
         protected Mock<IBlockPuller> lookaheadBlockPuller;
         protected Mock<ICoinView> coinView;
 
-        public PosConsensusRuleUnitTestBase() : base(RedstoneNetworks.RedstoneTest)
+        public PosConsensusRuleUnitTestBase() : base(RedstoneNetworks.TestNet)
         {
             this.stakeChain = new Mock<IStakeChain>();
             this.stakeValidator = new Mock<IStakeValidator>();
@@ -189,7 +191,7 @@
 
     public class TestConsensusRulesUnitTestBase : ConsensusRuleUnitTestBase<TestConsensusRules>
     {
-        public TestConsensusRulesUnitTestBase() : base(RedstoneNetworks.RedstoneTest)
+        public TestConsensusRulesUnitTestBase() : base(RedstoneNetworks.TestNet)
         {
             this.network.Consensus.Options = new ConsensusOptions();
             this.consensusRules = InitializeConsensusRules();
@@ -209,7 +211,7 @@
         protected Mock<IBlockPuller> lookaheadBlockPuller;
         protected Mock<ICoinView> coinView;
 
-        public TestPosConsensusRulesUnitTestBase() : base(RedstoneNetworks.RedstoneTest)
+        public TestPosConsensusRulesUnitTestBase() : base(RedstoneNetworks.TestNet)
         {
             this.stakeChain = new Mock<IStakeChain>();
             this.stakeValidator = new Mock<IStakeValidator>();

@@ -1,12 +1,13 @@
-using System.Collections.Generic;
-using System.Text;
-using NBitcoin;
-using NBitcoin.Networks;
-using Redstone.Features.Breeze.BreezeCommon;
-using Xunit;
+using Redstone.Core.Networks;
 
 namespace Redstone.Feature.Breeze.Tests
 {
+    using System.Collections.Generic;
+    using System.Text;
+    using NBitcoin;
+    using Redstone.Features.Breeze.BreezeCommon;
+    using Xunit;
+
     public class ConversionTests
     {
         [Fact]
@@ -31,7 +32,7 @@ namespace Redstone.Feature.Breeze.Tests
 
             string inputMessage = "a"; 
             byte[] inputMessageBytes = Encoding.ASCII.GetBytes(inputMessage);
-            List<BitcoinAddress> output = BlockChainDataConversions.BytesToAddresses(RedstoneNetworks.RedstoneTest, inputMessageBytes);
+            List<BitcoinAddress> output = BlockChainDataConversions.BytesToAddresses(RedstoneNetworks.TestNet, inputMessageBytes);
             List<BitcoinAddress> expectedOutput = new List<BitcoinAddress>();
             expectedOutput.Add(BitcoinAddress.Create("mpMqqfKnF9M2rwk9Ai4RymBqADx6TssFuM"));
 

@@ -4,6 +4,7 @@ using System.Net;
 using System.Text;
 using NBitcoin;
 using NBitcoin.Networks;
+using Redstone.Core.Networks;
 using Redstone.Features.Breeze.BreezeCommon;
 using Xunit;
 
@@ -21,7 +22,7 @@ namespace Redstone.Feature.Breeze.Tests
         public void RegistrationStoreAddTest()
         {
             var rsa = new RsaKey();
-            var ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.RedstoneMain);
+            var ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.Main);
             
             var token = new RegistrationToken(255,
                                               "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
@@ -152,7 +153,7 @@ namespace Redstone.Feature.Breeze.Tests
         public void CheckSignatureOfRegistrationToken()
         {
             var rsa = new RsaKey();
-            var ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.RedstoneMain);
+            var ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.Main);
             
             var token = new RegistrationToken(1,
                 "175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W",
@@ -179,7 +180,7 @@ namespace Redstone.Feature.Breeze.Tests
         public void CanVerifySignature()
         {   
             var rsa = new RsaKey();
-            var ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.RedstoneMain);
+            var ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.Main);
             
             var token = new RegistrationToken(1,
                 "175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W",

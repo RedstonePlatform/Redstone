@@ -1,6 +1,7 @@
 using System.Net;
 using NBitcoin;
 using NBitcoin.Networks;
+using Redstone.Core.Networks;
 using Redstone.Features.Breeze.BreezeCommon;
 using Xunit;
 
@@ -12,7 +13,7 @@ namespace Redstone.Feature.Breeze.Tests
 		public void CanValidateRegistrationToken()
 		{
 			var rsa = new RsaKey();
-			var ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.RedstoneMain);
+			var ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.Main);
 
 			var serverAddress = ecdsa.GetAddress().ToString();
 			
@@ -29,7 +30,7 @@ namespace Redstone.Feature.Breeze.Tests
 			token.RsaSignature = cryptoUtils.SignDataRSA(token.GetHeaderBytes().ToArray());
 			token.EcdsaSignature = cryptoUtils.SignDataECDSA(token.GetHeaderBytes().ToArray());
 
-			Assert.True(token.Validate(RedstoneNetworks.RedstoneMain));
+			Assert.True(token.Validate(RedstoneNetworks.Main));
 		}
 	}
 }
