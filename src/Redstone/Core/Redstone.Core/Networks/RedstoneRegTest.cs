@@ -1,4 +1,5 @@
-﻿using Stratis.Bitcoin.Features.Wallet;
+﻿using Redstone.Core.Networks.Deployments;
+using Stratis.Bitcoin.Features.Wallet;
 
 namespace Redstone.Core.Networks
 {
@@ -31,7 +32,7 @@ namespace Redstone.Core.Networks
             var powLimit = new Target(new uint256("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
 
             var consensusFactory = new PosConsensusFactory();
-            
+
             // Create the genesis block.
             this.GenesisTime = 1470467000;
             this.GenesisNonce = 1831645;
@@ -53,6 +54,7 @@ namespace Redstone.Core.Networks
                 maxStandardVersion: 2,
                 maxStandardTxWeight: 100_000,
                 maxBlockSigopsCost: 20_000,
+                maxStandardTxSigopsCost: 1,  // TODO Anthony - what should this value be (this param was added to the constructor)
                 provenHeadersActivationHeight: 10_000_000 // TODO: Set it to the real value once it is known.
             );
 
@@ -63,7 +65,7 @@ namespace Redstone.Core.Networks
                 [BuriedDeployments.BIP66] = 0
             };
 
-            var bip9Deployments = new BIP9DeploymentsArray();
+            var bip9Deployments = new RedstoneBIP9Deployments();
 
             this.Consensus = new Consensus(
                 consensusFactory: consensusFactory,

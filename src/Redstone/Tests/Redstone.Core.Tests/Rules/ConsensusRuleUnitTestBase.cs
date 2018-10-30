@@ -1,25 +1,24 @@
-﻿using Redstone.Core.Networks;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
+using Moq;
+using NBitcoin;
+using NBitcoin.Rules;
+using Redstone.Core.Networks;
+using Stratis.Bitcoin.Base;
+using Stratis.Bitcoin.Base.Deployments;
+using Stratis.Bitcoin.BlockPulling;
+using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Configuration.Settings;
+using Stratis.Bitcoin.Consensus;
+using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Bitcoin.Features.Consensus;
+using Stratis.Bitcoin.Features.Consensus.CoinViews;
+using Stratis.Bitcoin.Features.Consensus.Interfaces;
+using Stratis.Bitcoin.Utilities;
 
 namespace Redstone.Core.Tests.Rules
 {
-    using System;
-    using System.Collections.Generic;
-    using Microsoft.Extensions.Logging;
-    using Moq;
-    using NBitcoin;
-    using NBitcoin.Rules;
-    using Stratis.Bitcoin.Base;
-    using Stratis.Bitcoin.Base.Deployments;
-    using Stratis.Bitcoin.BlockPulling;
-    using Stratis.Bitcoin.Configuration.Settings;
-    using Stratis.Bitcoin.Consensus;
-    using Stratis.Bitcoin.Consensus.Rules;
-    using Stratis.Bitcoin.Features.Consensus;
-    using Stratis.Bitcoin.Features.Consensus.CoinViews;
-    using Stratis.Bitcoin.Features.Consensus.Interfaces;
-    using Stratis.Bitcoin.Tests.Common;
-    using Stratis.Bitcoin.Utilities;
-
     public class ConsensusRuleUnitTestBase
     {
         protected Network network;
@@ -48,7 +47,7 @@ namespace Redstone.Core.Tests.Rules
             this.chainState = new Mock<IChainState>();
             this.checkpoints = new Mock<ICheckpoints>();
             this.concurrentChain = new ConcurrentChain(this.network);
-            this.consensusSettings = new ConsensusSettings();
+            this.consensusSettings = new ConsensusSettings(NodeSettings.Default(this.network));
             this.nodeDeployments = new NodeDeployments(this.network, this.concurrentChain);
 
             this.rules = new List<IConsensusRuleBase>();
@@ -134,7 +133,7 @@ namespace Redstone.Core.Tests.Rules
             this.chainState = new Mock<IChainState>();
             this.checkpoints = new Mock<ICheckpoints>();
             this.concurrentChain = new ConcurrentChain(this.network);
-            this.consensusSettings = new ConsensusSettings();
+            this.consensusSettings = new ConsensusSettings(NodeSettings.Default(this.network));
             this.dateTimeProvider = new Mock<IDateTimeProvider>();
             this.nodeDeployments = new NodeDeployments(this.network, this.concurrentChain);
 

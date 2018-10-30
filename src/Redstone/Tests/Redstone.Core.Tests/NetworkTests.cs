@@ -6,6 +6,7 @@
     using NBitcoin.DataEncoders;
     using NBitcoin.Networks;
     using Networks;
+    using Redstone.Core.Networks.Deployments;
     using Xunit;
 
     public class NetworkTests
@@ -92,9 +93,9 @@
             Assert.False(network.Consensus.PowNoRetargeting);
             Assert.Equal(1916, network.Consensus.RuleChangeActivationThreshold);
             Assert.Equal(2016, network.Consensus.MinerConfirmationWindow);
-            Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.TestDummy]);
-            Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.CSV]);
-            Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.Segwit]);
+            Assert.Null(network.Consensus.BIP9Deployments[BitcoinBIP9Deployments.TestDummy]);
+            Assert.Null(network.Consensus.BIP9Deployments[BitcoinBIP9Deployments.CSV]);
+            Assert.Null(network.Consensus.BIP9Deployments[BitcoinBIP9Deployments.Segwit]);
             Assert.Equal(129600, network.Consensus.LastPOWBlock);
             Assert.True(network.Consensus.IsProofOfStake);
             Assert.Equal(787264, network.Consensus.CoinType);
@@ -189,9 +190,9 @@
             Assert.False(network.Consensus.PowNoRetargeting);
             Assert.Equal(1916, network.Consensus.RuleChangeActivationThreshold);
             Assert.Equal(2016, network.Consensus.MinerConfirmationWindow);
-            Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.TestDummy]);
-            Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.CSV]);
-            Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.Segwit]);
+            Assert.Null(network.Consensus.BIP9Deployments[BitcoinBIP9Deployments.TestDummy]);
+            Assert.Null(network.Consensus.BIP9Deployments[BitcoinBIP9Deployments.CSV]);
+            Assert.Null(network.Consensus.BIP9Deployments[BitcoinBIP9Deployments.Segwit]);
             Assert.Equal(1440, network.Consensus.LastPOWBlock);
             Assert.True(network.Consensus.IsProofOfStake);
             Assert.Equal(787264, network.Consensus.CoinType);
@@ -287,9 +288,9 @@
             Assert.True(network.Consensus.PowNoRetargeting);
             Assert.Equal(1916, network.Consensus.RuleChangeActivationThreshold);
             Assert.Equal(2016, network.Consensus.MinerConfirmationWindow);
-            Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.TestDummy]);
-            Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.CSV]);
-            Assert.Null(network.Consensus.BIP9Deployments[BIP9Deployments.Segwit]);
+            Assert.Null(network.Consensus.BIP9Deployments[BitcoinBIP9Deployments.TestDummy]);
+            Assert.Null(network.Consensus.BIP9Deployments[BitcoinBIP9Deployments.CSV]);
+            Assert.Null(network.Consensus.BIP9Deployments[BitcoinBIP9Deployments.Segwit]);
             Assert.Equal(1440, network.Consensus.LastPOWBlock);
             Assert.True(network.Consensus.IsProofOfStake);
             Assert.Equal(787264, network.Consensus.CoinType);
