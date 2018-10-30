@@ -6,6 +6,7 @@ using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 
@@ -20,9 +21,8 @@ namespace Stratis.Bitcoin.IntegrationTests.RPC
         protected override void InitializeFixture()
         {
             this.Builder = NodeBuilder.Create(this);
-            this.Node = this.Builder.CreateStratisPowNode(KnownNetworks.RegTest);
-            this.Builder.StartAll();
-            this.Node.NotInIBD();
+            this.Node = this.Builder.CreateStratisPowNode(new BitcoinRegTest()).Start();
+
             this.RpcClient = this.Node.CreateRPCClient();
             this.NetworkPeerClient = this.Node.CreateNetworkPeerClient();
             this.NetworkPeerClient.VersionHandshakeAsync().GetAwaiter().GetResult();
@@ -232,7 +232,7 @@ namespace Stratis.Bitcoin.IntegrationTests.RPC
         public void GetNewAddress()
         {
             BitcoinAddress address = this.rpcTestFixture.RpcClient.GetNewAddress();
-            Assert.NotNull(address);            
+            Assert.NotNull(address);
         }
 
         // TODO: implement the RPC methods used below

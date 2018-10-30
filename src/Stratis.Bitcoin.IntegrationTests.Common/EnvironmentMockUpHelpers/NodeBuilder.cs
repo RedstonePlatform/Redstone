@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
 using NBitcoin;
 using NBitcoin.Protocol;
 using NLog;
@@ -19,6 +17,7 @@ using Stratis.Bitcoin.Features.SmartContracts.Networks;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.SmartContracts.Networks;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 {
@@ -28,7 +27,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         public NodeConfigParameters ConfigParameters { get; }
 
-        private string rootFolder;
+        private readonly string rootFolder;
 
         public NodeBuilder(string rootFolder)
         {
@@ -67,11 +66,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             string path;
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                path = $"../../../../External Libs/Bitcoin Core/{version}/Windows/bitcoind.exe";
+                path = $"../../../../External libs/Bitcoin Core/{version}/Windows/bitcoind.exe";
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                path = $"../../../../External Libs/Bitcoin Core/{version}/Linux/bitcoind";
+                path = $"../../../../External libs/Bitcoin Core/{version}/Linux/bitcoind";
             else
-                path = $"../../../../External Libs/Bitcoin Core/{version}/OSX/bitcoind";
+                path = $"../../../../External libs/Bitcoin Core/{version}/OSX/bitcoind";
 
             if (File.Exists(path))
                 return path;
@@ -79,7 +78,24 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             throw new FileNotFoundException($"Could not load the file {path}.");
         }
 
-        private CoreNode CreateNode(NodeRunner runner, string configFile = "bitcoin.conf", bool useCookieAuth = false)
+        private static string GetStratisXPath(string version)
+        {
+            string path;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                path = $"../../../../External libs/StratisX/{version}/Windows/stratisd.exe";
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                path = $"../../../../External libs/StratisX/{version}/Linux/stratisd";
+            else
+                path = $"../../../../External libs/StratisX/{version}/OSX/stratisd";
+
+            if (File.Exists(path))
+                return path;
+
+            throw new FileNotFoundException($"Could not load the file {path}.");
+        }
+
+        protected CoreNode CreateNode(NodeRunner runner, string configFile = "bitcoin.conf", bool useCookieAuth = false)
         {
             var node = new CoreNode(runner, this.ConfigParameters, configFile, useCookieAuth);
             this.Nodes.Add(node);
@@ -90,6 +106,12 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         {
             string bitcoinDPath = GetBitcoinCorePath(version);
             return CreateNode(new BitcoinCoreRunner(this.GetNextDataFolderName(), bitcoinDPath), useCookieAuth: useCookieAuth);
+        }
+
+        public CoreNode CreateStratisXNode(string version = "2.0.0.5", bool useCookieAuth = false)
+        {
+            string stratisDPath = GetStratisXPath(version);
+            return CreateNode(new StratisXRunner(this.GetNextDataFolderName(), stratisDPath), "stratis.conf", useCookieAuth);
         }
 
         public CoreNode CreateStratisPowNode(Network network)
@@ -114,18 +136,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         public CoreNode CreateStratisPosNode(Network network)
         {
             return CreateNode(new StratisBitcoinPosRunner(this.GetNextDataFolderName(), network), "stratis.conf");
-        }
-
-        public CoreNode CreateSmartContractPowNode()
-        {
-            Network network = new SmartContractsRegTest();
-            return CreateNode(new StratisSmartContractNode(this.GetNextDataFolderName(), network), "stratis.conf");
-        }
-
-        public CoreNode CreateSmartContractPosNode()
-        {
-            Network network = new SmartContractPosRegTest();
-            return CreateNode(new StratisSmartContractPosNode(this.GetNextDataFolderName(), network), "stratis.conf");
         }
 
         public CoreNode CloneStratisNode(CoreNode cloneNode)
@@ -156,7 +166,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             return CreateNode(new CustomNodeRunner(dataDir, callback, network, protocolVersion, configParameters, agent), configFileName);
         }
 
-        private string GetNextDataFolderName(string folderName = null)
+        protected string GetNextDataFolderName(string folderName = null)
         {
             string hash = Guid.NewGuid().ToString("N").Substring(0, 7);
             string numberedFolderName = string.Join(
@@ -165,14 +175,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             string dataFolderName = Path.Combine(this.rootFolder, numberedFolderName);
 
             return dataFolderName;
-        }
-
-        public void StartAll()
-        {
-            foreach (CoreNode node in this.Nodes.Where(n => n.State == CoreNodeState.Stopped))
-            {
-                node.Start();
-            }
         }
 
         public void Dispose()

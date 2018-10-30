@@ -6,6 +6,15 @@ using NBitcoin.DataEncoders;
 
 namespace Stratis.Bitcoin.Features.PoA
 {
+    /// <summary>
+    /// Example network for PoA consensus.
+    /// </summary>
+    /// <remarks>
+    /// Do NOT use this network template exactly as it is when creating your own network.
+    /// Redefine federation keys and update genesis block, most importantly timestamp.
+    /// Also feel free to change target spacing, premine height and premine reward.
+    /// Don't set target spacing to be less than 10 sec.
+    /// </remarks>
     public class PoANetwork : Network
     {
         /// <summary> The name of the root folder containing the different PoA blockchains.</summary>
@@ -14,12 +23,7 @@ namespace Stratis.Bitcoin.Features.PoA
         /// <summary> The default name used for the Stratis configuration file. </summary>
         private const string NetworkDefaultConfigFilename = "poa.conf";
 
-        /// <summary>Public keys of all federation members.</summary>
-        /// <remarks>
-        /// Blocks that are not signed with private keys that correspond
-        /// to public keys from this list are considered to be invalid.
-        /// </remarks>
-        public List<PubKey> FederationPublicKeys { get; }
+        public PoAConsensusOptions ConsensusOptions => this.Consensus.Options as PoAConsensusOptions;
 
         public PoANetwork()
         {
@@ -48,14 +52,6 @@ namespace Stratis.Bitcoin.Features.PoA
 
             var consensusFactory = new PoAConsensusFactory();
 
-            // Configure federation public keys.
-            // Keep in mind that order in which keys are added to this list is important
-            // and should be the same for all nodes operating on this network.
-            this.FederationPublicKeys = new List<PubKey>()
-            {
-                new PubKey("02d485fc5ae101c2780ff5e1f0cb92dd907053266f7cf3388eb22c5a4bd266ca2e")
-            };
-
             // Create the genesis block.
             this.GenesisTime = 1513622125;
             this.GenesisNonce = 1560058197;
@@ -67,11 +63,24 @@ namespace Stratis.Bitcoin.Features.PoA
 
             this.Genesis = genesisBlock;
 
+            // Configure federation public keys.
+            // Keep in mind that order in which keys are added to this list is important
+            // and should be the same for all nodes operating on this network.
+            var federationPublicKeys = new List<PubKey>()
+            {
+                new PubKey("03e6f19ea3dc6c145d98a0e0838af952755798e5bc3950bbca4f9485aa23873d7f"),
+                new PubKey("02ddebcf18207072bdd172a25f85f2ea12e2de1d9d794f136722634aad08400fcb"),
+                new PubKey("02067b38d777690aaaf23a5b371a819e6ddc6d2aae734b0199fe59df28dc056dd7")
+            };
+
             var consensusOptions = new PoAConsensusOptions(
                 maxBlockBaseSize: 1_000_000,
                 maxStandardVersion: 2,
                 maxStandardTxWeight: 100_000,
-                maxBlockSigopsCost: 20_000
+                maxBlockSigopsCost: 20_000,
+                maxStandardTxSigopsCost: 20_000 / 5,
+                federationPublicKeys: federationPublicKeys,
+                targetSpacingSeconds: 16
             );
 
             var buriedDeployments = new BuriedDeploymentsArray
@@ -81,7 +90,7 @@ namespace Stratis.Bitcoin.Features.PoA
                 [BuriedDeployments.BIP66] = 0
             };
 
-            var bip9Deployments = new BIP9DeploymentsArray();
+            var bip9Deployments = new NoBIP9Deployments();
 
             this.Consensus = new NBitcoin.Consensus(
                 consensusFactory: consensusFactory,
@@ -97,11 +106,11 @@ namespace Stratis.Bitcoin.Features.PoA
                 bip34Hash: new uint256("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"),
                 ruleChangeActivationThreshold: 1916, // 95% of 2016
                 minerConfirmationWindow: 2016, // nPowTargetTimespan / nPowTargetSpacing
-                maxReorgLength: 500,
+                maxReorgLength: 0, // No max reorg limit on PoA networks.
                 defaultAssumeValid: null,
                 maxMoney: long.MaxValue,
-                coinbaseMaturity: 50,
-                premineHeight: 2,
+                coinbaseMaturity: 2,
+                premineHeight: 10,
                 premineReward: Money.Coins(100_000_000),
                 proofOfWorkReward: Money.Coins(0),
                 powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
@@ -134,7 +143,6 @@ namespace Stratis.Bitcoin.Features.PoA
 
             this.Checkpoints = new Dictionary<int, CheckpointInfo>
             {
-                //TODO POA add checkpoints
                 { 0, new CheckpointInfo(new uint256("0x0621b88fb7a99c985d695be42e606cb913259bace2babe92970547fa033e4076")) },
             };
 
@@ -143,29 +151,23 @@ namespace Stratis.Bitcoin.Features.PoA
             this.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS] = encoder;
             this.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS] = encoder;
 
-            this.DNSSeeds = new List<DNSSeedData>
-            {
-                // TODO POA
-                //new DNSSeedData("seednode1.stratisplatform.com", "seednode1.stratisplatform.com"),
-                //new DNSSeedData("seednode2.stratis.cloud", "seednode2.stratis.cloud"),
-                //new DNSSeedData("seednode3.stratisplatform.com", "seednode3.stratisplatform.com"),
-                //new DNSSeedData("seednode4.stratis.cloud", "seednode4.stratis.cloud")
-            };
+            // No DNS seeds.
+            this.DNSSeeds = new List<DNSSeedData> { };
 
-            // TODO POA change IPs here
-            string[] seedNodes = { "101.200.198.244" };
+            // No seed nodes.
+            string[] seedNodes = { };
             this.SeedNodes = this.ConvertToNetworkAddresses(seedNodes, this.DefaultPort).ToList();
 
             Assert(this.Consensus.HashGenesisBlock == uint256.Parse("0x0621b88fb7a99c985d695be42e606cb913259bace2babe92970547fa033e4076"));
             Assert(this.Genesis.Header.HashMerkleRoot == uint256.Parse("0x9928b372fd9e4cf62a31638607344c03c48731ba06d24576342db9c8591e1432"));
 
-            if ((this.FederationPublicKeys == null) || (this.FederationPublicKeys.Count == 0))
+            if ((this.ConsensusOptions.FederationPublicKeys == null) || (this.ConsensusOptions.FederationPublicKeys.Count == 0))
             {
                 throw new Exception("No keys for federation members are configured!");
             }
         }
 
-        private static Block CreatePoAGenesisBlock(ConsensusFactory consensusFactory, uint nTime, uint nNonce, uint nBits, int nVersion, Money genesisReward)
+        protected static Block CreatePoAGenesisBlock(ConsensusFactory consensusFactory, uint nTime, uint nNonce, uint nBits, int nVersion, Money genesisReward)
         {
             string data = "506f41202d204345485450414a6c75334f424148484139205845504839";
 

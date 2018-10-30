@@ -8,7 +8,7 @@ using Stratis.Bitcoin.Features.Wallet.Controllers;
 using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common.TestFramework;
 using Xunit.Abstractions;
 
@@ -16,7 +16,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
 {
     public partial class SendingTransactionOverPolicyByteLimit : BddSpecification
     {
-
         private NodeBuilder nodeBuilder;
         private Network network;
         private CoreNode firstNode;
@@ -35,8 +34,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
 
         protected override void BeforeTest()
         {
-
-            this.network = KnownNetworks.RegTest;
+            this.network = new BitcoinRegTest();
             this.nodeBuilder = NodeBuilder.Create(Path.Combine(this.GetType().Name, this.CurrentTest.DisplayName));
         }
 
@@ -47,13 +45,8 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
 
         private void two_connected_nodes()
         {
-            this.firstNode = this.nodeBuilder.CreateStratisPowNode(this.network);
-            this.firstNode.Start();
-            this.firstNode.NotInIBD().WithWallet();
-
-            this.secondNode = this.nodeBuilder.CreateStratisPowNode(this.network);
-            this.secondNode.Start();
-            this.secondNode.NotInIBD().WithWallet();
+            this.firstNode = this.nodeBuilder.CreateStratisPowNode(this.network).WithWallet().Start();
+            this.secondNode = this.nodeBuilder.CreateStratisPowNode(this.network).WithWallet().Start();
 
             TestHelper.Connect(this.firstNode, this.secondNode);
         }
@@ -108,7 +101,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
             try
             {
                 this.transaction = this.firstNode.FullNode.WalletTransactionHandler().BuildTransaction(this.transactionBuildContext);
-                Money transactionFee = this.firstNode.GetFee(this.transactionBuildContext);
+                Money transactionFee = this.firstNode.FullNode.WalletTransactionHandler().EstimateFee(this.transactionBuildContext);
             }
             catch (Exception e)
             {

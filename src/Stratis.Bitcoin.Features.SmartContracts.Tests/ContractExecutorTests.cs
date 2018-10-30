@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration.Logging;
@@ -34,7 +32,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
         private readonly SmartContractValidator validator;
         private IInternalExecutorFactory internalTxExecutorFactory;
         private IVirtualMachine vm;
-        private readonly ICallDataSerializer serializer;
+        private readonly ICallDataSerializer callDataSerializer;
         private readonly StateFactory stateFactory;
         private readonly IAddressGenerator addressGenerator;
         private readonly ILoader assemblyLoader;
@@ -42,6 +40,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
         private readonly IContractPrimitiveSerializer contractPrimitiveSerializer;
         private readonly IStateProcessor stateProcessor;
         private readonly ISmartContractStateFactory smartContractStateFactory;
+        private readonly ISerializer serializer;
 
         public ContractExecutorTests()
         {
@@ -57,14 +56,15 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             this.assemblyLoader = new ContractAssemblyLoader();
             this.moduleDefinitionReader = new ContractModuleDefinitionReader();
             this.contractPrimitiveSerializer = new ContractPrimitiveSerializer(this.network);
-            this.vm = new ReflectionVirtualMachine(this.validator, this.loggerFactory, this.network, this.assemblyLoader, this.moduleDefinitionReader);
+            this.serializer = new Serializer(this.contractPrimitiveSerializer);
+            this.vm = new ReflectionVirtualMachine(this.validator, this.loggerFactory, this.assemblyLoader, this.moduleDefinitionReader);
             this.stateProcessor = new StateProcessor(this.vm, this.addressGenerator);
-            this.internalTxExecutorFactory = new InternalExecutorFactory(this.loggerFactory, this.network, this.stateProcessor);
-            this.smartContractStateFactory = new SmartContractStateFactory(this.contractPrimitiveSerializer, this.network, this.internalTxExecutorFactory);
+            this.internalTxExecutorFactory = new InternalExecutorFactory(this.loggerFactory, this.stateProcessor);
+            this.smartContractStateFactory = new SmartContractStateFactory(this.contractPrimitiveSerializer, this.internalTxExecutorFactory, this.serializer);
             
-            this.serializer = new CallDataSerializer(new MethodParameterSerializer());
+            this.callDataSerializer = new CallDataSerializer(this.contractPrimitiveSerializer);
 
-            this.stateFactory = new StateFactory(this.network, this.smartContractStateFactory);
+            this.stateFactory = new StateFactory(this.smartContractStateFactory);
         }
 
         [Fact]
@@ -78,9 +78,9 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
 
 
             //Call smart contract and add to transaction-------------
-            var contractTxData = new ContractTxData(1, 1, (Gas)5000, ToAddress, "ThrowException");
+            var contractTxData = new ContractTxData(1, 1, (Gas)500_000, ToAddress, "ThrowException");
             var transactionCall = new Transaction();
-            TxOut callTxOut = transactionCall.AddOutput(0, new Script(this.serializer.Serialize(contractTxData)));
+            TxOut callTxOut = transactionCall.AddOutput(0, new Script(this.callDataSerializer.Serialize(contractTxData)));
             callTxOut.Value = 100;
             //-------------------------------------------------------
 
@@ -93,11 +93,10 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             IContractTransactionContext transactionContext = new ContractTransactionContext(BlockHeight, CoinbaseAddress, MempoolFee, SenderAddress, transactionCall);
             
             var executor = new ContractExecutor(this.loggerFactory,
-                this.serializer,
+                this.callDataSerializer,
                 this.state,
                 this.refundProcessor,
                 this.transferProcessor,
-                this.network,
                 this.stateFactory,
                 this.stateProcessor,
                 this.contractPrimitiveSerializer);
@@ -120,17 +119,16 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             var contractTxData = new ContractTxData(1, 1, (Gas) 10000, ToAddress, "TestMethod");
 
             var transaction = new Transaction();
-            TxOut txOut = transaction.AddOutput(0, new Script(this.serializer.Serialize(contractTxData)));
+            TxOut txOut = transaction.AddOutput(0, new Script(this.callDataSerializer.Serialize(contractTxData)));
             txOut.Value = 100;
 
             IContractTransactionContext transactionContext = new ContractTransactionContext(BlockHeight, CoinbaseAddress, MempoolFee, new uint160(2), transaction);
 
             var executor = new ContractExecutor(this.loggerFactory,
-                this.serializer,
+                this.callDataSerializer,
                 this.state,
                 this.refundProcessor,
                 this.transferProcessor,
-                this.network,
                 this.stateFactory,
                 this.stateProcessor,
                 this.contractPrimitiveSerializer);
@@ -146,18 +144,17 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             Assert.True(compilationResult.Success);
             byte[] contractCode = compilationResult.Compilation;
 
-            var contractTxData = new ContractTxData(0, (Gas) 1, (Gas)10000, contractCode);
+            var contractTxData = new ContractTxData(0, (Gas) 1, (Gas)500_000, contractCode);
             var tx = new Transaction();
-            tx.AddOutput(0, new Script(this.serializer.Serialize(contractTxData)));
+            tx.AddOutput(0, new Script(this.callDataSerializer.Serialize(contractTxData)));
 
             IContractTransactionContext transactionContext = new ContractTransactionContext(BlockHeight, CoinbaseAddress, MempoolFee, new uint160(2), tx);
 
             var executor = new ContractExecutor(this.loggerFactory,
-                this.serializer,
+                this.callDataSerializer,
                 this.state,
                 this.refundProcessor,
                 this.transferProcessor,
-                this.network,
                 this.stateFactory,
                 this.stateProcessor,
                 this.contractPrimitiveSerializer);
@@ -165,8 +162,8 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             IContractExecutionResult result = executor.Execute(transactionContext);
 
             Assert.NotNull(result.ErrorMessage);
-            // Base cost + constructor cost (21 because that is number of gas to invoke Assert(false));
-            Assert.Equal(GasPriceList.BaseCost + 21, result.GasConsumed);
+            // Number here shouldn't be hardcoded - note this is really only to let us know of consensus failure
+            Assert.Equal(GasPriceList.CreateCost + 18, result.GasConsumed);
         }
 
         [Fact]
@@ -178,25 +175,24 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
 
             object[] methodParameters = { 5 };
 
-            var contractTxData = new ContractTxData(0, (Gas)1, (Gas)10000, contractCode, methodParameters);
+            var contractTxData = new ContractTxData(0, (Gas)1, (Gas)500_000, contractCode, methodParameters);
             var tx = new Transaction();
-            tx.AddOutput(0, new Script(this.serializer.Serialize(contractTxData)));
+            tx.AddOutput(0, new Script(this.callDataSerializer.Serialize(contractTxData)));
 
             IContractTransactionContext transactionContext = new ContractTransactionContext(BlockHeight, CoinbaseAddress, MempoolFee, new uint160(2), tx);
 
             var executor = new ContractExecutor(this.loggerFactory,
-                this.serializer,
+                this.callDataSerializer,
                 this.state,
                 this.refundProcessor,
                 this.transferProcessor,
-                this.network,
                 this.stateFactory,
                 this.stateProcessor,
                 this.contractPrimitiveSerializer);
 
             IContractExecutionResult result = executor.Execute(transactionContext);
             Assert.NotNull(result.ErrorMessage);
-            Assert.Equal(GasPriceList.BaseCost, result.GasConsumed);
+            Assert.Equal(GasPriceList.CreateCost, result.GasConsumed);
         }
 
         [Fact]
@@ -208,18 +204,17 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
 
             object[] methodParameters = { true };
 
-            var contractTxData = new ContractTxData(0, (Gas)1, (Gas)10000, contractCode, methodParameters);
+            var contractTxData = new ContractTxData(0, (Gas)1, (Gas)500_000, contractCode, methodParameters);
             var tx = new Transaction();
-            tx.AddOutput(0, new Script(this.serializer.Serialize(contractTxData)));
+            tx.AddOutput(0, new Script(this.callDataSerializer.Serialize(contractTxData)));
 
             IContractTransactionContext transactionContext = new ContractTransactionContext(BlockHeight, CoinbaseAddress, MempoolFee, new uint160(2), tx);
 
             var executor = new ContractExecutor(this.loggerFactory,
-                this.serializer,
+                this.callDataSerializer,
                 this.state,
                 this.refundProcessor,
                 this.transferProcessor,
-                this.network,
                 this.stateFactory,
                 this.stateProcessor,
                 this.contractPrimitiveSerializer);
@@ -227,7 +222,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             IContractExecutionResult result = executor.Execute(transactionContext);
 
             Assert.NotNull(result.ErrorMessage);
-            Assert.Equal(GasPriceList.BaseCost, result.GasConsumed);
+            Assert.Equal(GasPriceList.CreateCost, result.GasConsumed);
         }
 
         [Fact]
@@ -242,9 +237,9 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             //-------------------------------------------------------
 
             // Add contract creation code to transaction-------------
-            var contractTxData = new ContractTxData(1, (Gas)1, (Gas)3500, contractExecutionCode);
+            var contractTxData = new ContractTxData(1, (Gas)1, (Gas)500_000, contractExecutionCode);
             var transaction = new Transaction();
-            TxOut txOut = transaction.AddOutput(0, new Script(this.serializer.Serialize(contractTxData)));
+            TxOut txOut = transaction.AddOutput(0, new Script(this.callDataSerializer.Serialize(contractTxData)));
             txOut.Value = 100;
             //-------------------------------------------------------
 
@@ -253,11 +248,10 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             IContractTransactionContext transactionContext = new ContractTransactionContext(BlockHeight, CoinbaseAddress, MempoolFee, SenderAddress, transaction);
 
             var executor = new ContractExecutor(this.loggerFactory,
-                this.serializer,
+                this.callDataSerializer,
                 this.state,
                 this.refundProcessor,
                 this.transferProcessor,
-                this.network,
                 this.stateFactory,
                 this.stateProcessor,
                 this.contractPrimitiveSerializer);
@@ -277,9 +271,9 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             //-------------------------------------------------------
 
             //Call smart contract and add to transaction-------------
-            contractTxData = new ContractTxData(1, (Gas)1, (Gas)3500, contractExecutionCode);
+            contractTxData = new ContractTxData(1, (Gas)1, (Gas)500_000, contractExecutionCode);
             transaction = new Transaction();
-            txOut = transaction.AddOutput(0, new Script(this.serializer.Serialize(contractTxData)));
+            txOut = transaction.AddOutput(0, new Script(this.callDataSerializer.Serialize(contractTxData)));
             txOut.Value = 100;
             //-------------------------------------------------------
 
@@ -295,23 +289,22 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
 
             // Invoke infinite loop
 
-            var gasLimit = (Gas)100_000;
+            var gasLimit = (Gas)500_000;
 
-            object[] parameters = { address1.ToAddress(this.network).Value };
+            object[] parameters = { address1.ToAddress() };
 
             contractTxData = new ContractTxData(1, (Gas)1, gasLimit, address2, "CallInfiniteLoop", parameters);
             transaction = new Transaction();
-            txOut = transaction.AddOutput(0, new Script(this.serializer.Serialize(contractTxData)));
+            txOut = transaction.AddOutput(0, new Script(this.callDataSerializer.Serialize(contractTxData)));
             txOut.Value = 100;
 
             transactionContext = new ContractTransactionContext(BlockHeight, CoinbaseAddress, MempoolFee, SenderAddress, transaction);
 
             var callExecutor = new ContractExecutor(this.loggerFactory,
-                this.serializer,
+                this.callDataSerializer,
                 this.state,
                 this.refundProcessor,
                 this.transferProcessor,
-                this.network,
                 this.stateFactory,
                 this.stateProcessor,
                 this.contractPrimitiveSerializer);
@@ -321,37 +314,69 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             // for the method body to have finished execution while minimising the amount of time we spend 
             // running tests
             // If you're running with the debugger on this will obviously be a source of failures
-            result = RunWithTimeout(3, () => callExecutor.Execute(transactionContext));
+            result = TimeoutHelper.RunCodeWithTimeout(3, () => callExecutor.Execute(transactionContext));
 
             // Actual call was successful, but internal call failed due to gas - returned false.
             Assert.False(result.Revert);
             Assert.False((bool) result.Return);
         }
 
-        private static T RunWithTimeout<T>(int timeout, Func<T> execute)
+        [Fact]
+        public void Execute_NestedLoop_ExecutionSucceeds()
         {
-            // ref. https://stackoverflow.com/questions/20282111/xunit-net-how-can-i-specify-a-timeout-how-long-a-test-should-maximum-need
-            // Only run single-threaded code in this method
+            AssertSuccessfulContractMethodExecution(nameof(NestedLoop), nameof(NestedLoop.GetNumbers), new object[] { (int)6 }, "1; 1,2; 1,2,3; 1,2,3,4; 1,2,3,4,5; 1,2,3,4,5,6; ");
+        }
 
-            Task<T> task = Task.Run(execute);
-            bool completedInTime = Task.WaitAll(new Task[] { task }, TimeSpan.FromSeconds(timeout));
+        [Fact]
+        public void Execute_MultipleIfElseBlocks_ExecutionSucceeds()
+        {
+            AssertSuccessfulContractMethodExecution(nameof(MultipleIfElseBlocks), nameof(MultipleIfElseBlocks.PersistNormalizeValue), new object[] { "z" });
+        }
 
-            if (task.Exception != null)
+        private void AssertSuccessfulContractMethodExecution(string contractName, string methodName, object[] methodParameters = null, string expectedReturn = null)
+        {
+            var transactionValue = (Money)100;
+
+            var executor = new ContractExecutor(this.loggerFactory,
+                this.callDataSerializer,
+                this.state,
+                this.refundProcessor,
+                this.transferProcessor,
+                this.stateFactory,
+                this.stateProcessor,
+                this.contractPrimitiveSerializer);
+
+            ContractCompilationResult compilationResult = ContractCompiler.CompileFile($"SmartContracts/{contractName}.cs");
+            Assert.True(compilationResult.Success);
+            byte[] contractExecutionCode = compilationResult.Compilation;
+
+            var contractTxData = new ContractTxData(1, (Gas)1, (Gas)500_000, contractExecutionCode);
+
+            var transaction = new Transaction();
+            TxOut txOut = transaction.AddOutput(0, new Script(this.callDataSerializer.Serialize(contractTxData)));
+            txOut.Value = transactionValue;
+            var transactionContext = new ContractTransactionContext(BlockHeight, CoinbaseAddress, MempoolFee, SenderAddress, transaction);
+
+            IContractExecutionResult result = executor.Execute(transactionContext);
+            uint160 contractAddress = result.NewContractAddress;
+
+            contractTxData = new ContractTxData(1, (Gas)1, (Gas)500_000, contractAddress, methodName, methodParameters);
+
+            transaction = new Transaction();
+            txOut = transaction.AddOutput(0, new Script(this.callDataSerializer.Serialize(contractTxData)));
+            txOut.Value = transactionValue;
+            transactionContext = new ContractTransactionContext(BlockHeight, CoinbaseAddress, MempoolFee, SenderAddress, transaction);
+
+            result = executor.Execute(transactionContext);
+
+            Assert.NotNull(result);
+            Assert.Null(result.ErrorMessage);
+
+            if (expectedReturn != null)
             {
-                if (task.Exception.InnerExceptions.Count == 1)
-                {
-                    throw task.Exception.InnerExceptions[0];
-                }
-
-                throw task.Exception;
+                Assert.NotNull(result.Return);
+                Assert.Equal(expectedReturn, (string)result.Return);
             }
-
-            if (!completedInTime)
-            {
-                throw new TimeoutException($"Task did not complete in {timeout} seconds.");
-            }
-
-            return task.Result;
         }
     }
 }

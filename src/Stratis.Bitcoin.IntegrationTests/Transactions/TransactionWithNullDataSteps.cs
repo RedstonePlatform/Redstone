@@ -10,7 +10,7 @@ using Stratis.Bitcoin.Features.Wallet.Controllers;
 using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common.TestFramework;
 using Xunit.Abstractions;
 
@@ -49,13 +49,8 @@ namespace Stratis.Bitcoin.IntegrationTests.Transactions
 
         private void two_proof_of_work_nodes()
         {
-            this.senderNode = this.builder.CreateStratisPowNode(KnownNetworks.RegTest);
-            this.receiverNode = this.builder.CreateStratisPowNode(KnownNetworks.RegTest);
-
-            this.builder.StartAll();
-
-            this.senderNode.NotInIBD().WithWallet();
-            this.receiverNode.NotInIBD().WithWallet();
+            this.senderNode = this.builder.CreateStratisPowNode(new BitcoinRegTest()).WithWallet().Start();
+            this.receiverNode = this.builder.CreateStratisPowNode(new BitcoinRegTest()).WithWallet().Start();
         }
 
         private void a_sending_and_a_receiving_wallet()
@@ -70,7 +65,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Transactions
         private void some_funds_in_the_sending_wallet()
         {
             int maturity = (int)this.senderNode.FullNode.Network.Consensus.CoinbaseMaturity;
-            TestHelper.MineBlocks(this.senderNode, maturity + 5);
+            TestHelper.MineBlocks(this.senderNode, maturity + 1 + 5);
 
             this.senderNode.FullNode.WalletManager().GetSpendableTransactionsInWallet(this.walletName)
                 .Sum(utxo => utxo.Transaction.Amount)

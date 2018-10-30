@@ -12,7 +12,6 @@ using Microsoft.Extensions.Logging;
 using Mono.Cecil;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.SmartContracts.Consensus;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
@@ -51,6 +50,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
         private readonly IContractPrimitiveSerializer contractPrimitiveSerializer;
         private readonly IReceiptRepository receiptRepository;
         private readonly ICallDataSerializer callDataSerializer;
+        private readonly IMethodParameterStringSerializer methodParameterStringSerializer;
 
         public SmartContractsController(IBroadcasterManager broadcasterManager,
             IBlockStore blockStore,
@@ -65,7 +65,8 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             IAddressGenerator addressGenerator,
             IContractPrimitiveSerializer contractPrimitiveSerializer,
             IReceiptRepository receiptRepository,
-            ICallDataSerializer callDataSerializer)
+            ICallDataSerializer callDataSerializer,
+            IMethodParameterStringSerializer methodParameterStringSerializer)
         {
             this.stateRoot = stateRoot;
             this.walletTransactionHandler = walletTransactionHandler;
@@ -80,13 +81,14 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             this.contractPrimitiveSerializer = contractPrimitiveSerializer;
             this.receiptRepository = receiptRepository;
             this.callDataSerializer = callDataSerializer;
+            this.methodParameterStringSerializer = methodParameterStringSerializer;
         }
 
         [Route("code")]
         [HttpGet]
         public IActionResult GetCode([FromQuery]string address)
         {
-            uint160 addressNumeric = new Address(address).ToUint160(this.network);
+            uint160 addressNumeric = address.ToUint160(this.network);
             byte[] contractCode = this.stateRoot.GetCode(addressNumeric);
 
             if (contractCode == null || !contractCode.Any())
@@ -117,7 +119,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
         [HttpGet]
         public IActionResult GetBalance([FromQuery]string address)
         {
-            uint160 addressNumeric = new Address(address).ToUint160(this.network);
+            uint160 addressNumeric = address.ToUint160(this.network);
             ulong balance = this.stateRoot.GetCurrentBalance(addressNumeric);
             
             return Json(balance);
@@ -133,7 +135,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
                 return ModelStateErrors.BuildErrorResponse(this.ModelState);
             }
 
-            uint160 addressNumeric = new Address(request.ContractAddress).ToUint160(this.network);
+            uint160 addressNumeric = request.ContractAddress.ToUint160(this.network);
             byte[] storageValue = this.stateRoot.GetStorageValue(addressNumeric, Encoding.UTF8.GetBytes(request.StorageKey));
 
             return Json(GetStorageValue(request.DataType, storageValue).ToString());
@@ -168,7 +170,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
         public async Task<IActionResult> ReceiptSearch([FromQuery] string contractAddress, [FromQuery] string eventName)
         {
             // Build the bytes we can use to check for this event.
-            uint160 addressUint160 = new Address(contractAddress).ToUint160(this.network);
+            uint160 addressUint160 = contractAddress.ToUint160(this.network);
             byte[] addressBytes = addressUint160.ToBytes();
             byte[] eventBytes = Encoding.UTF8.GetBytes(eventName);
 
@@ -300,7 +302,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             ContractTxData txData;
             if (request.Parameters != null && request.Parameters.Any())
             {
-                var methodParameters = this.callDataSerializer.MethodParamSerializer.Deserialize(request.Parameters);
+                var methodParameters = this.methodParameterStringSerializer.Deserialize(request.Parameters);
                 txData = new ContractTxData(ReflectionVirtualMachine.VmVersion, (Gas)gasPrice, (Gas)gasLimit, request.ContractCode.HexToByteArray(), methodParameters);
             }
             else
@@ -334,7 +336,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             {
                 Transaction transaction = this.walletTransactionHandler.BuildTransaction(context);
                 uint160 contractAddress = this.addressGenerator.GenerateAddress(transaction.GetHash(), 0);
-                return BuildCreateContractTransactionResponse.Succeeded(transaction, context.TransactionFee, contractAddress.ToAddress(this.network));
+                return BuildCreateContractTransactionResponse.Succeeded(transaction, context.TransactionFee, contractAddress.ToBase58Address(this.network));
             }
             catch (Exception exception)
             {
@@ -355,12 +357,12 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
 
             ulong gasPrice = ulong.Parse(request.GasPrice);
             ulong gasLimit = ulong.Parse(request.GasLimit);
-            uint160 addressNumeric = new Address(request.ContractAddress).ToUint160(this.network);
+            uint160 addressNumeric = request.ContractAddress.ToUint160(this.network);
 
             ContractTxData txData;
             if (request.Parameters != null && request.Parameters.Any())
             {
-                var methodParameters = this.callDataSerializer.MethodParamSerializer.Deserialize(request.Parameters);
+                var methodParameters = this.methodParameterStringSerializer.Deserialize(request.Parameters);
                 txData = new ContractTxData(ReflectionVirtualMachine.VmVersion, (Gas)gasPrice, (Gas)gasLimit, addressNumeric, request.MethodName, methodParameters);
             }
             else

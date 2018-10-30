@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Bitcoin.Features.PoA
 {
@@ -23,8 +22,8 @@ namespace Stratis.Bitcoin.Features.PoA
 
         public FederationManager(NodeSettings nodeSettings, Network network, ILoggerFactory loggerFactory)
         {
-            this.settings = nodeSettings;
-            this.network = network as PoANetwork;
+            this.settings = Guard.NotNull(nodeSettings, nameof(nodeSettings));
+            this.network = Guard.NotNull(network as PoANetwork, nameof(network));
 
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
@@ -36,7 +35,7 @@ namespace Stratis.Bitcoin.Features.PoA
             if (this.FederationMemberKey != null)
             {
                 // Loaded key has to be a key for current federation.
-                if (!this.network.FederationPublicKeys.Contains(this.FederationMemberKey.PubKey))
+                if (!this.network.ConsensusOptions.FederationPublicKeys.Contains(this.FederationMemberKey.PubKey))
                 {
                     string message = "Key provided is not registered on the network!";
 
@@ -46,6 +45,9 @@ namespace Stratis.Bitcoin.Features.PoA
 
                 this.logger.LogInformation("Federation key pair was successfully loaded. Your public key is: {0}.", this.FederationMemberKey.PubKey);
             }
+
+            this.logger.LogInformation("Federation contains {0} members. Their public keys are: {1}",
+                this.network.ConsensusOptions.FederationPublicKeys.Count, Environment.NewLine + string.Join(Environment.NewLine, this.network.ConsensusOptions.FederationPublicKeys));
         }
 
         /// <summary>Loads federation key if it exists.</summary>

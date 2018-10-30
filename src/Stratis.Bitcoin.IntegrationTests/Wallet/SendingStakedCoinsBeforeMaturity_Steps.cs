@@ -7,7 +7,7 @@ using Stratis.Bitcoin.Features.Wallet.Controllers;
 using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common.TestFramework;
 using Stratis.Bitcoin.Utilities.JsonErrors;
 using Xunit.Abstractions;
@@ -43,9 +43,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
             this.proofOfStakeSteps.PremineNodeWithWallet();
             this.proofOfStakeSteps.MineGenesisAndPremineBlocks();
 
-            this.receiverNode = this.proofOfStakeSteps.nodeBuilder.CreateStratisPosNode(KnownNetworks.StratisRegTest);
-            this.receiverNode.Start();
-            this.receiverNode.NotInIBD().WithWallet();
+            this.receiverNode = this.proofOfStakeSteps.nodeBuilder.CreateStratisPosNode(new StratisRegTest()).WithWallet().Start();
 
             TestHelper.ConnectAndSync(this.proofOfStakeSteps.PremineNodeWithCoins, this.receiverNode);
         }

@@ -31,7 +31,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
                 fixture.ContractStateRoot.Object,
                 fixture.RefundProcessor.Object,
                 fixture.TransferProcessor.Object,
-                fixture.Network,
                 fixture.StateFactory.Object,
                 fixture.StateProcessor.Object,
                 fixture.ContractPrimitiveSerializer.Object);
@@ -56,10 +55,10 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
 
             fixture.TransferProcessor.Verify(t => t
                 .Process(
-                    fixture.ContractStateRoot.Object, 
+                    snapshot.ContractState, 
                     stateTransitionResult.Success.ContractAddress, 
                     fixture.ContractTransactionContext,
-                    fixture.State.Object.InternalTransfers,
+                    snapshot.InternalTransfers,
                     false), 
                 Times.Once);
 
@@ -104,7 +103,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
                 fixture.ContractStateRoot.Object,
                 fixture.RefundProcessor.Object,
                 fixture.TransferProcessor.Object,
-                fixture.Network,
                 fixture.StateFactory.Object,
                 fixture.StateProcessor.Object,
                 fixture.ContractPrimitiveSerializer.Object);
@@ -132,10 +130,10 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
 
             fixture.TransferProcessor.Verify(t => t
                     .Process(
-                        fixture.ContractStateRoot.Object,
+                        snapshot.ContractState,
                         null,
                         fixture.ContractTransactionContext,
-                        fixture.State.Object.InternalTransfers,
+                        snapshot.InternalTransfers,
                         true),
                 Times.Once);
 
@@ -183,7 +181,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
                 fixture.ContractStateRoot.Object,
                 fixture.RefundProcessor.Object,
                 fixture.TransferProcessor.Object,
-                fixture.Network,
                 fixture.StateFactory.Object,
                 fixture.StateProcessor.Object,
                 fixture.ContractPrimitiveSerializer.Object);
@@ -213,10 +210,10 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
 
             fixture.TransferProcessor.Verify(t => t
                 .Process(
-                    fixture.ContractStateRoot.Object,
+                    snapshot.ContractState,
                     stateTransitionResult.Success.ContractAddress,
                     fixture.ContractTransactionContext,
-                    fixture.State.Object.InternalTransfers,
+                    snapshot.InternalTransfers,
                     false),
                 Times.Once);
 
@@ -262,7 +259,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
                 fixture.ContractStateRoot.Object,
                 fixture.RefundProcessor.Object,
                 fixture.TransferProcessor.Object,
-                fixture.Network,
                 fixture.StateFactory.Object,
                 fixture.StateProcessor.Object,
                 fixture.ContractPrimitiveSerializer.Object);
@@ -293,10 +289,10 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             // Transfer processor is called with null for new contract address and true for reversion required.
             fixture.TransferProcessor.Verify(t => t
                     .Process(
-                        fixture.ContractStateRoot.Object,
+                        snapshot.ContractState,
                         null,
                         fixture.ContractTransactionContext,
-                        fixture.State.Object.InternalTransfers,
+                        snapshot.InternalTransfers,
                         true),
                 Times.Once);
 
