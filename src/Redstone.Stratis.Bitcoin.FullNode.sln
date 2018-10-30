@@ -184,6 +184,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redstone.Feature.Breeze.Tes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redstone.IntegrationTests.Common", "Redstone\Tests\Redstone.IntegrationTests.Common\Redstone.IntegrationTests.Common.csproj", "{2C17FA4E-3134-43DB-BA9A-36C9F7226524}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.SmartContracts.Networks", "Stratis.SmartContracts.Networks\Stratis.SmartContracts.Networks.csproj", "{C1CCB886-B110-4633-AD59-364CFA2EC809}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.SmartContracts.Token", "Stratis.SmartContracts.Token\Stratis.SmartContracts.Token.csproj", "{0607BF67-112A-4DC0-B965-91E6518C22A6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XUnitRetry", "XUnitRetry\XUnitRetry.csproj", "{328557E3-605B-45AA-BFF2-6E642DA20B2F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Bitcoin.Features.PoA.IntegrationTests", "Stratis.Bitcoin.Features.PoA.IntegrationTests\Stratis.Bitcoin.Features.PoA.IntegrationTests.csproj", "{1C51CB91-F08C-40AD-9478-C6F61642E755}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.SmartContracts.Token.Tests", "Stratis.SmartContracts.Token.Tests\Stratis.SmartContracts.Token.Tests.csproj", "{F80E2724-8255-4502-A892-A3089355806F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -474,6 +484,26 @@ Global
 		{2C17FA4E-3134-43DB-BA9A-36C9F7226524}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C17FA4E-3134-43DB-BA9A-36C9F7226524}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2C17FA4E-3134-43DB-BA9A-36C9F7226524}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1CCB886-B110-4633-AD59-364CFA2EC809}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1CCB886-B110-4633-AD59-364CFA2EC809}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1CCB886-B110-4633-AD59-364CFA2EC809}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1CCB886-B110-4633-AD59-364CFA2EC809}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0607BF67-112A-4DC0-B965-91E6518C22A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0607BF67-112A-4DC0-B965-91E6518C22A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0607BF67-112A-4DC0-B965-91E6518C22A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0607BF67-112A-4DC0-B965-91E6518C22A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{328557E3-605B-45AA-BFF2-6E642DA20B2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{328557E3-605B-45AA-BFF2-6E642DA20B2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{328557E3-605B-45AA-BFF2-6E642DA20B2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{328557E3-605B-45AA-BFF2-6E642DA20B2F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C51CB91-F08C-40AD-9478-C6F61642E755}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C51CB91-F08C-40AD-9478-C6F61642E755}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C51CB91-F08C-40AD-9478-C6F61642E755}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C51CB91-F08C-40AD-9478-C6F61642E755}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F80E2724-8255-4502-A892-A3089355806F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F80E2724-8255-4502-A892-A3089355806F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F80E2724-8255-4502-A892-A3089355806F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F80E2724-8255-4502-A892-A3089355806F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -547,6 +577,11 @@ Global
 		{A3FC5B82-9743-4012-9B5E-1BB45B5C91F4} = {3610EA04-E09C-4D7F-9C55-C97176DDAFBA}
 		{D3B3B78B-F601-4B64-8591-391C79615824} = {E95F76D5-5391-4F7B-88E4-4FF69606CF54}
 		{2C17FA4E-3134-43DB-BA9A-36C9F7226524} = {E95F76D5-5391-4F7B-88E4-4FF69606CF54}
+		{C1CCB886-B110-4633-AD59-364CFA2EC809} = {1B9A916F-DDAC-4675-B424-EDEDC1A58231}
+		{0607BF67-112A-4DC0-B965-91E6518C22A6} = {1B9A916F-DDAC-4675-B424-EDEDC1A58231}
+		{328557E3-605B-45AA-BFF2-6E642DA20B2F} = {1B9A916F-DDAC-4675-B424-EDEDC1A58231}
+		{1C51CB91-F08C-40AD-9478-C6F61642E755} = {EAE139C2-B19C-4905-9117-8A4068ABD3D2}
+		{F80E2724-8255-4502-A892-A3089355806F} = {EAE139C2-B19C-4905-9117-8A4068ABD3D2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6C780ABA-5872-4B83-AD3F-A5BD423AD907}

@@ -6,6 +6,7 @@
     using NBitcoin;
     using NBitcoin.BouncyCastle.Math;
     using NBitcoin.DataEncoders;
+    using Redstone.Core.Networks.Deployments;
     using Stratis.Bitcoin.Features.Wallet;
 
     public class RedstoneMain : Network
@@ -66,6 +67,7 @@
                 maxStandardVersion: 2,
                 maxStandardTxWeight: 100_000,
                 maxBlockSigopsCost: 20_000,
+                maxStandardTxSigopsCost: 1,  // TODO Anthony - what should this value be (this param was added to the constructor)
                 provenHeadersActivationHeight: 20_000_000 // TODO: Set it to the real value once it is known.
             );
 
@@ -76,7 +78,7 @@
                 [BuriedDeployments.BIP66] = 0
             };
 
-            var bip9Deployments = new BIP9DeploymentsArray();
+            var bip9Deployments = new RedstoneBIP9Deployments();
 
             this.Consensus = new Consensus(
                 consensusFactory: consensusFactory,

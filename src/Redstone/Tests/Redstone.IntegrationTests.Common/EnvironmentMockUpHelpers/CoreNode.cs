@@ -72,7 +72,6 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
             this.ConfigParameters.SetDefaultValueIfUndefined("rpcport", randomFoundPorts[1].ToString());
             this.ConfigParameters.SetDefaultValueIfUndefined("apiport", randomFoundPorts[2].ToString());
 
-            this.connectionManagerSettings = new ConnectionManagerSettings();
             this.loggerFactory = new ExtendedLoggerFactory();
             this.loggerFactory.AddConsoleWithFilters();
 
