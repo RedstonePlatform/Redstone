@@ -1,13 +1,12 @@
+using System.Collections.Generic;
+using System.Text;
+using NBitcoin;
 using Redstone.Core.Networks;
+using Redstone.Features.MasterNode.Common;
+using Xunit;
 
-namespace Redstone.Feature.Breeze.Tests
+namespace Redstone.Feature.MasterNode.Tests
 {
-    using System.Collections.Generic;
-    using System.Text;
-    using NBitcoin;
-    using Redstone.Features.Breeze.BreezeCommon;
-    using Xunit;
-
     public class ConversionTests
     {
         [Fact]

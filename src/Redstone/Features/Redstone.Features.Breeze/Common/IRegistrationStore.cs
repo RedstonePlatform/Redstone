@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Redstone.Features.Breeze.BreezeCommon
+namespace Redstone.Features.MasterNode.Common
 {
     public interface IRegistrationStore
     {

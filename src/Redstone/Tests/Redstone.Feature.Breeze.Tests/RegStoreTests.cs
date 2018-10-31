@@ -3,12 +3,11 @@ using System.IO;
 using System.Net;
 using System.Text;
 using NBitcoin;
-using NBitcoin.Networks;
 using Redstone.Core.Networks;
-using Redstone.Features.Breeze.BreezeCommon;
+using Redstone.Features.MasterNode.Common;
 using Xunit;
 
-namespace Redstone.Feature.Breeze.Tests
+namespace Redstone.Feature.MasterNode.Tests
 {
     public class RegStoreTests
     {

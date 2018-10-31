@@ -1,4 +1,4 @@
-﻿namespace Redstone.Features.Breeze.BreezeCommon
+﻿namespace Redstone.Features.MasterNode.Common
 {
     public class Utils
     {

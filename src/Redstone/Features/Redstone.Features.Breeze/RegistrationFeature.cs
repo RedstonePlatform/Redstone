@@ -1,27 +1,28 @@
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using NBitcoin;
 using Redstone.Core.Networks;
+using Redstone.Features.MasterNode.Common;
+using Stratis.Bitcoin.Builder;
+using Stratis.Bitcoin.Builder.Feature;
+using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Features.Notifications.Interfaces;
+using Stratis.Bitcoin.Features.Wallet.Interfaces;
+using Stratis.Bitcoin.Features.WatchOnlyWallet;
+using Stratis.Bitcoin.Signals;
 
-namespace Redstone.Features.Breeze.BreezeRegistration
+namespace Redstone.Features.MasterNode
 {
-    using System;
-    using System.Collections.Generic;
-    using BreezeCommon;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
-    using NBitcoin;
-    using Stratis.Bitcoin.Builder;
-    using Stratis.Bitcoin.Builder.Feature;
-    using Stratis.Bitcoin.Configuration;
-    using Stratis.Bitcoin.Features.Notifications.Interfaces;
-    using Stratis.Bitcoin.Features.Wallet.Interfaces;
-    using Stratis.Bitcoin.Features.WatchOnlyWallet;
-    using Stratis.Bitcoin.Signals;
-
     public class RegistrationFeature : FullNodeFeature
     {
-        private const int SyncHeightMain = 772272;
-        private const int SyncHeightTest = 335760;
+        // Default initial sysc height
+        private const int SyncHeightMain = 0;
+        private const int SyncHeightTest = 0;
         private const int SyncHeightRegTest = 0;
+
         private readonly ILogger logger;
         private readonly RegistrationStore registrationStore;
         private readonly ConcurrentChain chain;
@@ -130,7 +131,7 @@ namespace Redstone.Features.Breeze.BreezeRegistration
 
     public static class RegistrationFeatureExtension
     {
-        public static IFullNodeBuilder UseRegistration(this IFullNodeBuilder fullNodeBuilder)
+        public static IFullNodeBuilder UseMasterNode(this IFullNodeBuilder fullNodeBuilder)
         {
             fullNodeBuilder.ConfigureFeature(features =>
             {

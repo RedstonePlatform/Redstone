@@ -7,15 +7,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using NBitcoin;
 using Redstone.Core.Networks;
-using Redstone.Features.Breeze.BreezeCommon;
-using Redstone.Features.Breeze.BreezeRegistration;
+using Redstone.Features.MasterNode;
+using Redstone.Features.MasterNode.Common;
 using Redstone.IntegrationTests.Common;
 using Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Xunit;
 
-namespace Redstone.Feature.Breeze.Tests
+namespace Redstone.Feature.MasterNode.Tests
 {
     public class Tests
     {

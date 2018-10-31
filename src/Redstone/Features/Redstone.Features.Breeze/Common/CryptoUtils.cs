@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using NBitcoin;
 
-namespace Redstone.Features.Breeze.BreezeCommon
+namespace Redstone.Features.MasterNode.Common
 {
     public class CryptoUtils
     {
