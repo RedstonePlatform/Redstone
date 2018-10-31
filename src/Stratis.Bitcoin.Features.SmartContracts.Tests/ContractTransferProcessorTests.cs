@@ -125,12 +125,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             // A transfer of 100
             var transferInfos = new List<TransferInfo>
             {
-                new TransferInfo
-                {
-                    From = contractAddress,
-                    To = receiverAddress,
-                    Value = 100
-                }
+                new TransferInfo(contractAddress, receiverAddress, 100)
             };
 
             var result = new SmartContractExecutionResult();
@@ -170,12 +165,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             // transfer 75
             var transferInfos = new List<TransferInfo>
             {
-                new TransferInfo
-                {
-                    From = contractAddress,
-                    To = receiverAddress,
-                    Value = 75
-                }
+                new TransferInfo(contractAddress, receiverAddress, 75)
             };
 
             var result = new SmartContractExecutionResult();
@@ -189,7 +179,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             Assert.Equal(txContextMock.Object.TransactionHash, internalTransaction.Inputs[0].PrevOut.Hash);
             Assert.Equal(txContextMock.Object.Nvout, internalTransaction.Inputs[0].PrevOut.N);
             string output1Address = PayToPubkeyHashTemplate.Instance.ExtractScriptPubKeyParameters(internalTransaction.Outputs[0].ScriptPubKey).GetAddress(this.network).ToString();
-            Assert.Equal(receiverAddress.ToAddress(this.network).Value, output1Address);
+            Assert.Equal(receiverAddress.ToBase58Address(this.network), output1Address);
             Assert.Equal(75, internalTransaction.Outputs[0].Value); // Note outputs are in descending order by value.
             Assert.True(internalTransaction.Outputs[1].ScriptPubKey.IsSmartContractInternalCall());
             Assert.Equal(25, internalTransaction.Outputs[1].Value);
@@ -309,12 +299,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             // transfer 75
             var transferInfos = new List<TransferInfo>
             {
-                new TransferInfo
-                {
-                    From = contractAddress,
-                    To = receiverAddress,
-                    Value = 75
-                }
+                new TransferInfo(contractAddress, receiverAddress, 75)
             };
 
             var result = new SmartContractExecutionResult();
@@ -328,7 +313,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             Assert.Equal(new uint256(1), internalTransaction.Inputs[0].PrevOut.Hash);
             Assert.Equal((uint) 1, internalTransaction.Inputs[0].PrevOut.N);
             string output1Address = PayToPubkeyHashTemplate.Instance.ExtractScriptPubKeyParameters(internalTransaction.Outputs[0].ScriptPubKey).GetAddress(this.network).ToString();
-            Assert.Equal(receiverAddress.ToAddress(this.network).Value, output1Address);
+            Assert.Equal(receiverAddress.ToBase58Address(this.network), output1Address);
             Assert.Equal(75, internalTransaction.Outputs[0].Value);
             Assert.True(internalTransaction.Outputs[1].ScriptPubKey.IsSmartContractInternalCall());
             Assert.Equal(25, internalTransaction.Outputs[1].Value);
@@ -369,12 +354,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             // transfer 75
             var transferInfos = new List<TransferInfo>
             {
-                new TransferInfo
-                {
-                    From = contractAddress,
-                    To = receiverAddress,
-                    Value = 75
-                }
+                new TransferInfo(contractAddress, receiverAddress, 75)
             };
 
             var result = new SmartContractExecutionResult();
@@ -394,7 +374,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             Assert.Equal(125, internalTransaction.Outputs[0].Value);
 
             string output2Address = PayToPubkeyHashTemplate.Instance.ExtractScriptPubKeyParameters(internalTransaction.Outputs[1].ScriptPubKey).GetAddress(this.network).ToString();
-            Assert.Equal(receiverAddress.ToAddress(this.network).Value, output2Address);
+            Assert.Equal(receiverAddress.ToBase58Address(this.network), output2Address);
             Assert.Equal(75, internalTransaction.Outputs[1].Value);
 
             // Ensure db updated
@@ -413,12 +393,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
 
             var transferInfos = new List<TransferInfo>
             {
-                new TransferInfo
-                {
-                    From = uint160.One,
-                    To = new uint160(2),
-                    Value = 0
-                }
+                new TransferInfo(uint160.One, new uint160(2), 0)
             };
 
             Transaction internalTransaction = this.transferProcessor.Process(stateMock.Object, uint160.One, txContextMock.Object, transferInfos, false);
@@ -458,24 +433,9 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             // several transfers
             var transferInfos = new List<TransferInfo>
             {
-                new TransferInfo
-                {
-                    From = contractAddress,
-                    To = receiverAddress,
-                    Value = 75
-                },
-                new TransferInfo
-                {
-                    From = receiverAddress,
-                    To = contractAddress,
-                    Value = 20
-                },
-                new TransferInfo
-                {
-                    From = receiverAddress,
-                    To = thirdAddress,
-                    Value = 5
-                }
+                new TransferInfo(contractAddress, receiverAddress, 75),
+                new TransferInfo(receiverAddress, contractAddress, 20),
+                new TransferInfo(receiverAddress, thirdAddress, 5)
             };
 
             // End result should be Contract: 45, Receiver: 50, ThirdAddress: 5
@@ -491,12 +451,12 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             Assert.Equal(new uint256(1), internalTransaction.Inputs[0].PrevOut.Hash);
             Assert.Equal((uint)1, internalTransaction.Inputs[0].PrevOut.N);
             string output1Address = PayToPubkeyHashTemplate.Instance.ExtractScriptPubKeyParameters(internalTransaction.Outputs[0].ScriptPubKey).GetAddress(this.network).ToString();
-            Assert.Equal(receiverAddress.ToAddress(this.network).Value, output1Address);
+            Assert.Equal(receiverAddress.ToBase58Address(this.network), output1Address);
             Assert.Equal(50, internalTransaction.Outputs[0].Value);
             Assert.True(internalTransaction.Outputs[1].ScriptPubKey.IsSmartContractInternalCall());
             Assert.Equal(45, internalTransaction.Outputs[1].Value);
             string output3Address = PayToPubkeyHashTemplate.Instance.ExtractScriptPubKeyParameters(internalTransaction.Outputs[2].ScriptPubKey).GetAddress(this.network).ToString();
-            Assert.Equal(thirdAddress.ToAddress(this.network).Value, output3Address);
+            Assert.Equal(thirdAddress.ToBase58Address(this.network), output3Address);
             Assert.Equal(5, internalTransaction.Outputs[2].Value);
 
             // Ensure db updated
@@ -522,7 +482,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             Assert.Equal(txContextMock.Object.TxOutValue, (ulong) refundTransaction.Outputs[0].Value);
             string outputAddress = PayToPubkeyHashTemplate.Instance.ExtractScriptPubKeyParameters(refundTransaction.Outputs[0].ScriptPubKey).GetAddress(this.network).ToString();
 
-            Assert.Equal(txContextMock.Object.Sender.ToAddress(this.network).Value, outputAddress);
+            Assert.Equal(txContextMock.Object.Sender.ToBase58Address(this.network), outputAddress);
             Assert.Equal(txContextMock.Object.Time, refundTransaction.Time);
         }
     }

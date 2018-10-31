@@ -75,16 +75,16 @@ namespace Redstone.Feature.MasterNode.Tests
 
             var retrievedRecords = store.GetAll();
 
-            Assert.Equal(retrievedRecords.Count, 1);
+            Assert.Single(retrievedRecords);
 
             var retrievedRecord = retrievedRecords[0].Record;
 
-            Assert.Equal(retrievedRecord.ProtocolVersion, 255);
-            Assert.Equal(retrievedRecord.ServerId, "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2");
+            Assert.Equal(255, retrievedRecord.ProtocolVersion);
+            Assert.Equal("1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2", retrievedRecord.ServerId);
             Assert.Equal(retrievedRecord.Ipv4Addr, IPAddress.Parse("127.0.0.1"));
             Assert.Equal(retrievedRecord.Ipv6Addr, IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"));
-            Assert.Equal(retrievedRecord.OnionAddress, "0123456789ABCDEF");
-            Assert.Equal(retrievedRecord.Port, 37123);
+            Assert.Equal("0123456789ABCDEF", retrievedRecord.OnionAddress);
+            Assert.Equal(37123, retrievedRecord.Port);
             Assert.Equal(retrievedRecord.EcdsaPubKey, ecdsaPub);
         }
 
@@ -136,16 +136,16 @@ namespace Redstone.Feature.MasterNode.Tests
 
             var retrievedRecords = store.GetByServerId("1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2");
 
-            Assert.Equal(retrievedRecords.Count, 1);
+            Assert.Single(retrievedRecords);
 
             var retrievedRecord = retrievedRecords[0].Record;
 
-            Assert.Equal(retrievedRecord.ProtocolVersion, 255);
-            Assert.Equal(retrievedRecord.ServerId, "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2");
+            Assert.Equal(255, retrievedRecord.ProtocolVersion);
+            Assert.Equal("1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2", retrievedRecord.ServerId);
             Assert.Equal(retrievedRecord.Ipv4Addr, IPAddress.Parse("127.0.0.1"));
             Assert.Equal(retrievedRecord.Ipv6Addr, IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"));
-            Assert.Equal(retrievedRecord.OnionAddress, "0123456789ABCDEF");
-            Assert.Equal(retrievedRecord.Port, 37123);
+            Assert.Equal("0123456789ABCDEF", retrievedRecord.OnionAddress);
+            Assert.Equal(37123, retrievedRecord.Port);
         }
 
         [Fact]

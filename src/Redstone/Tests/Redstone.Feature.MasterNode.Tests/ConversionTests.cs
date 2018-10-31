@@ -18,9 +18,9 @@ namespace Redstone.Feature.MasterNode.Tests
             
             byte[] converted = BlockChainDataConversions.PubKeysToBytes(keys);
 
-            Assert.Equal(converted[0], 0x61);
-            Assert.Equal(converted[1], 0x62);
-            Assert.Equal(converted[2], 0x63);
+            Assert.Equal(0x61, converted[0]);
+            Assert.Equal(0x62, converted[1]);
+            Assert.Equal(0x63, converted[2]);
         }
 
         [Fact]

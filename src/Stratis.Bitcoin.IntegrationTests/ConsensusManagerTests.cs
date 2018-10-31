@@ -1,15 +1,17 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
+using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.Miner.Interfaces;
 using Stratis.Bitcoin.Features.Miner.Staking;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Networks;
-using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests
@@ -17,23 +19,37 @@ namespace Stratis.Bitcoin.IntegrationTests
     public class ConsensusManagerTests
     {
         private readonly Network posNetwork;
-
         private readonly Network powNetwork;
 
         public ConsensusManagerTests()
         {
             this.posNetwork = new StratisRegTest();
             this.powNetwork = new BitcoinRegTest();
-
-            Type consensusType = typeof(NBitcoin.Consensus);
-            consensusType.GetProperty("MaxReorgLength").SetValue(this.posNetwork.Consensus, (uint)20);
         }
 
         private class ConsensusOptionsTest : PosConsensusOptions
         {
+            public ConsensusOptionsTest() : base(
+                maxBlockBaseSize: 1_000_000,
+                maxStandardVersion: 2,
+                maxStandardTxWeight: 100_000,
+                maxBlockSigopsCost: 20_000,
+                maxStandardTxSigopsCost: 20_000 / 5,
+                provenHeadersActivationHeight: 10_000_000)
+            {
+            }
+
             public override int GetStakeMinConfirmations(int height, Network network)
             {
-                return height < 15 ? 5 : 20;
+                return height < 55 ? 50 : 60;
+            }
+        }
+
+        public class StratisConsensusOptionsOverrideTest : StratisRegTest
+        {
+            public StratisConsensusOptionsOverrideTest()
+            {
+                this.Name = Guid.NewGuid().ToString();
             }
         }
 
@@ -42,6 +58,17 @@ namespace Stratis.Bitcoin.IntegrationTests
             public StratisOverrideRegTest() : base()
             {
                 this.Name = Guid.NewGuid().ToString();
+            }
+        }
+
+        public class StratisMaxReorgOverrideTest : StratisRegTest
+        {
+            public StratisMaxReorgOverrideTest()
+            {
+                this.Name = Guid.NewGuid().ToString();
+
+                Type consensusType = typeof(NBitcoin.Consensus);
+                consensusType.GetProperty("MaxReorgLength").SetValue(this.Consensus, (uint)20);
             }
         }
 
@@ -55,8 +82,7 @@ namespace Stratis.Bitcoin.IntegrationTests
 
         public class FailValidation : FullValidationConsensusRule
         {
-            private int failheight;
-
+            private readonly int failheight;
             private int failcount;
 
             public FailValidation(int failheight, int failcount = 1)
@@ -85,15 +111,9 @@ namespace Stratis.Bitcoin.IntegrationTests
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {
-                var minerA = builder.CreateStratisPosNode(this.posNetwork);
-                var minerB = builder.CreateStratisPosNode(this.posNetwork);
-                var syncer = builder.CreateStratisPosNode(this.posNetwork);
-
-                builder.StartAll();
-
-                minerA.NotInIBD().WithWallet();
-                minerB.NotInIBD().WithWallet();
-                syncer.NotInIBD();
+                var minerA = builder.CreateStratisPowNode(this.powNetwork).WithDummyWallet().Start();
+                var minerB = builder.CreateStratisPowNode(this.powNetwork).WithDummyWallet().Start();
+                var syncer = builder.CreateStratisPowNode(this.powNetwork).Start();
 
                 // MinerA mines to height 10.
                 TestHelper.MineBlocks(minerA, 10);
@@ -132,24 +152,22 @@ namespace Stratis.Bitcoin.IntegrationTests
         }
 
         [Fact]
+        [Trait("Unstable", "True")]
         public void ConsensusManager_Fork_Occurs_Node_Gets_Disconnected_Due_To_InvalidStakeDepth()
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {
-                var minerA = builder.CreateStratisPosNode(this.posNetwork);
-                var minerB = builder.CreateStratisPosNode(this.posNetwork);
-                var syncer = builder.CreateStratisPosNode(this.posNetwork);
+                var network = new StratisConsensusOptionsOverrideTest();
 
-                builder.StartAll();
+                // MinerA requires an physical wallet to stake with.
+                var minerA = builder.CreateStratisPosNode(network).OverrideDateTimeProvider().WithWallet().Start();
+                var minerB = builder.CreateStratisPosNode(network).OverrideDateTimeProvider().Start();
+                var syncer = builder.CreateStratisPosNode(network).OverrideDateTimeProvider().Start();
 
-                minerA.NotInIBD().WithWallet();
-                minerB.NotInIBD();
-                syncer.NotInIBD();
+                // MinerA mines to height 55.
+                TestHelper.MineBlocks(minerA, 55);
 
-                // MinerA mines to height 15.
-                TestHelper.MineBlocks(minerA, 15);
-
-                // Sync the network to height 15.
+                // Sync the network to height 55.
                 TestHelper.Connect(syncer, minerA);
                 TestHelper.Connect(syncer, minerB);
                 TestHelper.WaitLoop(() => TestHelper.AreNodesSynced(syncer, minerA));
@@ -162,13 +180,13 @@ namespace Stratis.Bitcoin.IntegrationTests
                 // Ensure syncer does not have any connections.
                 TestHelper.WaitLoop(() => !TestHelper.IsNodeConnected(syncer));
 
-                // Miner A stakes a coin that increases the network height to 16.
+                // Miner A stakes a coin that increases the network height to 56.
                 var minter = minerA.FullNode.NodeService<IPosMinting>();
                 minter.Stake(new WalletSecret() { WalletName = "mywallet", WalletPassword = "password" });
 
                 TestHelper.WaitLoop(() =>
                 {
-                    return minerA.FullNode.ConsensusManager().Tip.Height == 16;
+                    return minerA.FullNode.ConsensusManager().Tip.Height == 56;
                 });
 
                 minter.StopStake();
@@ -190,8 +208,8 @@ namespace Stratis.Bitcoin.IntegrationTests
                 // Ensure that Syncer is not connected to MinerA.
                 TestHelper.WaitLoop(() => !TestHelper.IsNodeConnectedTo(syncer, minerA));
 
-                Assert.True(syncer.FullNode.ConsensusManager().Tip.Height == 15);
-                Assert.True(minerB.FullNode.ConsensusManager().Tip.Height == 15);
+                Assert.True(syncer.FullNode.ConsensusManager().Tip.Height == 55);
+                Assert.True(minerB.FullNode.ConsensusManager().Tip.Height == 55);
             }
         }
 
@@ -200,15 +218,11 @@ namespace Stratis.Bitcoin.IntegrationTests
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {
-                var minerA = builder.CreateStratisPosNode(this.posNetwork);
-                var minerB = builder.CreateStratisPosNode(this.posNetwork);
-                var syncer = builder.CreateStratisPosNode(this.posNetwork);
+                var network = new StratisMaxReorgOverrideTest();
 
-                builder.StartAll();
-
-                minerA.NotInIBD().WithWallet();
-                minerB.NotInIBD().WithWallet();
-                syncer.NotInIBD();
+                var minerA = builder.CreateStratisPosNode(network).WithDummyWallet().Start();
+                var minerB = builder.CreateStratisPosNode(network).WithDummyWallet().Start();
+                var syncer = builder.CreateStratisPosNode(network).Start();
 
                 // MinerA mines to height 20.
                 TestHelper.MineBlocks(minerA, 20);
@@ -253,15 +267,9 @@ namespace Stratis.Bitcoin.IntegrationTests
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {
-                var minerA = builder.CreateStratisPowNode(this.powNetwork);
-                var minerB = builder.CreateStratisPowNode(this.powNetwork);
-                var syncer = builder.CreateStratisPowNode(this.powNetwork);
-
-                builder.StartAll();
-
-                minerA.NotInIBD().WithWallet();
-                minerB.NotInIBD().WithWallet();
-                syncer.NotInIBD();
+                var minerA = builder.CreateStratisPowNode(this.powNetwork).WithDummyWallet().Start();
+                var minerB = builder.CreateStratisPowNode(this.powNetwork).WithDummyWallet().Start();
+                var syncer = builder.CreateStratisPowNode(this.powNetwork).Start();
 
                 // MinerA mines to height 10.
                 TestHelper.MineBlocks(minerA, 10);
@@ -301,21 +309,15 @@ namespace Stratis.Bitcoin.IntegrationTests
         }
 
         [Fact]
-        public void ConsensusManager_Reorgs_Then_Try_To_Connect_Longer_Chain__With_Connected_Blocks_And_Fail_Then_Revert_Back()
+        public void ConsensusManager_Reorgs_Then_Try_To_Connect_Longer_Chain_With_Connected_Blocks_And_Fail_Then_Revert_Back()
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {
                 var syncerNetwork = new StratisOverrideRegTest();
 
-                var minerA = builder.CreateStratisPosNode(this.posNetwork);
-                var minerB = builder.CreateStratisPosNode(this.posNetwork);
-                var syncer = builder.CreateStratisPosNode(syncerNetwork);
-
-                builder.StartAll();
-
-                minerA.NotInIBD().WithWallet();
-                minerB.NotInIBD().WithWallet();
-                syncer.NotInIBD();
+                var minerA = builder.CreateStratisPosNode(this.posNetwork).WithDummyWallet().Start();
+                var minerB = builder.CreateStratisPosNode(this.posNetwork).WithDummyWallet().Start();
+                var syncer = builder.CreateStratisPosNode(syncerNetwork).Start();
 
                 // MinerA mines to height 10.
                 TestHelper.MineBlocks(minerA, 10);
@@ -330,8 +332,12 @@ namespace Stratis.Bitcoin.IntegrationTests
                 TestHelper.MineBlocks(minerA, 10);
                 TestHelper.WaitLoop(() => TestHelper.AreNodesSynced(syncer, minerA));
 
+                Assert.True(minerA.FullNode.ConsensusManager().Tip.Height == 20);
+                Assert.True(minerB.FullNode.ConsensusManager().Tip.Height == 10);
+                Assert.True(syncer.FullNode.ConsensusManager().Tip.Height == 20);
+
                 // Inject a rule that will fail at block 15 of the new chain.
-                ConsensusRuleEngine engine = syncer.FullNode.NodeService<IConsensusRuleEngine>() as ConsensusRuleEngine;
+                var engine = syncer.FullNode.NodeService<IConsensusRuleEngine>() as ConsensusRuleEngine;
                 syncerNetwork.Consensus.FullValidationRules.Insert(1, new FailValidation(15));
                 engine.Register();
 
@@ -343,7 +349,7 @@ namespace Stratis.Bitcoin.IntegrationTests
 
                 // Miner B should become disconnected.
                 TestHelper.WaitLoop(() => !TestHelper.IsNodeConnectedTo(syncer, minerB));
-                
+
                 // Make sure syncer rolled back.
                 Assert.True(syncer.FullNode.ConsensusManager().Tip.Height == 20);
 
@@ -353,21 +359,15 @@ namespace Stratis.Bitcoin.IntegrationTests
         }
 
         [Fact]
-        public void ConsensusManager_Reorgs_Then_Try_To_Connect_Longer_Chain__With__No_Connected_Blocks_And_Fail_Then_Revert_Back()
+        public void ConsensusManager_Reorgs_Then_Try_To_Connect_Longer_Chain_With_No_Connected_Blocks_And_Fail_Then_Revert_Back()
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {
                 var syncerNetwork = new BitcoinOverrideRegTest();
 
-                var minerA = builder.CreateStratisPowNode(this.powNetwork);
-                var minerB = builder.CreateStratisPowNode(this.powNetwork);
-                var syncer = builder.CreateStratisPowNode(syncerNetwork);
-
-                builder.StartAll();
-
-                minerA.NotInIBD().WithWallet();
-                minerB.NotInIBD().WithWallet();
-                syncer.NotInIBD();
+                var minerA = builder.CreateStratisPowNode(this.powNetwork).WithDummyWallet().Start();
+                var minerB = builder.CreateStratisPowNode(this.powNetwork).WithDummyWallet().Start();
+                var syncer = builder.CreateStratisPowNode(syncerNetwork).Start();
 
                 // MinerA mines to height 10.
                 TestHelper.MineBlocks(minerA, 10);
@@ -405,19 +405,68 @@ namespace Stratis.Bitcoin.IntegrationTests
         }
 
         [Fact]
+        public void ConsensusManager_Reorg_To_Longest_Chain_Multiple_Times_Without_Invalid_Blocks()
+        {
+            using (NodeBuilder builder = NodeBuilder.Create(this))
+            {
+                var minerA = builder.CreateStratisPowNode(this.powNetwork).WithDummyWallet().Start();
+                var minerB = builder.CreateStratisPowNode(this.powNetwork).WithDummyWallet().Start();
+                var syncer = builder.CreateStratisPowNode(this.powNetwork);
+
+                void flushCondition(IServiceCollection services)
+                {
+                    ServiceDescriptor service = services.FirstOrDefault(s => s.ServiceType == typeof(IBlockStoreQueueFlushCondition));
+                    if (service != null)
+                        services.Remove(service);
+
+                    services.AddSingleton<IBlockStoreQueueFlushCondition>((serviceprovider) =>
+                    {
+                        var chainState = serviceprovider.GetService<IChainState>();
+                        return new BlockStoreQueueFlushConditionReorgTests(chainState, 10);
+                    });
+                };
+
+                syncer.OverrideService(flushCondition).Start();
+
+                // MinerA mines to height 10.
+                TestHelper.MineBlocks(minerA, 10);
+
+                // Sync the network to height 10.
+                TestHelper.ConnectAndSync(syncer, minerA, minerB);
+
+                TestHelper.DisableBlockPropagation(syncer, minerA);
+                TestHelper.DisableBlockPropagation(syncer, minerB);
+
+                // Syncer syncs to minerA's block of 11
+                TestHelper.MineBlocks(minerA, 1);
+                TestHelper.WaitLoop(() => minerA.FullNode.ConsensusManager().Tip.Height == 11);
+                TestHelper.WaitLoop(() => minerB.FullNode.ConsensusManager().Tip.Height == 10);
+                TestHelper.WaitLoop(() => syncer.FullNode.ConsensusManager().Tip.Height == 11);
+
+                // Syncer jumps chain and reorgs to minerB's longer chain of 12
+                TestHelper.MineBlocks(minerB, 2);
+                TestHelper.WaitLoop(() => minerA.FullNode.ConsensusManager().Tip.Height == 11);
+                TestHelper.WaitLoop(() => minerB.FullNode.ConsensusManager().Tip.Height == 12);
+                TestHelper.WaitLoop(() => syncer.FullNode.ConsensusManager().Tip.Height == 12);
+
+                // Syncer jumps chain and reorg to minerA's longer chain of 18
+                TestHelper.MineBlocks(minerA, 2);
+                TestHelper.TriggerSync(syncer);
+                TestHelper.WaitLoop(() => minerA.FullNode.ConsensusManager().Tip.Height == 13);
+                TestHelper.WaitLoop(() => minerB.FullNode.ConsensusManager().Tip.Height == 12);
+                TestHelper.WaitLoop(() => syncer.FullNode.ConsensusManager().Tip.Height == 13);
+            }
+        }
+
+        [Fact]
         public void ConsensusManager_Connect_New_Block_Failed()
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {
                 var syncerNetwork = new StratisOverrideRegTest();
 
-                var minerA = builder.CreateStratisPosNode(this.posNetwork);
-                var syncer = builder.CreateStratisPosNode(syncerNetwork);
-
-                builder.StartAll();
-
-                minerA.NotInIBD().WithWallet();
-                syncer.NotInIBD();
+                var minerA = builder.CreateStratisPosNode(this.posNetwork).WithDummyWallet().Start();
+                var syncer = builder.CreateStratisPosNode(syncerNetwork).Start();
 
                 // Miner A mines to height 11.
                 TestHelper.MineBlocks(minerA, 11);
@@ -435,6 +484,29 @@ namespace Stratis.Bitcoin.IntegrationTests
 
                 // Make sure syncer rolled back
                 Assert.True(syncer.FullNode.ConsensusManager().Tip.Height == 10);
+            }
+        }
+    }
+
+    public class BlockStoreQueueFlushConditionReorgTests : IBlockStoreQueueFlushCondition
+    {
+        private readonly IChainState chainState;
+        private readonly int interceptAtBlockHeight;
+
+        public BlockStoreQueueFlushConditionReorgTests(IChainState chainState, int interceptAtBlockHeight)
+        {
+            this.chainState = chainState;
+            this.interceptAtBlockHeight = interceptAtBlockHeight;
+        }
+
+        public bool ShouldFlush
+        {
+            get
+            {
+                if (this.chainState.ConsensusTip.Height >= this.interceptAtBlockHeight)
+                    return false;
+
+                return this.chainState.IsAtBestChainTip;
             }
         }
     }

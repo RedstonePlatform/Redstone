@@ -72,7 +72,6 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
             this.ConfigParameters.SetDefaultValueIfUndefined("rpcport", randomFoundPorts[1].ToString());
             this.ConfigParameters.SetDefaultValueIfUndefined("apiport", randomFoundPorts[2].ToString());
 
-            this.connectionManagerSettings = new ConnectionManagerSettings();
             this.loggerFactory = new ExtendedLoggerFactory();
             this.loggerFactory.AddConsoleWithFilters();
 
@@ -223,8 +222,8 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
         /// <summary>
         /// Emit a ping and wait the pong.
         /// </summary>
-        /// <param name="cancellation"></param>
-        /// <param name="peer"></param>
+        /// <param name="peer">Peer</param>
+        /// <param name="cancellation">Cancellation</param>
         /// <returns>Latency.</returns>
         public async Task<TimeSpan> PingPongAsync(INetworkPeer peer, CancellationToken cancellation = default(CancellationToken))
         {
@@ -335,7 +334,7 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
         /// </summary>
         /// <param name="peer">Peer to get chain from.</param>
         /// <param name="hashStop">The highest block wanted.</param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="cancellationToken">The cancellation token</param>
         /// <returns>The chain of headers.</returns>
         private ConcurrentChain GetChain(INetworkPeer peer, uint256 hashStop = null, CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -350,8 +349,8 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
         /// <param name="peer">Node to synchronize the chain for.</param>
         /// <param name="chain">The chain to synchronize.</param>
         /// <param name="hashStop">The location until which it synchronize.</param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <param name="cancellationToken">The cancellation token</param>
+        /// <returns>The chained header</returns>
         private IEnumerable<ChainedHeader> SynchronizeChain(INetworkPeer peer, ChainBase chain, uint256 hashStop = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             ChainedHeader oldTip = chain.Tip;

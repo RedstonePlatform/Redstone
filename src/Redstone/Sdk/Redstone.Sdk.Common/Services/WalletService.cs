@@ -26,7 +26,7 @@ namespace Redstone.Sdk.Services
             {
                 response = await this.client.PostAsync("http://localhost:38222/api/wallet/build-transaction", content);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw new WalletServiceException("Failed to connect to node, is it running.");
             }
@@ -55,7 +55,7 @@ namespace Redstone.Sdk.Services
             {
                 response = await this.client.PostAsync("http://localhost:38222/api/wallet/send-transaction", content);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw new WalletServiceException("Failed to connect to node, is it running.");
             }
@@ -82,7 +82,7 @@ namespace Redstone.Sdk.Services
                 response = await this.client.GetAsync(
                     $"http://localhost:38222/api/RPC/callbyname?methodName=getrawtransaction&txid={request.TransactionId}&verbose=1");
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw new WalletServiceException("Failed to connect to node, is it running.");
             }

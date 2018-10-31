@@ -63,7 +63,7 @@ namespace NBitcoin
 
         BuriedDeploymentsArray BuriedDeployments { get; }
 
-        BIP9DeploymentsArray BIP9Deployments { get; }
+        IBIP9DeploymentsArray BIP9Deployments { get; }
 
         int SubsidyHalvingInterval { get; }
 

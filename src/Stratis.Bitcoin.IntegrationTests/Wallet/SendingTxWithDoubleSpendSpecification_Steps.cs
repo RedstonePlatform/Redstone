@@ -33,13 +33,9 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
         protected override void BeforeTest()
         {
             this.builder = NodeBuilder.Create(this);
-            this.stratisSender = this.builder.CreateStratisPowNode(KnownNetworks.RegTest);
-            this.stratisReceiver = this.builder.CreateStratisPowNode(KnownNetworks.RegTest);
+            this.stratisSender = this.builder.CreateStratisPowNode(KnownNetworks.RegTest).WithWallet().Start();
+            this.stratisReceiver = this.builder.CreateStratisPowNode(KnownNetworks.RegTest).WithWallet().Start();
             this.mempoolValidationState = new MempoolValidationState(true);
-
-            this.builder.StartAll();
-            this.stratisSender.NotInIBD().WithWallet();
-            this.stratisReceiver.NotInIBD().WithWallet();
         }
 
         protected override void AfterTest()
@@ -55,9 +51,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
             var total = this.stratisSender.FullNode.WalletManager().GetSpendableTransactionsInWallet(Name).Sum(s => s.Transaction.Amount);
             total.Should().Equals(Money.COIN * 6 * 50);
 
-            // sync both nodes
-            this.stratisSender.CreateRPCClient().AddNode(this.stratisReceiver.Endpoint, true);
-            TestHelper.WaitLoop(() => TestHelper.AreNodesSynced(this.stratisReceiver, this.stratisSender));
+            TestHelper.ConnectAndSync(this.stratisSender, this.stratisReceiver);
         }
 
         private void coins_first_sent_to_receiving_wallet()
