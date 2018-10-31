@@ -15,7 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.Wallet\Stratis.Bitcoin.Features.Wallet.csproj" />
     <ProjectReference Include="..\..\Core\Redstone.Core\Redstone.Core.csproj" />
-    <ProjectReference Include="..\..\Features\Redstone.Features.Breeze\Redstone.Features.MasterNode.csproj" />
+    <ProjectReference Include="..\..\Features\Redstone.Features.MasterNode\Redstone.Features.MasterNode.csproj" />
     <ProjectReference Include="..\Redstone.IntegrationTests.Common\Redstone.IntegrationTests.Common.csproj" />
   </ItemGroup>
 
