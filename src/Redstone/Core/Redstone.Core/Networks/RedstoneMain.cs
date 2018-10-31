@@ -33,7 +33,7 @@
             messageStart[1] = 0x35;
             messageStart[2] = 0x22;
             messageStart[3] = 0x05;
-            uint magic = BitConverter.ToUInt32(messageStart, 0); //0x5223570; 
+            uint magic = BitConverter.ToUInt32(messageStart, 0); // 0x5223570;
 
             this.Name = "RedstoneMain";
             this.Magic = magic;
@@ -141,14 +141,14 @@
             this.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS] = encoder;
             this.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS] = encoder;
 
-            // TODO:Redstone - need seed 
+            // TODO:Redstone - need seed
             this.DNSSeeds = new List<DNSSeedData>()
             /*
             {
-                //new DNSSeedData("seednode1.stratisplatform.com", "seednode1.stratisplatform.com"),
-                //new DNSSeedData("seednode2.stratis.cloud", "seednode2.stratis.cloud"),
-                //new DNSSeedData("seednode3.stratisplatform.com", "seednode3.stratisplatform.com"),
-                //new DNSSeedData("seednode4.stratis.cloud", "seednode4.stratis.cloud")
+                new DNSSeedData("seednode1.stratisplatform.com", "seednode1.stratisplatform.com"),
+                new DNSSeedData("seednode2.stratis.cloud", "seednode2.stratis.cloud"),
+                new DNSSeedData("seednode3.stratisplatform.com", "seednode3.stratisplatform.com"),
+                new DNSSeedData("seednode4.stratis.cloud", "seednode4.stratis.cloud")
             })*/;
 
             this.SeedNodes = this.ConvertToNetworkAddresses(new string[] { /*"35.176.127.127", "35.176.127.127"*/}, this.DefaultPort).ToList();

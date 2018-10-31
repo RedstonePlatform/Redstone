@@ -34,9 +34,9 @@
         {
             Network network = RedstoneNetworks.Main;
 
-            Assert.Equal(0, network.Checkpoints.Count);
-            Assert.Equal(0, network.DNSSeeds.Count);
-            Assert.Equal(0, network.SeedNodes.Count);
+            Assert.Empty(network.Checkpoints);
+            Assert.Empty(network.DNSSeeds);
+            Assert.Empty(network.SeedNodes);
 
             Assert.Equal("RedstoneMain", network.Name);
             Assert.Equal(RedstoneMain.RedstoneRootFolderName, network.RootFolderName);
@@ -129,9 +129,9 @@
         {
             Network network = RedstoneNetworks.TestNet;
 
-            Assert.Equal(0, network.Checkpoints.Count);
-            Assert.Equal(0, network.DNSSeeds.Count);
-            Assert.Equal(0, network.SeedNodes.Count);
+            Assert.Empty(network.Checkpoints);
+            Assert.Empty(network.DNSSeeds);
+            Assert.Empty(network.SeedNodes);
 
             Assert.Equal("RedstoneTest", network.Name);
             Assert.Equal(RedstoneMain.RedstoneRootFolderName, network.RootFolderName);

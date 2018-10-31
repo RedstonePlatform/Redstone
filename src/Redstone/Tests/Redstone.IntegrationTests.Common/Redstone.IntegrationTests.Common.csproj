@@ -15,7 +15,7 @@
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <Version>1.2.1-beta</Version>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-	<CodeAnalysisRuleSet>..\None.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>..\..\..\None.ruleset</CodeAnalysisRuleSet>
     <Product />
   </PropertyGroup>
 
