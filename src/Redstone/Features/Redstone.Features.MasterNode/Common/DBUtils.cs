@@ -8,7 +8,7 @@ using System.Text;
 using DBreeze;
 using Stratis.Bitcoin.Utilities.JsonConverters;
 
-namespace Redstone.Features.Breeze.BreezeCommon
+namespace Redstone.Features.MasterNode.Common
 {
     public class DBUtils : IDisposable
     {

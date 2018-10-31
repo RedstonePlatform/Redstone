@@ -1,10 +1,10 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Redstone.Features.Breeze.BreezeCommon;
+using Redstone.Features.MasterNode.Common;
 using Stratis.Bitcoin.Features.WatchOnlyWallet;
 
-namespace Redstone.Features.Breeze.BreezeRegistration
+namespace Redstone.Features.MasterNode
 {
     public class RegistrationManager : IRegistrationManager
     {

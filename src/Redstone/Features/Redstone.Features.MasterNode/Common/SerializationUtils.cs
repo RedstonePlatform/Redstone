@@ -6,7 +6,7 @@ using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Redstone.Features.Breeze.BreezeCommon
+namespace Redstone.Features.MasterNode.Common
 {
     public class IPAddressConverter : JsonConverter
     {

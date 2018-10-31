@@ -5,7 +5,7 @@ using System.Linq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
-namespace Redstone.Features.Breeze.BreezeCommon
+namespace Redstone.Features.MasterNode.Common
 {
     public class BlockChainDataConversions
     {
