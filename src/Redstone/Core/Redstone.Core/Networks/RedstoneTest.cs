@@ -27,7 +27,6 @@
             this.DefaultPort = 19156;
             this.RPCPort = 19157;
             this.CoinTicker = "TXRD";
-            this.MaxTipAge = RedstoneDefaultMaxTipAgeInSeconds * 12 * 365;  // set to 1 year for test net
 
             var powLimit = new Target(new uint256("0000ffff00000000000000000000000000000000000000000000000000000000"));
 
