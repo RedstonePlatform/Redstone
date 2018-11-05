@@ -27,6 +27,7 @@
             this.DefaultPort = 19156;
             this.RPCPort = 19157;
             this.CoinTicker = "TXRD";
+            this.MaxTipAge = RedstoneDefaultMaxTipAgeInSeconds * 12 * 365;  // set to 1 year for test net
 
             var powLimit = new Target(new uint256("0000ffff00000000000000000000000000000000000000000000000000000000"));
 
@@ -53,7 +54,7 @@
                 maxStandardVersion: 2,
                 maxStandardTxWeight: 100_000,
                 maxBlockSigopsCost: 20_000,
-                maxStandardTxSigopsCost: 1,  // TODO Anthony - what should this value be (this param was added to the constructor)
+                maxStandardTxSigopsCost: 4_000,  // TODO as per Stratis set to 20% of MaxBlockSigopsCost
                 provenHeadersActivationHeight: 10_000_000 // TODO: Set it to the real value once it is known.
             );
 
