@@ -1,10 +1,10 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Redstone.Features.MasterNode.Common;
+using Redstone.Features.ServiceNode.Common;
 using Stratis.Bitcoin.Features.WatchOnlyWallet;
 
-namespace Redstone.Features.MasterNode
+namespace Redstone.Features.ServiceNode
 {
     public interface IRegistrationManager : IDisposable
     {

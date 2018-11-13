@@ -1,14 +1,14 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Redstone.Features.MasterNode.Common;
+using Redstone.Features.ServiceNode.Common;
 using Stratis.Bitcoin.Features.WatchOnlyWallet;
 
-namespace Redstone.Features.MasterNode
+namespace Redstone.Features.ServiceNode
 {
     public class RegistrationManager : IRegistrationManager
     {
-        public static readonly Money MASTERNODE_COLLATERAL_THRESHOLD = new Money(5, MoneyUnit.BTC);
+        public static readonly Money SERVICENODE_COLLATERAL_THRESHOLD = new Money(5, MoneyUnit.BTC);
         public static readonly int MAX_PROTOCOL_VERSION = 128; // >128 = regard as test versions
         public static readonly int MIN_PROTOCOL_VERSION = 1;
         public static readonly int WINDOW_PERIOD_BLOCK_COUNT = 30;
@@ -125,7 +125,7 @@ namespace Redstone.Features.MasterNode
                                              serverCollateralBalance.ToString() + ", original registration height " +
                                              record.BlockReceived + ", current height " + height);
 
-                        if ((serverCollateralBalance < MASTERNODE_COLLATERAL_THRESHOLD) &&
+                        if ((serverCollateralBalance < SERVICENODE_COLLATERAL_THRESHOLD) &&
                             ((height - record.BlockReceived) > WINDOW_PERIOD_BLOCK_COUNT))
                         {
                             // Remove server registrations as funding has not been performed timeously,

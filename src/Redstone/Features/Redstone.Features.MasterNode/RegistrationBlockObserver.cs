@@ -4,7 +4,7 @@ using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Utilities;
 
-namespace Redstone.Features.MasterNode
+namespace Redstone.Features.ServiceNode
 {
     /// <summary>
     /// Observer that receives notifications about the arrival of new <see cref="ChainedHeaderBlock"/>s.

@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using NBitcoin;
 
-namespace Redstone.Features.MasterNode.Common
+namespace Redstone.Features.ServiceNode.Common
 {
     public class CryptoUtils
     {

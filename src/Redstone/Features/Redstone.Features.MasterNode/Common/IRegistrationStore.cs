@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Redstone.Features.MasterNode.Common
+namespace Redstone.Features.ServiceNode.Common
 {
     public interface IRegistrationStore
     {

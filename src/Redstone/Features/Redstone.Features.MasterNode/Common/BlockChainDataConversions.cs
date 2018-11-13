@@ -5,7 +5,7 @@ using System.Linq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
-namespace Redstone.Features.MasterNode.Common
+namespace Redstone.Features.ServiceNode.Common
 {
     public class BlockChainDataConversions
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 
-namespace Redstone.Features.MasterNode.Common
+namespace Redstone.Features.ServiceNode.Common
 {
     public class RegistrationStore : IRegistrationStore
     {

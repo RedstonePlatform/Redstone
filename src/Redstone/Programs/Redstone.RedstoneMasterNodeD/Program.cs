@@ -6,7 +6,7 @@ using NBitcoin.Networks;
 using NBitcoin.Protocol;
 using Redstone.Core.Networks;
 using Redstone.Features.Api;
-using Redstone.Features.MasterNode;
+using Redstone.Features.ServiceNode;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.BlockStore;
@@ -17,7 +17,7 @@ using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Utilities;
 
-namespace Redstone.RedstoneMasterNodeD
+namespace Redstone.RedstoneServiceNodeD
 {
     public class Program
     {
@@ -47,7 +47,7 @@ namespace Redstone.RedstoneMasterNodeD
                     .UseMempool()
                     .UseWallet()
                     .UseApi()
-                    .UseMasterNode()
+                    .UseServiceNode()
                     .AddRPC()
                     .Build();
 

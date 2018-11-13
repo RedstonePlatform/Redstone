@@ -2,7 +2,7 @@
 using NBitcoin;
 using Newtonsoft.Json;
 
-namespace Redstone.Features.MasterNode.Common
+namespace Redstone.Features.ServiceNode.Common
 {
     public class RegistrationRecord
     {

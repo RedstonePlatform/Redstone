@@ -5,7 +5,7 @@ using System.Text;
 using NBitcoin;
 using Newtonsoft.Json;
 
-namespace Redstone.Features.MasterNode.Common
+namespace Redstone.Features.ServiceNode.Common
 {
     /*
         Bitstream format for Breeze TumbleBit registration token

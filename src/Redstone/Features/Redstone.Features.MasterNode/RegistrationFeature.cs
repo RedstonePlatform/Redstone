@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Redstone.Core.Networks;
-using Redstone.Features.MasterNode.Common;
+using Redstone.Features.ServiceNode.Common;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration;
@@ -14,7 +14,7 @@ using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.WatchOnlyWallet;
 using Stratis.Bitcoin.Signals;
 
-namespace Redstone.Features.MasterNode
+namespace Redstone.Features.ServiceNode
 {
     public class RegistrationFeature : FullNodeFeature
     {
@@ -66,15 +66,15 @@ namespace Redstone.Features.MasterNode
             this.logger.LogTrace("()");
 
             IList<RegistrationRecord> registrationRecords = this.registrationStore.GetAll();
-            this.logger.LogInformation("Restored {0} masternode registrations from the configuration file", registrationRecords.Count);
+            this.logger.LogInformation("Restored {0} service node registrations from the configuration file", registrationRecords.Count);
 
-            // If there are no registrations then revert back to the block height of when the MasterNodes were set-up.
+            // If there are no registrations then revert back to the block height of when the service nodes were set-up.
             if (registrationRecords.Count == 0)
                 RevertRegistrations();
             else
                 VerifyRegistrationStore(registrationRecords);
 
-            // Only need to subscribe to receive blocks and transactions on the Stratis network.
+            // Only need to subscribe to receive blocks and transactions on the Redstone network.
             this.blockSubscriberdDisposable =
                 this.signals.SubscribeForBlocksConnected(new RegistrationBlockObserver(this.chain, this.registrationManager));
 
@@ -102,7 +102,7 @@ namespace Redstone.Features.MasterNode
                     ? SyncHeightTest 
                     : SyncHeightRegTest;
 
-            this.logger.LogInformation("No registrations have been found; Syncing from height {0} in order to get masternode registrations", syncHeight);
+            this.logger.LogInformation("No registrations have been found; Syncing from height {0} in order to get service node registrations", syncHeight);
 
             this.walletSyncManager.SyncFromHeight(syncHeight);
 
@@ -131,7 +131,7 @@ namespace Redstone.Features.MasterNode
 
     public static class RegistrationFeatureExtension
     {
-        public static IFullNodeBuilder UseMasterNode(this IFullNodeBuilder fullNodeBuilder)
+        public static IFullNodeBuilder UseServiceNode(this IFullNodeBuilder fullNodeBuilder)
         {
             fullNodeBuilder.ConfigureFeature(features =>
             {

@@ -180,9 +180,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.PoAChainD", "Strati
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redstone.IntegrationTests.Common", "Redstone\Tests\Redstone.IntegrationTests.Common\Redstone.IntegrationTests.Common.csproj", "{2C17FA4E-3134-43DB-BA9A-36C9F7226524}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redstone.RedstoneMasterNodeD", "Redstone\Programs\Redstone.RedstoneMasterNodeD\Redstone.RedstoneMasterNodeD.csproj", "{28487B0C-047E-4E12-B962-A992FC1033AC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redstone.RedstoneServiceNodeD", "Redstone\Programs\Redstone.RedstoneMasterNodeD\Redstone.RedstoneServiceNodeD.csproj", "{28487B0C-047E-4E12-B962-A992FC1033AC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redstone.Features.MasterNode", "Redstone\Features\Redstone.Features.MasterNode\Redstone.Features.MasterNode.csproj", "{A4C6433B-4C7E-4D57-8F2A-37A5BAD66101}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redstone.Features.ServiceNode", "Redstone\Features\Redstone.Features.MasterNode\Redstone.Features.ServiceNode.csproj", "{A4C6433B-4C7E-4D57-8F2A-37A5BAD66101}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.SmartContracts.Networks", "Stratis.SmartContracts.Networks\Stratis.SmartContracts.Networks.csproj", "{C1CCB886-B110-4633-AD59-364CFA2EC809}"
 EndProject
@@ -194,7 +194,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Bitcoin.Features.Po
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.SmartContracts.Token.Tests", "Stratis.SmartContracts.Token.Tests\Stratis.SmartContracts.Token.Tests.csproj", "{F80E2724-8255-4502-A892-A3089355806F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redstone.Feature.MasterNode.Tests", "Redstone\Tests\Redstone.Feature.MasterNode.Tests\Redstone.Feature.MasterNode.Tests.csproj", "{7A839C1C-437D-49DB-B2AA-84B9613B71CA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redstone.Feature.ServiceNode.Tests", "Redstone\Tests\Redstone.Feature.MasterNode.Tests\Redstone.Feature.ServiceNode.Tests.csproj", "{7A839C1C-437D-49DB-B2AA-84B9613B71CA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

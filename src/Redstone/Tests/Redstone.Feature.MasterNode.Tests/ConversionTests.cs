@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using System.Text;
 using NBitcoin;
 using Redstone.Core.Networks;
-using Redstone.Features.MasterNode.Common;
+using Redstone.Features.ServiceNode.Common;
 using Xunit;
 
-namespace Redstone.Feature.MasterNode.Tests
+namespace Redstone.Feature.ServiceNode.Tests
 {
     public class ConversionTests
     {

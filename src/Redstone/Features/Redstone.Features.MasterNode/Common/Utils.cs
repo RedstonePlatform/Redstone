@@ -1,4 +1,4 @@
-﻿namespace Redstone.Features.MasterNode.Common
+﻿namespace Redstone.Features.ServiceNode.Common
 {
     public class Utils
     {
