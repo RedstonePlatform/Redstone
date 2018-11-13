@@ -22,45 +22,12 @@ namespace Redstone.Feature.MasterNode.Tests
         [Fact]
         public async Task RegistrationTest()
         {
-            using (NodeBuilder builder = NodeBuilder.Create(this)) // TODO: AC-FromBreeze this was called with no params
+            using (NodeBuilder builder = NodeBuilder.Create(this)) 
             {
-                // TODO: AC-FromBreeze check these calls for difference in network build
                 CoreNode node1 = builder.CreateRedstonePosNode(RedstoneNetworks.TestNet);
-
-                //    true, fullNodeBuilder =>
-                //{
-                //    fullNodeBuilder
-                //        .UsePosConsensus()
-                //        .UseBlockStore()
-                //        .UseMempool()
-                //        .UseBlockNotification()
-                //        .UseTransactionNotification()
-                //        .UseWallet()
-                //        .UseWatchOnlyWallet()
-                //        .AddPowPosMining()
-                //        //.AddMining()
-                //        //.UseApi()
-                //        .AddRPC();
-                //});
-
                 CoreNode node2 = builder.CreateRedstonePosNode(RedstoneNetworks.TestNet);
-                //    true, fullNodeBuilder =>
-                //{
-                //    fullNodeBuilder
-                //        .UsePosConsensus()
-                //        .UseBlockStore()
-                //        .UseMempool()
-                //        .UseBlockNotification()
-                //        .UseTransactionNotification()
-                //        .UseWallet()
-                //        .UseWatchOnlyWallet()
-                //        .AddPowPosMining()
-                //        //.AddMining()
-                //        //.UseApi()
-                //        .AddRPC()
-                //        .UseRegistration();
-                //});
-
+                node1.Start();
+                node2.Start();
                 node1.NotInIBD();
                 node2.NotInIBD();
 
@@ -200,22 +167,7 @@ namespace Redstone.Feature.MasterNode.Tests
             {
                 // TODO: AC-FromBreeze check these calls for difference in network build
                 CoreNode node1 = builder.CreateRedstonePosNode(RedstoneNetworks.TestNet);
-                //    true, fullNodeBuilder =>
-                //{
-                //    fullNodeBuilder
-                //        .UsePosConsensus()
-                //        .UseBlockStore()
-                //        .UseMempool()
-                //        .UseBlockNotification()
-                //        .UseTransactionNotification()
-                //        .UseWallet()
-                //        .UseWatchOnlyWallet()
-                //        .AddPowPosMining()
-                //        //.AddMining()
-                //        //.UseApi()
-                //        .AddRPC();
-                //});
-
+                node1.Start();
                 node1.NotInIBD();
 
                 var rpc1 = node1.CreateRPCClient();

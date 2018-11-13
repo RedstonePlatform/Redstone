@@ -127,7 +127,7 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
         //    return CreateNode(new StratisSmartContractPosNode(this.GetNextDataFolderName(), network), "stratis.conf");
         //}
 
-        public CoreNode CloneStratisNode(CoreNode cloneNode)
+        public CoreNode CloneRedstoneNode(CoreNode cloneNode)
         {
             var node = new CoreNode(new RedstonePowRunner(cloneNode.FullNode.Settings.DataFolder.RootPath, cloneNode.FullNode.Network), this.ConfigParameters, "bitcoin.conf");
             this.Nodes.Add(node);
