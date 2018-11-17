@@ -50,9 +50,9 @@ namespace Redstone.Features.ServiceNode
                     if (tx.Outputs.Count < 2)
                         continue;
 
-                    // Check if the transaction has the Breeze registration marker output (literal text BREEZE_REGISTRATION_MARKER)
+                    // Check if the transaction has the Redstone Service Node registration marker output (literal text REDSTONE_SN_REGISTRATION_MARKER)
                     if (!tx.Outputs[0].ScriptPubKey.ToHex().ToLower()
-                        .Equals("6a1a425245455a455f524547495354524154494f4e5f4d41524b4552")) continue;
+                        .Equals("6a1f52454453544f4e455f534e5f524547495354524154494f4e5f4d41524b4552")) continue;
 
                     this.logger.LogDebug("Received a new registration transaction: " + tx.GetHash());
 

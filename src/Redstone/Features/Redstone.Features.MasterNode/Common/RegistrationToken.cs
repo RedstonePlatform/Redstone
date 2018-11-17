@@ -8,18 +8,17 @@ using Newtonsoft.Json;
 namespace Redstone.Features.ServiceNode.Common
 {
     /*
-        Bitstream format for Breeze TumbleBit registration token
+        Bitstream format for Redstone ServiceNode registration token
 
         A registration token, once submitted to the network, remains valid indefinitely until invalidated.
 
-        The registration token for a Breeze TumbleBit server can be invalidated by the sending of a subsequent
-        token transaction at a greater block height than the original. It is the responsibility of the Breeze
+        The registration token for a Redstone ServiceNode server can be invalidated by the sending of a subsequent
+        token transaction at a greater block height than the original. It is the responsibility of the Redstone
         client software to scan the blockchain for the most current server registrations prior to initiating
         contact with any server.
 
-        The registration token consists of a single transaction broadcast on the network of choice (e.g. Bitcoin's
-        mainnet/testnet, or the Stratis mainnet/testnet). This transaction has any number of funding inputs, as normal.
-        It has precisely one nulldata output marking the entire transaction as a Breeze TumbleBit registration.
+        The registration token consists of a single transaction broadcast on the network of choice (e.g. Redstone mainnet/testnet). This transaction has any number of funding inputs, as normal.
+        It has precisely one nulldata output marking the entire transaction as a Redstone ServiceNode registration.
         There can be an optional change return output, which if present MUST be at the end of the entire output list.
         
         The remainder of the transaction outputs are of near-dust value. Each output encodes 64 bytes of token data
@@ -28,7 +27,7 @@ namespace Redstone.Features.ServiceNode.Common
         The presumption is that the transaction outputs are not reordered by the broadcasting node.
 
         - OP_RETURN transaction output
-        -> 26 bytes - Literal string: BREEZE_REGISTRATION_MARKER
+        -> 31 bytes - Literal string: REDSTONE_SN_REGISTRATION_MARKER
 
         - Encoded public key transaction outputs
         -> 1 byte - Protocol version byte (255 = test registration to be ignored by mainnet wallets)
@@ -39,16 +38,15 @@ namespace Redstone.Features.ServiceNode.Common
         -> 16 bytes - Onion (Tor) address of tumbler server; 00000000000000000000000000000000 indicates non-Tor
         -> 2 bytes - IPV4/IPV6/Onion TCP port of server
         -> 2 bytes - RSA signature length
-        -> n bytes - RSA signature proving ownership of the Breeze TumbleBit server's private key (to prevent spoofing)
+        -> n bytes - RSA signature proving ownership of the Redstone ServiceNode server's private key (to prevent spoofing)
         -> 2 bytes - ECDSA signature length
-        -> n bytes - ECDSA signature proving ownership of the Breeze TumbleBit server's private key
+        -> n bytes - ECDSA signature proving ownership of the Redstone ServiceNode server's private key
         -> 40 bytes - Hash of the tumbler server's configuration file
         <...>
         -> Protocol does not preclude additional data being appended in future without breaking compatibility
 
-        On connection with the Breeze TumbleBit server by a client, the public key of the server will be verified
-        by the client to ensure that the server is authentic and in possession of the registered keys. The
-        TumbleBit protocol is then followed as normal.
+        On connection with the Redstone ServiceNode server by a client, the public key of the server will be verified
+        by the client to ensure that the server is authentic and in possession of the registered keys. 
     */
 
     public class RegistrationToken

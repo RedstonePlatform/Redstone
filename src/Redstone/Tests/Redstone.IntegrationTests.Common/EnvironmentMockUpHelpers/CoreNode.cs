@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
@@ -78,7 +79,7 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
             CreateConfigFile(this.ConfigParameters);
         }
 
-        /// <summary>Get stratis full node if possible.</summary>
+        /// <summary>Get full node if possible.</summary>
         public FullNode FullNode => this.runner.FullNode;
 
         public CoreNodeState State { get; private set; }
@@ -93,7 +94,7 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         public CoreNode NotInIBD()
         {
-            ((InitialBlockDownloadStateMock)this.FullNode.NodeService<IInitialBlockDownloadState>()).SetIsInitialBlockDownload(false, DateTime.UtcNow.AddMinutes(5));
+            ((InitialBlockDownloadStateMock)this.FullNode.NodeService<IInitialBlockDownloadState>()).SetIsInitialBlockDownload(false, DateTime.UtcNow.AddMinutes(20));
 
             return this;
         }
@@ -141,7 +142,7 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
             //if (this.runner is BitcoinCoreRunner)
             //    StartBitcoinCoreRunner();
             //else
-                StartStratisRunner();
+                StartRedstoneRunner();
 
             this.State = CoreNodeState.Running;
         }
@@ -194,7 +195,7 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
                 failureReason: $"Failed to invoke GetBlockHash on BitcoinCore instance after {duration}");
         }
 
-        private void StartStratisRunner()
+        private void StartRedstoneRunner()
         {
             var timeToNodeInit = TimeSpan.FromMinutes(1);
             var timeToNodeStart = TimeSpan.FromMinutes(1);
@@ -473,10 +474,16 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
             }
         }
 
-        public bool AddToStratisMempool(Transaction trx)
+        public bool AddToRedstoneMempool(Transaction trx)
         {
             var state = new MempoolValidationState(true);
             return this.runner.FullNode.MempoolManager().Validator.AcceptToMemoryPool(state, trx).Result;
+        }
+
+        public List<uint256> GenerateRedstoneWithMiner(int blockCount)
+        {
+            return this.FullNode.Services.ServiceProvider.GetService<IPowMining>().GenerateBlocks(                    
+                new ReserveScript { ReserveFullNodeScript = this.MinerSecret.ScriptPubKey }, (ulong)blockCount, uint.MaxValue);
         }
 
         public async Task BroadcastBlocksAsync(Block[] blocks, INetworkPeer peer)

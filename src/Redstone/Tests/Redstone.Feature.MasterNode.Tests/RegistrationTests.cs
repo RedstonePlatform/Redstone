@@ -24,8 +24,8 @@ namespace Redstone.Feature.ServiceNode.Tests
         {
             using (NodeBuilder builder = NodeBuilder.Create(this)) 
             {
-                CoreNode node1 = builder.CreateRedstonePosNode(RedstoneNetworks.TestNet);
-                CoreNode node2 = builder.CreateRedstonePosNode(RedstoneNetworks.TestNet);
+                CoreNode node1 = builder.CreateRedstonePosNode(RedstoneNetworks.RegTest);
+                CoreNode node2 = builder.CreateRedstonePosNode(RedstoneNetworks.RegTest);
                 node1.Start();
                 node2.Start();
                 node1.NotInIBD();
@@ -49,9 +49,7 @@ namespace Redstone.Feature.ServiceNode.Tests
 
                 // Generate a block so we have some funds to create a transaction with
 
-                // TODO: AC-FromBreeze was generate like this before
-                //node1.GenerateStratisWithMiner(52);
-                await node1.GenerateAsync(52);
+                node1.GenerateRedstoneWithMiner(12);
 
                 TestHelper.TriggerSync(node1);
                 TestHelper.TriggerSync(node2);
@@ -81,7 +79,7 @@ namespace Redstone.Feature.ServiceNode.Tests
                 Money outputValue = new Money(0.01m, MoneyUnit.BTC);
                 Money feeValue = new Money(0.01m, MoneyUnit.BTC);
 
-                byte[] bytes = Encoding.UTF8.GetBytes("BREEZE_REGISTRATION_MARKER");
+                byte[] bytes = Encoding.UTF8.GetBytes("REDSTONE_SN_REGISTRATION_MARKER");
                 sendTx.Outputs.Add(new TxOut()
                 {
                     Value = outputValue,
@@ -115,26 +113,23 @@ namespace Redstone.Feature.ServiceNode.Tests
                     WalletName = wm1.Wallets.First().Name
                 };
 
-                var context = new TransactionBuildContext(RedstoneNetworks.TestNet)
-                // TODO: AC-FromBreeze
-                //walletReference,
-                //recipients,
-                //"Registration1")
+                var context = new TransactionBuildContext(RedstoneNetworks.RegTest)
                 {
+                    Recipients = recipients,
+                    AccountReference = walletReference,
                     MinConfirmations = 0,
                     OverrideFeeRate = new FeeRate(new Money(0.001m, MoneyUnit.BTC)),
                     Shuffle = false,
-                    // TODO: AC-FromBreeze
-                    // Sign = true
+                    WalletPassword = "Registration1",
+                    Sign = true,
+                    
                 };
 
                 var tx = wth1.BuildTransaction(context);
 
                 TestHelper.WaitLoop(() => rpc1.GetRawMempool().Length > 0);
 
-                // TODO: AC-FromBreeze was generate like this before
-                //node1.GenerateStratisWithMiner(1);
-                await node1.GenerateAsync(1);
+                node1.GenerateRedstoneWithMiner(1);
 
                 Thread.Sleep(10000);
 
@@ -166,7 +161,7 @@ namespace Redstone.Feature.ServiceNode.Tests
                 // TODO: AC-FromBreeze this was called with no params
             {
                 // TODO: AC-FromBreeze check these calls for difference in network build
-                CoreNode node1 = builder.CreateRedstonePosNode(RedstoneNetworks.TestNet);
+                CoreNode node1 = builder.CreateRedstonePosNode(RedstoneNetworks.RegTest);
                 node1.Start();
                 node1.NotInIBD();
 
@@ -185,22 +180,15 @@ namespace Redstone.Feature.ServiceNode.Tests
                 node1.SetDummyMinerSecret(new BitcoinSecret(secret1.PrivateKey, node1.FullNode.Network));
 
                 // Generate a block so we have some funds to create a transaction with
-                // TODO: AC-FromBreeze was generate like this before
-                //node1.GenerateStratisWithMiner(10);
-                await node1.GenerateAsync(10);
+                node1.GenerateRedstoneWithMiner(10);
 
                 Thread.Sleep(20000);
 
-                // TODO: AC-FromBreeze was generate like this before
-                //node1.GenerateStratisWithMiner(10);
-                await node1.GenerateAsync(10);
+                node1.GenerateRedstoneWithMiner(10);
 
                 Thread.Sleep(20000);
 
-                // TODO: AC-FromBreeze was generate like this before
-                //node1.GenerateStratisWithMiner(10);
-                await node1.GenerateAsync(10);
-
+                node1.GenerateRedstoneWithMiner(10);
 
                 Thread.Sleep(600000);
 
