@@ -5,11 +5,14 @@ using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.Api;
 using Stratis.Bitcoin.Features.BlockStore;
+using Stratis.Bitcoin.Features.Notifications;
 using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.Wallet;
+using Stratis.Bitcoin.Features.WatchOnlyWallet;
+using Redstone.Features.ServiceNode;
 
 namespace Redstone.IntegrationTests.Common.Runners
 {
@@ -27,17 +30,39 @@ namespace Redstone.IntegrationTests.Common.Runners
 
             this.FullNode = (FullNode)new FullNodeBuilder()
                 .UseNodeSettings(settings)
-                .UseBlockStore()
                 .UsePosConsensus()
+                .UseBlockStore()
                 .UseMempool()
+                .UseBlockNotification()
+                .UseTransactionNotification()
                 .UseWallet()
+                .UseWatchOnlyWallet()
                 .AddPowPosMining()
                 .AddRPC()
-                .UseApi()
+                //.UseApi()
                 .MockIBD()
-                .SubstituteDateTimeProviderFor<MiningFeature>()
+                //.SubstituteDateTimeProviderFor<MiningFeature>()   
+                .UseServiceRegistration()
                 .Build();
         }
+
+        //CoreNode node2 = builder.CreateStratisPosNode(true, fullNodeBuilder =>
+        //{
+        //    fullNodeBuilder
+        //        .UsePosConsensus()-
+        //        .UseBlockStore()-
+        //        .UseMempool()-
+        //        .UseBlockNotification()-
+        //        .UseTransactionNotification()
+        //        .UseWallet()-
+        //        .UseWatchOnlyWallet()x
+        //        .AddPowPosMining()-
+        //        //.AddMining()
+        //        //.UseApi()
+        //        .AddRPC()-
+        //        .UseRegistration();
+        //});
+
 
         /// <summary>
         /// Builds a node with POS miner and RPC enabled.

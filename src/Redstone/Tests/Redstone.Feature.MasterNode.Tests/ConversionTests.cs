@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Text;
 using NBitcoin;
+using NBitcoin.DataEncoders;
 using Redstone.Core.Networks;
 using Redstone.Features.ServiceNode.Common;
 using Xunit;
@@ -31,33 +33,33 @@ namespace Redstone.Feature.ServiceNode.Tests
 
             string inputMessage = "a"; 
             byte[] inputMessageBytes = Encoding.ASCII.GetBytes(inputMessage);
-            List<BitcoinAddress> output = BlockChainDataConversions.BytesToAddresses(RedstoneNetworks.TestNet, inputMessageBytes);
+            List<BitcoinAddress> output = BlockChainDataConversions.BytesToAddresses(Stratis.Bitcoin.Networks.Networks.Stratis.Testnet(), inputMessageBytes);
+            //List<BitcoinAddress> output = BlockChainDataConversions.BytesToAddresses(Stratis.Bitcoin.Networks.Networks.Bitcoin.Testnet(), inputMessageBytes);
             List<BitcoinAddress> expectedOutput = new List<BitcoinAddress>();
+            //expectedOutput.Add(BitcoinAddress.Create("SW8taT1xAV6yc93yza58hk84x1apRXiHrv"));
             expectedOutput.Add(BitcoinAddress.Create("mpMqqfKnF9M2rwk9Ai4RymBqADx6TssFuM"));
-
-            /* Worked example
+            // Worked example
             // 0x00 - Mainnet
-            // 0x6F - Testnet
-            // 0x?? - Stratis mainnet
+            // 0x63 - Testnet
 
             // Literal 'a' is 0x61 hex
 
-            var keyBytes = new byte[] {0x6F, 0x61, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+            var keyBytes = new byte[] {0x63, 0x61, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
             var algorithm = SHA256.Create();
             var hash = algorithm.ComputeHash(algorithm.ComputeHash(keyBytes));
 
-            First 4 bytes of double SHA256: 15, 146, 165, 196
-            Need to concatenate them to keyBytes
+            //First 4 bytes of double SHA256: 90, 242, 0, 148
+            //Need to concatenate them to keyBytes
 
-            var keyBytes2 = new byte[] {0x6F,
+            var keyBytes2 = new byte[] {0x63,
                 0x61, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                15, 146, 165, 196};
+                90, 242, 0, 148};
 
             var finalEncodedAddress = Encoders.Base58.EncodeData(keyBytes2);
 
-            Result should be "mpMqqfKnF9M2rwk9Ai4RymBqADx6TssFuM"
-            */
+            //Result should be "SW8taT1xAV6yc93yza58hk84x1apRXiHrv"
+            //
 
             Assert.Equal(expectedOutput, output);
         }

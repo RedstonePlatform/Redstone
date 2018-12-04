@@ -24,8 +24,8 @@ namespace Redstone.Feature.ServiceNode.Tests
         {
             using (NodeBuilder builder = NodeBuilder.Create(this)) 
             {
-                CoreNode node1 = builder.CreateRedstonePosNode(RedstoneNetworks.RegTest);
-                CoreNode node2 = builder.CreateRedstonePosNode(RedstoneNetworks.RegTest);
+                CoreNode node1 = builder.CreateRedstonePosNode(RedstoneNetworks.TestNet);
+                CoreNode node2 = builder.CreateRedstonePosNode(RedstoneNetworks.TestNet);
                 node1.Start();
                 node2.Start();
                 node1.NotInIBD();
@@ -57,7 +57,7 @@ namespace Redstone.Feature.ServiceNode.Tests
                 TestHelper.WaitLoop(() => rpc1.GetBestBlockHash() == rpc2.GetBestBlockHash());
 
                 var rsa = new RsaKey();
-                var ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.RegTest);
+                var ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.TestNet);
                 var serverAddress = ecdsa.GetAddress().ToString();
 
                 var token = new RegistrationToken(1,
@@ -127,11 +127,20 @@ namespace Redstone.Feature.ServiceNode.Tests
 
                 var tx = wth1.BuildTransaction(context);
 
+
+                var broadcaster = node1.FullNode.NodeService<IBroadcasterManager>();
+                broadcaster.BroadcastTransactionAsync(tx).GetAwaiter().GetResult();
+
                 TestHelper.WaitLoop(() => rpc1.GetRawMempool().Length > 0);
 
                 node1.GenerateRedstoneWithMiner(1);
 
                 Thread.Sleep(10000);
+
+
+                TestHelper.TriggerSync(node1);
+                TestHelper.TriggerSync(node2);
+
 
                 TestHelper.WaitLoop(() => rpc1.GetBestBlockHash() == rpc2.GetBestBlockHash());
 
@@ -190,7 +199,7 @@ namespace Redstone.Feature.ServiceNode.Tests
 
                 node1.GenerateRedstoneWithMiner(10);
 
-                Thread.Sleep(600000);
+                Thread.Sleep(20000);
 
                 node1.Kill();
             }

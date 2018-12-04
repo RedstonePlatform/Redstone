@@ -47,7 +47,7 @@ namespace Redstone.RedstoneServiceNodeD
                     .UseMempool()
                     .UseWallet()
                     .UseApi()
-                    .UseServiceNode()
+                    .UseServiceRegistration()
                     .AddRPC()
                     .Build();
 
