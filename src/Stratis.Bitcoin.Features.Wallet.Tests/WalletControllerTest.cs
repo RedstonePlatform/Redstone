@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Connection;
+using Stratis.Bitcoin.Features.Wallet.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet.Controllers;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.Wallet.Models;
@@ -1462,12 +1463,12 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
                 .Returns(sentTrx);
 
             var controller = new WalletController(this.LoggerFactory.Object, mockWalletManager.Object, mockWalletTransactionHandler.Object, new Mock<IWalletSyncManager>().Object, It.IsAny<ConnectionManager>(), this.Network, this.chain, new Mock<IBroadcasterManager>().Object, DateTimeProvider.Default);
+
             IActionResult result = controller.BuildTransaction(new BuildTransactionRequest
             {
                 AccountName = "Account 1",
                 AllowUnconfirmed = true,
-                Amount = new Money(150000).ToString(),
-                DestinationAddress = key.PubKey.GetAddress(this.Network).ToString(),
+                Recipients = new List<RecipientModel> { new RecipientModel { DestinationAddress = key.PubKey.GetAddress(this.Network).ToString(), Amount = new Money(150000).ToString() } },
                 FeeType = "105",
                 Password = "test",
                 WalletName = "myWallet"
@@ -1496,8 +1497,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             {
                 AccountName = "Account 1",
                 AllowUnconfirmed = true,
-                Amount = new Money(150000).ToString(),
-                DestinationAddress = key.PubKey.GetAddress(this.Network).ToString(),
+                Recipients = new List<RecipientModel> { new RecipientModel { DestinationAddress = key.PubKey.GetAddress(this.Network).ToString(), Amount = new Money(150000).ToString() } },
                 FeeType = "105",
                 FeeAmount = "0.1234",
                 Password = "test",
@@ -1526,9 +1526,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             {
                 AccountName = "Account 1",
                 AllowUnconfirmed = true,
-                Amount = new Money(150000).ToString(),
-                DestinationAddress = key.PubKey.GetAddress(this.Network).ToString(),
-
+                Recipients = new List<RecipientModel> { new RecipientModel { DestinationAddress = key.PubKey.GetAddress(this.Network).ToString(), Amount = new Money(150000).ToString() } },
                 FeeAmount = "0.1234",
                 Password = "test",
                 WalletName = "myWallet"
@@ -1556,8 +1554,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             {
                 AccountName = "Account 1",
                 AllowUnconfirmed = false,
-                Amount = new Money(150000).ToString(),
-                DestinationAddress = key.PubKey.GetAddress(this.Network).ToString(),
+                Recipients = new List<RecipientModel> { new RecipientModel { DestinationAddress = key.PubKey.GetAddress(this.Network).ToString(), Amount = new Money(150000).ToString() } },
                 FeeType = "105",
                 Password = "test",
                 WalletName = "myWallet"
@@ -1607,8 +1604,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             {
                 AccountName = "Account 1",
                 AllowUnconfirmed = false,
-                Amount = new Money(150000).ToString(),
-                DestinationAddress = key.PubKey.GetAddress(this.Network).ToString(),
+                Recipients = new List<RecipientModel> { new RecipientModel { DestinationAddress = key.PubKey.GetAddress(this.Network).ToString(), Amount = new Money(150000).ToString() } },
                 FeeType = "105",
                 Password = "test",
                 WalletName = "myWallet"
@@ -1630,6 +1626,9 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             string transactionHex = "010000000189c041f79aac3aa7e7a72804a9a55cd9eceba41a0586640f602eb9823540ce89010000006b483045022100ab9597b37cb8796aefa30b207abb248c8003d4d153076997e375b0daf4f9f7050220546397fee1cefe54c49210ea653e9e61fb88adf51b68d2c04ad6d2b46ddf97a30121035cc9de1f233469dad8a3bbd1e61b699a7dd8e0d8370c6f3b1f2a16167da83546ffffffff02f6400a00000000001976a914accf603142aaa5e22dc82500d3e187caf712f11588ac3cf61700000000001976a91467872601dda216fbf4cab7891a03ebace87d8e7488ac00000000";
 
             var mockBroadcasterManager = new Mock<IBroadcasterManager>();
+
+            mockBroadcasterManager.Setup(m => m.GetTransaction(It.IsAny<uint256>())).Returns(new TransactionBroadcastEntry(this.Network.CreateTransaction(transactionHex), State.Broadcasted, string.Empty));
+
             var connectionManagerMock = new Mock<IConnectionManager>();
             var peers = new List<INetworkPeer>();
             peers.Add(null);
@@ -1662,7 +1661,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
                 new Mock<IWalletSyncManager>().Object, connectionManagerMock.Object, this.Network, this.chain, mockBroadcasterManager.Object, DateTimeProvider.Default);
 
             IActionResult result = controller.SendTransaction(new SendTransactionRequest(new uint256(15555).ToString()));
-            
+
             var errorResult = Assert.IsType<ErrorResult>(result);
             var errorResponse = Assert.IsType<ErrorResponse>(errorResult.Value);
             Assert.Single(errorResponse.Errors);
@@ -2118,8 +2117,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             IActionResult result = controller.GetTransactionFeeEstimate(new TxFeeEstimateRequest
             {
                 AccountName = "Account 1",
-                Amount = new Money(150000).ToString(),
-                DestinationAddress = key.PubKey.GetAddress(this.Network).ToString(),
+                Recipients = new List<RecipientModel> { new RecipientModel { DestinationAddress = key.PubKey.GetAddress(this.Network).ToString(), Amount = new Money(150000).ToString() } },
                 FeeType = "105",
                 WalletName = "myWallet"
             });
@@ -2281,7 +2279,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             return null;
         }
 
-        public INetworkPeer FindByIp(IPAddress ip)
+        public List<INetworkPeer> FindByIp(IPAddress ip)
         {
             return null;
         }

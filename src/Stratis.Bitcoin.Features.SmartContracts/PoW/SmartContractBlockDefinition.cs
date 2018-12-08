@@ -8,6 +8,7 @@ using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Features.Miner;
+using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Utilities;
 using Stratis.SmartContracts.Core;
@@ -28,6 +29,8 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoW
         private readonly IStateRepositoryRoot stateRoot;
         private IStateRepositoryRoot stateSnapshot;
         private readonly ISenderRetriever senderRetriever;
+        private ulong blockGasConsumed;
+        private const ulong GasPerBlockLimit = SmartContractFormatRule.GasLimitMaximum * 10;
 
         public SmartContractBlockDefinition(
             IBlockBufferGenerator blockBufferGenerator,
@@ -83,7 +86,10 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoW
             {
                 this.logger.LogTrace("Transaction contains smart contract information.");
 
-                // We HAVE to first execute the smart contract contained in the transaction
+                if (this.blockGasConsumed >= GasPerBlockLimit) 
+                    return;
+
+                // We HAVE to firstly execute the smart contract contained in the transaction
                 // to ensure its validity before we can add it to the block.
                 IContractExecutionResult result = this.ExecuteSmartContract(mempoolEntry);
                 this.AddTransactionToBlock(mempoolEntry.Transaction);
@@ -110,15 +116,15 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoW
         public override BlockTemplate Build(ChainedHeader chainTip, Script scriptPubKeyIn)
         {
             GetSenderResult getSenderResult = this.senderRetriever.GetAddressFromScript(scriptPubKeyIn);
-            if (!getSenderResult.Success)
-                throw new ConsensusErrorException(new ConsensusError("sc-block-assembler-createnewblock", getSenderResult.Error));
 
-            this.coinbaseAddress = getSenderResult.Sender;
+            this.coinbaseAddress = (getSenderResult.Success) ? getSenderResult.Sender : uint160.Zero;
 
             this.stateSnapshot = this.stateRoot.GetSnapshotTo(((ISmartContractBlockHeader)this.ConsensusManager.Tip.Header).HashStateRoot.ToBytes());
 
             this.refundOutputs.Clear();
             this.receipts.Clear();
+
+            this.blockGasConsumed = 0;
 
             base.OnBuild(chainTip, scriptPubKeyIn);
 
@@ -184,6 +190,8 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoW
             IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)this.height, this.coinbaseAddress, mempoolEntry.Fee, getSenderResult.Sender, mempoolEntry.Transaction);
             IContractExecutor executor = this.executorFactory.CreateExecutor(this.stateSnapshot, transactionContext);
             IContractExecutionResult result = executor.Execute(transactionContext);
+
+            this.blockGasConsumed += result.GasConsumed;
 
             // As we're not storing receipts, can use only consensus fields. 
             var receipt = new Receipt(

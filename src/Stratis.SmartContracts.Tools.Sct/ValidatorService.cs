@@ -2,10 +2,10 @@
 using System.Reflection;
 using McMaster.Extensions.CommandLineUtils;
 using Stratis.Bitcoin.Features.SmartContracts.Networks;
-using Stratis.SmartContracts.Core.Validation;
-using Stratis.SmartContracts.Executor.Reflection;
-using Stratis.SmartContracts.Executor.Reflection.Compilation;
-using Stratis.SmartContracts.Executor.Reflection.Serialization;
+using Stratis.SmartContracts.CLR.Validation;
+using Stratis.SmartContracts.CLR;
+using Stratis.SmartContracts.CLR.Compilation;
+using Stratis.SmartContracts.CLR.Serialization;
 
 namespace Stratis.SmartContracts.Tools.Sct
 {
@@ -55,7 +55,8 @@ namespace Stratis.SmartContracts.Tools.Sct
 
             Assembly smartContract = Assembly.Load(compilation);
 
-            var serializer = new MethodParameterStringSerializer();
+            // Network does not matter here as we are only checking the deserialized Types of the params.
+            var serializer = new MethodParameterStringSerializer(new SmartContractsRegTest());
             object[] methodParameters = null;
             if (parameters.Length != 0)
             {
