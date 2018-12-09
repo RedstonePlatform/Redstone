@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Base.Deployments;
+using Stratis.Bitcoin.Builder.Feature;
+using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.Consensus.Behaviors;
@@ -28,6 +30,9 @@ namespace Stratis.Bitcoin.Features.Consensus
         private readonly IInitialBlockDownloadState initialBlockDownloadState;
         private readonly IPeerBanning peerBanning;
         private readonly ILoggerFactory loggerFactory;
+        private readonly ICheckpoints checkpoints;
+        private readonly IProvenBlockHeaderStore provenBlockHeaderStore;
+        private readonly ConnectionManagerSettings connectionManagerSettings;
 
         public PosConsensusFeature(
             Network network,
@@ -39,7 +44,10 @@ namespace Stratis.Bitcoin.Features.Consensus
             IInitialBlockDownloadState initialBlockDownloadState,
             IPeerBanning peerBanning,
             Signals.Signals signals,
-            ILoggerFactory loggerFactory): base(network, chainState, connectionManager, signals, consensusManager, nodeDeployments)
+            ILoggerFactory loggerFactory,
+            ICheckpoints checkpoints,
+            IProvenBlockHeaderStore provenBlockHeaderStore,
+            ConnectionManagerSettings connectionManagerSettings) : base(network, chainState, connectionManager, signals, consensusManager, nodeDeployments)
         {
             this.network = network;
             this.chainState = chainState;
@@ -50,6 +58,9 @@ namespace Stratis.Bitcoin.Features.Consensus
             this.initialBlockDownloadState = initialBlockDownloadState;
             this.peerBanning = peerBanning;
             this.loggerFactory = loggerFactory;
+            this.checkpoints = checkpoints;
+            this.provenBlockHeaderStore = provenBlockHeaderStore;
+            this.connectionManagerSettings = connectionManagerSettings;
 
             this.chainState.MaxReorgLength = network.Consensus.MaxReorgLength;
         }
@@ -58,10 +69,16 @@ namespace Stratis.Bitcoin.Features.Consensus
         public override Task InitializeAsync()
         {
             NetworkPeerConnectionParameters connectionParameters = this.connectionManager.Parameters;
-            bool oldCMBRemoved = connectionParameters.TemplateBehaviors.Remove(connectionParameters.TemplateBehaviors.Single(x => x is ConsensusManagerBehavior));
-            Guard.Assert(oldCMBRemoved);
 
-            connectionParameters.TemplateBehaviors.Add(new ProvenHeadersConsensusManagerBehavior(this.chain, this.initialBlockDownloadState, this.consensusManager, this.peerBanning, this.loggerFactory, this.network, this.chainState));
+            var defaultConsensusManagerBehavior = connectionParameters.TemplateBehaviors.FirstOrDefault(behavior => behavior is ConsensusManagerBehavior);
+            if (defaultConsensusManagerBehavior == null)
+            {
+                throw new MissingServiceException(typeof(ConsensusManagerBehavior), "Missing expected ConsensusManagerBehavior.");
+            }
+
+            // Replace default ConsensusManagerBehavior with ProvenHeadersConsensusManagerBehavior
+            connectionParameters.TemplateBehaviors.Remove(defaultConsensusManagerBehavior);
+            connectionParameters.TemplateBehaviors.Add(new ProvenHeadersConsensusManagerBehavior(this.chain, this.initialBlockDownloadState, this.consensusManager, this.peerBanning, this.loggerFactory, this.network, this.chainState, this.checkpoints, this.provenBlockHeaderStore, this.connectionManagerSettings));
 
             return Task.CompletedTask;
         }
@@ -71,6 +88,4 @@ namespace Stratis.Bitcoin.Features.Consensus
         {
         }
     }
-
-    
 }

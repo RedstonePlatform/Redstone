@@ -1,5 +1,4 @@
 ﻿using System;
-using NBitcoin.Crypto;
 
 namespace NBitcoin
 {
@@ -74,6 +73,15 @@ namespace NBitcoin
         /// <summary>Gets the total header size - including the <see cref="BlockHeader.Size"/> - in bytes. <see cref="ProvenBlockHeader"/> must be serialized or deserialized for this property to be set.</summary>
         public long HeaderSize => Size + this.MerkleProofSize + this.SignatureSize + this.CoinstakeSize;
 
+        /// <summary>
+        /// Gets or sets the stake modifier v2.
+        /// </summary>
+        /// <value>
+        /// The stake modifier v2.
+        /// </value>
+        /// <remarks>This property is used only in memory, it is not persisted to disk not sent over any Payloads.</remarks>
+        public uint256 StakeModifierV2 { get; set; }
+
         public ProvenBlockHeader()
         {
         }
@@ -91,7 +99,7 @@ namespace NBitcoin
             this.Version = block.Header.Version;
 
             this.signature = block.BlockSignature;
-            this.coinstake = block.Transactions[1];
+            this.coinstake = block.GetProtocolTransaction();
             this.merkleProof = new MerkleBlock(block, new[] { this.coinstake.GetHash() }).PartialMerkleTree;
         }
 
@@ -99,14 +107,18 @@ namespace NBitcoin
         public override void ReadWrite(BitcoinStream stream)
         {
             base.ReadWrite(stream);
+            long prev = stream.ProcessedBytes;
+
             stream.ReadWrite(ref this.merkleProof);
-            this.MerkleProofSize = stream.ProcessedBytes - Size;
+            this.MerkleProofSize = stream.ProcessedBytes - prev;
 
+            prev = stream.ProcessedBytes;
             stream.ReadWrite(ref this.signature);
-            this.SignatureSize = stream.ProcessedBytes - Size - this.MerkleProofSize;
+            this.SignatureSize = stream.ProcessedBytes - prev;
 
+            prev = stream.ProcessedBytes;
             stream.ReadWrite(ref this.coinstake);
-            this.CoinstakeSize = stream.ProcessedBytes - Size - this.MerkleProofSize - this.SignatureSize;
+            this.CoinstakeSize = stream.ProcessedBytes - prev;
         }
 
         /// <inheritdoc />

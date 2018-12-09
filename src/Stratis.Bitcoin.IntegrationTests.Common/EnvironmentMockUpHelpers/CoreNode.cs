@@ -38,6 +38,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         private List<Transaction> transactions = new List<Transaction>();
 
         public int ApiPort => int.Parse(this.ConfigParameters["apiport"]);
+
         public BitcoinSecret MinerSecret { get; private set; }
         public HdAddress MinerHDAddress { get; internal set; }
         public int ProtocolPort => int.Parse(this.ConfigParameters["port"]);
@@ -59,6 +60,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         private Func<ChainedHeaderBlock, bool> builderDisconnectInterceptor;
         private Func<ChainedHeaderBlock, bool> builderConnectInterceptor;
 
+        private bool builderEnablePeerDiscovery;
         private bool builderNoValidation;
         private bool builderOverrideDateTimeProvider;
         private bool builderWithDummyWallet;
@@ -131,6 +133,16 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         }
 
         /// <summary>
+        /// Enables <see cref="PeerDiscovery"/> and <see cref="PeerConnectorDiscovery"/> which is disabled by default.
+        /// </summary>
+        /// <returns>This node.</returns>
+        public CoreNode EnablePeerDiscovery()
+        {
+            this.builderEnablePeerDiscovery = true;
+            return this;
+        }
+
+        /// <summary>
         /// Overrides the node's date time provider with one where the current date time starts 2018-01-01.
         /// <para>
         /// This is primarily used where we want to mine coins in the past used for staking.
@@ -184,7 +196,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         public RPCClient CreateRPCClient()
         {
-            return new RPCClient(this.GetRPCAuth(), new Uri("http://127.0.0.1:" + this.RpcPort + "/"), KnownNetworks.RegTest);
+            return new RPCClient(this.GetRPCAuth(), new Uri("http://127.0.0.1:" + this.RpcPort + "/"), this.FullNode?.Network ?? KnownNetworks.RegTest);
         }
 
         public INetworkPeer CreateNetworkPeerClient()
@@ -224,6 +236,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         {
             lock (this.lockObject)
             {
+                this.runner.EnablePeerDiscovery = this.builderEnablePeerDiscovery;
                 this.runner.OverrideDateTimeProvider = this.builderOverrideDateTimeProvider;
 
                 if (this.builderDisconnectInterceptor != null)

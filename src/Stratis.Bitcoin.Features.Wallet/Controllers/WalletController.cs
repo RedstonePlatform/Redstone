@@ -375,7 +375,8 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
                 {
                     var transactionItems = new List<TransactionItemModel>();
 
-                    List<FlatHistory> items = accountHistory.History.OrderByDescending(o => o.Transaction.CreationTime).Take(200).ToList();
+                    List<FlatHistory> items = accountHistory.History.OrderByDescending(o => o.Transaction.CreationTime).ToList();
+                    items = string.IsNullOrEmpty(request.SearchQuery) ? items.Take(200).ToList() : items;
 
                     // Represents a sublist containing only the transactions that have already been spent.
                     List<FlatHistory> spendingDetails = items.Where(t => t.Transaction.SpendingDetails != null).ToList();
@@ -497,9 +498,16 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
                         }
                     }
 
+                    // Sort and filter the history items.
+                    List<TransactionItemModel> itemsToInclude = transactionItems.OrderByDescending(t => t.Timestamp)
+                        .Where(x => string.IsNullOrEmpty(request.SearchQuery) || (x.Id.ToString() == request.SearchQuery || x.ToAddress == request.SearchQuery || x.Payments.Any(p => p.DestinationAddress == request.SearchQuery)))
+                        .Skip(request.Skip ?? 0)
+                        .Take(request.Take ?? transactionItems.Count)
+                        .ToList();
+
                     model.AccountsHistoryModel.Add(new AccountHistoryModel
                     {
-                        TransactionsHistory = transactionItems.OrderByDescending(t => t.Timestamp).ToList(),
+                        TransactionsHistory = itemsToInclude,
                         Name = accountHistory.Account.Name,
                         CoinType = this.coinType,
                         HdPath = accountHistory.Account.HdPath
@@ -629,6 +637,48 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
         }
 
         /// <summary>
+        /// Gets the spendable transactions in an account, taking into account coin maturity and number of confirmations.
+        /// </summary>
+        /// <param name="request">The request parameters.</param>
+        /// <returns></returns>
+        [Route("spendable-transactions")]
+        [HttpGet]
+        public IActionResult GetSpendableTransactions([FromQuery] SpendableTransactionsRequest request)
+        {
+            Guard.NotNull(request, nameof(request));
+
+            // Checks the request is valid.
+            if (!this.ModelState.IsValid)
+            {
+                return ModelStateErrors.BuildErrorResponse(this.ModelState);
+            }
+
+            try
+            {
+                IEnumerable<UnspentOutputReference> spendableTransactions = this.walletManager.GetSpendableTransactionsInAccount(new WalletAccountReference(request.WalletName, request.AccountName), request.MinConfirmations);
+
+                return this.Json(new SpendableTransactionsModel
+                {
+                    SpendableTransactions = spendableTransactions.Select(st => new SpendableTransactionModel
+                    {
+                        Id = st.Transaction.Id,
+                        Amount = st.Transaction.Amount,
+                        Address = st.Address.Address,
+                        Index = st.Transaction.Index,
+                        IsChange = st.Address.IsChangeAddress(),
+                        CreationTime = st.Transaction.CreationTime,
+                        Confirmations = st.Confirmations
+                    }).ToList()
+                });
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError("Exception occurred: {0}", e.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
+            }
+        }
+
+        /// <summary>
         /// Gets a transaction fee estimate.
         /// Fee can be estimated by creating a <see cref="TransactionBuildContext"/> with no password
         /// and then building the transaction and retrieving the fee from the context.
@@ -649,13 +699,22 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
 
             try
             {
-                Script destination = BitcoinAddress.Create(request.DestinationAddress, this.network).ScriptPubKey;
+                var recipients = new List<Recipient>();
+                foreach (RecipientModel recipientModel in request.Recipients)
+                {
+                    recipients.Add(new Recipient
+                    {
+                        ScriptPubKey = BitcoinAddress.Create(recipientModel.DestinationAddress, this.network).ScriptPubKey,
+                        Amount = recipientModel.Amount
+                    });
+                }
+
                 var context = new TransactionBuildContext(this.network)
                 {
                     AccountReference = new WalletAccountReference(request.WalletName, request.AccountName),
                     FeeType = FeeParser.Parse(request.FeeType),
                     MinConfirmations = request.AllowUnconfirmed ? 0 : 1,
-                    Recipients = new[] { new Recipient { Amount = request.Amount, ScriptPubKey = destination } }.ToList()
+                    Recipients = recipients
                 };
 
                 return this.Json(this.walletTransactionHandler.EstimateFee(context));
@@ -686,7 +745,16 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
 
             try
             {
-                Script destination = BitcoinAddress.Create(request.DestinationAddress, this.network).ScriptPubKey;
+                var recipients = new List<Recipient>();
+                foreach (RecipientModel recipientModel in request.Recipients)
+                {
+                    recipients.Add(new Recipient
+                    {
+                        ScriptPubKey = BitcoinAddress.Create(recipientModel.DestinationAddress, this.network).ScriptPubKey,
+                        Amount = recipientModel.Amount
+                    });
+                }
+
                 var context = new TransactionBuildContext(this.network)
                 {
                     AccountReference = new WalletAccountReference(request.WalletName, request.AccountName),
@@ -695,7 +763,9 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
                     Shuffle = request.ShuffleOutputs ?? true, // We shuffle transaction outputs by default as it's better for anonymity.
                     OpReturnData = request.OpReturnData,
                     WalletPassword = request.Password,
-                    Recipients = new[] { new Recipient { Amount = request.Amount, ScriptPubKey = destination } }.ToList()
+                    SelectedInputs = request.Outpoints?.Select(u => new OutPoint(uint256.Parse(u.TransactionId), u.Index)).ToList(),
+                    AllowOtherInputs = false,
+                    Recipients = recipients
                 };
 
                 if (!string.IsNullOrEmpty(request.FeeType))
@@ -725,7 +795,6 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
         /// Sends a transaction.
         /// </summary>
         /// <param name="request">The hex representing the transaction.</param>
-        /// <returns></returns>
         [Route("send-transaction")]
         [HttpPost]
         public IActionResult SendTransaction([FromBody] SendTransactionRequest request)
@@ -759,7 +828,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
                     bool isUnspendable = output.ScriptPubKey.IsUnspendable;
                     model.Outputs.Add(new TransactionOutputModel
                     {
-                        Address = isUnspendable ? null : output.ScriptPubKey.GetDestinationAddress(this.network).ToString(),
+                        Address = isUnspendable ? null : output.ScriptPubKey.GetDestinationAddress(this.network)?.ToString(),
                         Amount = output.Value,
                         OpReturnData = isUnspendable ? Encoding.UTF8.GetString(output.ScriptPubKey.ToOps().Last().PushData) : null
                     });
@@ -769,7 +838,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
 
                 TransactionBroadcastEntry transactionBroadCastEntry = this.broadcasterManager.GetTransaction(transaction.GetHash());
 
-                if (!string.IsNullOrEmpty(transactionBroadCastEntry?.ErrorMessage))
+                if (transactionBroadCastEntry.State == State.CantBroadcast)
                 {
                     this.logger.LogError("Exception occurred: {0}", transactionBroadCastEntry.ErrorMessage);
                     return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, transactionBroadCastEntry.ErrorMessage, "Transaction Exception");
