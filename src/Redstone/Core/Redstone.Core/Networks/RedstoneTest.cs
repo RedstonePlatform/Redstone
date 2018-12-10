@@ -27,7 +27,7 @@
             this.DefaultPort = 19156;
             this.RPCPort = 19157;
             this.CoinTicker = "TXRD";
-            this.MaxTipAge = RedstoneDefaultMaxTipAgeInSeconds * 12 * 365;  // set to 1 year for test net
+            this.MaxTipAge = RedstoneDefaultMaxTipAgeInSeconds;
 
             var powLimit = new Target(new uint256("0000ffff00000000000000000000000000000000000000000000000000000000"));
 
@@ -54,8 +54,7 @@
                 maxStandardVersion: 2,
                 maxStandardTxWeight: 100_000,
                 maxBlockSigopsCost: 20_000,
-                maxStandardTxSigopsCost: 20_000 / 5, 
-                provenHeadersActivationHeight: 10_000_000 // TODO: Set it to the real value once it is known.
+                maxStandardTxSigopsCost: 20_000 / 5 
             );
 
             var buriedDeployments = new BuriedDeploymentsArray
