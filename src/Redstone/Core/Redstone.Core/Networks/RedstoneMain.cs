@@ -38,6 +38,8 @@
             this.Name = "RedstoneMain";
             this.Magic = magic;
             this.DefaultPort = 19056;
+            this.DefaultMaxOutboundConnections = 16;
+            this.DefaultMaxInboundConnections = 109;
             this.RPCPort = 19057;
             this.MaxTipAge = RedstoneDefaultMaxTipAgeInSeconds;
             this.MinTxFee = 10000;
