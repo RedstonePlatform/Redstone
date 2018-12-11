@@ -15,7 +15,7 @@
         public const int RedstoneMaxTimeOffsetSeconds = 25 * 60;
 
         /// <summary> Redstone default value for the maximum tip age in seconds to consider the node in initial block download (2 hours). </summary>
-        public const int RedstoneDefaultMaxTipAgeInSeconds = 2 * 60 * 60;
+        public const int RedstoneDefaultMaxTipAgeInSeconds = 2 * 60 * 60 * 12 * 365;
 
         /// <summary> The name of the root folder containing the different Redstone blockchains (RedstoneMain, RedstoneTest, RedstoneRegTest). </summary>
         public const string RedstoneRootFolderName = "redstone";
