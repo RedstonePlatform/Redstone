@@ -1,24 +1,24 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using NBitcoin;
-using NBitcoin.Networks;
-using NBitcoin.Protocol;
-using Redstone.Core.Networks;
-using Redstone.Features.Api;
-using Redstone.Features.MasterNode;
-using Stratis.Bitcoin.Builder;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.Consensus;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.Miner;
-using Stratis.Bitcoin.Features.RPC;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Utilities;
-
 namespace Redstone.RedstoneMasterNodeD
 {
+    using System;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using NBitcoin;
+    using NBitcoin.Networks;
+    using NBitcoin.Protocol;
+    using Redstone.Core.Networks;
+    using Redstone.Features.Api;
+    using Redstone.Features.MasterNode;
+    using Stratis.Bitcoin.Builder;
+    using Stratis.Bitcoin.Configuration;
+    using Stratis.Bitcoin.Features.BlockStore;
+    using Stratis.Bitcoin.Features.Consensus;
+    using Stratis.Bitcoin.Features.MemoryPool;
+    using Stratis.Bitcoin.Features.Miner;
+    using Stratis.Bitcoin.Features.RPC;
+    using Stratis.Bitcoin.Features.Wallet;
+    using Stratis.Bitcoin.Utilities;
+
     public class Program
     {
         public static void Main(string[] args)
@@ -36,8 +36,10 @@ namespace Redstone.RedstoneMasterNodeD
                     ? NetworkRegistration.Register(new RedstoneRegTest())
                     : NetworkRegistration.Register(new RedstoneMain());
 
-
-                NodeSettings nodeSettings = new NodeSettings(network, ProtocolVersion.ALT_PROTOCOL_VERSION, "Redstone", args: args);
+                var nodeSettings = new NodeSettings(network, protocolVersion: ProtocolVersion.PROVEN_HEADER_VERSION, args: args, agent: "Redstone")
+                {
+                    MinProtocolVersion = ProtocolVersion.ALT_PROTOCOL_VERSION
+                };
 
                 var node = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings)
@@ -52,7 +54,9 @@ namespace Redstone.RedstoneMasterNodeD
                     .Build();
 
                 if (node != null)
+                {
                     await node.RunAsync();
+                }
             }
             catch (Exception ex)
             {
