@@ -49,7 +49,9 @@ namespace Redstone.RedstoneMasterNodeD
                     .Build();
 
                 if (node != null)
+                {
                     await node.RunAsync();
+                }
             }
             catch (Exception ex)
             {
