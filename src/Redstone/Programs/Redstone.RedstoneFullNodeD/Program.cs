@@ -13,19 +13,16 @@ using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.RPC;
-using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Bitcoin.Features.Apps;
+using Stratis.Bitcoin.Features.Wallet;
+using Stratis.Bitcoin.Features.ColdStaking;
 
 namespace Redstone.RedstoneFullNodeD
 {
     public class Program
     {
-        public static void Main(string[] args)
-        {
-            MainAsync(args).Wait();
-        }
-
-        public static async Task MainAsync(string[] args)
+        public static async Task Main(string[] args)
         {
             try
             {
@@ -35,17 +32,21 @@ namespace Redstone.RedstoneFullNodeD
                     ? NetworkRegistration.Register(new RedstoneRegTest())
                     : NetworkRegistration.Register(new RedstoneMain());
 
-
-                NodeSettings nodeSettings = new NodeSettings(network, ProtocolVersion.ALT_PROTOCOL_VERSION, "Redstone", args: args);
+                var nodeSettings = new NodeSettings(network: network, protocolVersion: ProtocolVersion.PROVEN_HEADER_VERSION, args: args)
+                {
+                    MinProtocolVersion = ProtocolVersion.ALT_PROTOCOL_VERSION
+                };
 
                 var node = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings)
                     .UseBlockStore()
                     .UsePosConsensus()
-                    .AddPowPosMining()
                     .UseMempool()
                     .UseWallet()
+                    //.UseColdStakingWallet()
+                    .AddPowPosMining()
                     .UseApi()
+                    .UseApps()
                     .AddRPC()
                     .Build();
 
@@ -54,7 +55,7 @@ namespace Redstone.RedstoneFullNodeD
             }
             catch (Exception ex)
             {
-                Console.WriteLine("There was a problem initializing the node. Details: '{0}'", ex.Message);
+                Console.WriteLine("There was a problem initializing the node. Details: '{0}'", ex.ToString());
             }
         }
     }

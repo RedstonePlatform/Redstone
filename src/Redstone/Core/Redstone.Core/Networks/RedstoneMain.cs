@@ -38,6 +38,8 @@
             this.Name = "RedstoneMain";
             this.Magic = magic;
             this.DefaultPort = 19056;
+            this.DefaultMaxOutboundConnections = 16;
+            this.DefaultMaxInboundConnections = 109;
             this.RPCPort = 19057;
             this.MaxTipAge = RedstoneDefaultMaxTipAgeInSeconds;
             this.MinTxFee = 10000;
@@ -67,8 +69,7 @@
                 maxStandardVersion: 2,
                 maxStandardTxWeight: 100_000,
                 maxBlockSigopsCost: 20_000,
-                maxStandardTxSigopsCost: 20_000 / 5,
-                provenHeadersActivationHeight: 20_000_000 // TODO: Set it to the real value once it is known.
+                maxStandardTxSigopsCost: 20_000 / 5
             );
 
             var buriedDeployments = new BuriedDeploymentsArray

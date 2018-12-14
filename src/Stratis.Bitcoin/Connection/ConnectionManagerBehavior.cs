@@ -1,10 +1,14 @@
 using System;
+using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Bitcoin.Utilities.Extensions;
+using TracerAttributes;
 
 namespace Stratis.Bitcoin.Connection
 {
@@ -18,7 +22,7 @@ namespace Stratis.Bitcoin.Connection
     public class ConnectionManagerBehavior : NetworkPeerBehavior, IConnectionManagerBehavior
     {
         /// <summary>Logger factory to create loggers.</summary>
-        private readonly ILoggerFactory loggerFactory;
+        protected readonly ILoggerFactory loggerFactory;
 
         /// <summary>Instance logger.</summary>
         private readonly ILogger logger;
@@ -29,7 +33,7 @@ namespace Stratis.Bitcoin.Connection
         /// </summary>
         private readonly ILogger infoLogger;
 
-        private readonly IConnectionManager connectionManager;
+        protected readonly IConnectionManager connectionManager;
 
         public bool Whitelisted { get; internal set; }
 
@@ -44,6 +48,7 @@ namespace Stratis.Bitcoin.Connection
             this.connectionManager = connectionManager;
         }
 
+        [NoTrace]
         public override object Clone()
         {
             return new ConnectionManagerBehavior(this.connectionManager, this.loggerFactory)
@@ -53,9 +58,19 @@ namespace Stratis.Bitcoin.Connection
             };
         }
 
+        [NoTrace]
         protected override void AttachCore()
         {
             this.AttachedPeer.StateChanged.Register(this.OnStateChangedAsync);
+
+            INetworkPeer peer = this.AttachedPeer;
+            if (peer != null)
+            {
+                if (this.connectionManager.ConnectionSettings.Whitelist.Exists(e => e.Match(peer.PeerEndPoint)))
+                {
+                    this.Whitelisted = true;
+                }
+            }
         }
 
         private async Task OnStateChangedAsync(INetworkPeer peer, NetworkPeerState oldState)
@@ -66,6 +81,7 @@ namespace Stratis.Bitcoin.Connection
                 {
                     this.connectionManager.AddConnectedPeer(peer);
                     this.infoLogger.LogInformation("Peer '{0}' connected ({1}), agent '{2}', height {3}", peer.RemoteSocketEndpoint, peer.Inbound ? "inbound" : "outbound", peer.PeerVersion.UserAgent, peer.PeerVersion.StartHeight);
+
                     await peer.SendMessageAsync(new SendHeadersPayload()).ConfigureAwait(false);
                 }
 
@@ -81,6 +97,7 @@ namespace Stratis.Bitcoin.Connection
             }
         }
 
+        [NoTrace]
         protected override void DetachCore()
         {
             this.AttachedPeer.StateChanged.Unregister(this.OnStateChangedAsync);

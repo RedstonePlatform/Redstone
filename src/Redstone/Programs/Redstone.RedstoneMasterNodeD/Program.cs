@@ -21,12 +21,7 @@ namespace Redstone.RedstoneServiceNodeD
 {
     public class Program
     {
-        public static void Main(string[] args)
-        {
-            MainAsync(args).Wait();
-        }
-
-        public static async Task MainAsync(string[] args)
+        public static async Task Main(string[] args)
         {
             try
             {
@@ -36,8 +31,10 @@ namespace Redstone.RedstoneServiceNodeD
                     ? NetworkRegistration.Register(new RedstoneRegTest())
                     : NetworkRegistration.Register(new RedstoneMain());
 
-
-                NodeSettings nodeSettings = new NodeSettings(network, ProtocolVersion.ALT_PROTOCOL_VERSION, "Redstone", args: args);
+                var nodeSettings = new NodeSettings(network: network, protocolVersion: ProtocolVersion.PROVEN_HEADER_VERSION, args: args)
+                {
+                    MinProtocolVersion = ProtocolVersion.ALT_PROTOCOL_VERSION
+                };
 
                 var node = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings)
@@ -52,7 +49,9 @@ namespace Redstone.RedstoneServiceNodeD
                     .Build();
 
                 if (node != null)
+                {
                     await node.RunAsync();
+                }
             }
             catch (Exception ex)
             {

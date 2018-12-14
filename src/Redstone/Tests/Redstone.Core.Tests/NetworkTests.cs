@@ -212,7 +212,7 @@
             Assert.Equal(long.MaxValue, network.Consensus.MaxMoney);
 
             Block genesis = network.GetGenesis();
-            Assert.Equal(uint256.Parse("0x6076e1f485f447ee49cc8d808cb3c71480d1451f3dc749325aa4ff20eb7b5538"),
+            Assert.Equal(uint256.Parse("0x5b3bce1db145b398f502782d4fbef62cbb46205a41bb4aa37cda3619729e3037"),
                 genesis.GetHash());
             Assert.Equal(uint256.Parse("ad15198e3c12a1c342f346ca3a6e2faea6bfec7491e6143d636b8741a22ce2b9"),
                 genesis.Header.HashMerkleRoot);

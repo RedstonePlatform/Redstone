@@ -21,6 +21,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
 {
     public class BlockStoreFeature : FullNodeFeature
     {
+        private readonly Network network;
         private readonly ConcurrentChain chain;
 
         private readonly Signals.Signals signals;
@@ -43,7 +44,10 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
         private readonly IConsensusManager consensusManager;
 
+        private readonly ICheckpoints checkpoints;
+
         public BlockStoreFeature(
+            Network network,
             ConcurrentChain chain,
             IConnectionManager connectionManager,
             Signals.Signals signals,
@@ -53,8 +57,10 @@ namespace Stratis.Bitcoin.Features.BlockStore
             IChainState chainState,
             IBlockStoreQueue blockStoreQueue,
             INodeStats nodeStats,
-            IConsensusManager consensusManager)
+            IConsensusManager consensusManager,
+            ICheckpoints checkpoints)
         {
+            this.network = network;
             this.chain = chain;
             this.blockStoreQueue = blockStoreQueue;
             this.signals = signals;
@@ -65,6 +71,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
             this.storeSettings = storeSettings;
             this.chainState = chainState;
             this.consensusManager = consensusManager;
+            this.checkpoints = checkpoints;
 
             nodeStats.RegisterStats(this.AddInlineStats, StatsType.Inline, 900);
         }
@@ -84,10 +91,24 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
         public override Task InitializeAsync()
         {
-            this.connectionManager.Parameters.TemplateBehaviors.Add(new BlockStoreBehavior(this.chain, this.chainState, this.loggerFactory, this.consensusManager));
+            // Use ProvenHeadersBlockStoreBehavior for PoS Networks
+            if (this.network.Consensus.IsProofOfStake)
+            {
+                this.connectionManager.Parameters.TemplateBehaviors.Add(new ProvenHeadersBlockStoreBehavior(this.network, this.chain, this.chainState, this.loggerFactory, this.consensusManager, this.checkpoints, this.blockStoreQueue));
+            }
+            else
+            {
+                this.connectionManager.Parameters.TemplateBehaviors.Add(new BlockStoreBehavior(this.chain, this.chainState, this.loggerFactory, this.consensusManager, this.blockStoreQueue));
+            }
 
             // Signal to peers that this node can serve blocks.
-            this.connectionManager.Parameters.Services = (this.storeSettings.Prune ? NetworkPeerServices.Nothing : NetworkPeerServices.Network) | NetworkPeerServices.NODE_WITNESS;
+            this.connectionManager.Parameters.Services = (this.storeSettings.Prune ? NetworkPeerServices.Nothing : NetworkPeerServices.Network);
+
+            // Temporary measure to support asking witness data on BTC.
+            // At some point NetworkPeerServices will move to the Network class,
+            // Then this values should be taken from there.
+            if (!this.network.Consensus.IsProofOfStake)
+                this.connectionManager.Parameters.Services |= NetworkPeerServices.NODE_WITNESS;
 
             this.signals.SubscribeForBlocksConnected(this.blockStoreSignaled);
 
@@ -120,7 +141,12 @@ namespace Stratis.Bitcoin.Features.BlockStore
                     {
                         services.AddSingleton<IBlockStoreQueue, BlockStoreQueue>().AddSingleton<IBlockStore>(provider => provider.GetService<IBlockStoreQueue>());
                         services.AddSingleton<IBlockRepository, BlockRepository>();
-                        services.AddSingleton<BlockStoreSignaled>();
+
+                        if (fullNodeBuilder.Network.Consensus.IsProofOfStake)
+                            services.AddSingleton<BlockStoreSignaled, ProvenHeadersBlockStoreSignaled>();
+                        else
+                            services.AddSingleton<BlockStoreSignaled>();
+
                         services.AddSingleton<StoreSettings>();
                         services.AddSingleton<BlockStoreController>();
                         services.AddSingleton<IBlockStoreQueueFlushCondition, BlockStoreQueueFlushCondition>();

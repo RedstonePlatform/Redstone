@@ -22,22 +22,20 @@ namespace Redstone.RedstoneFullNodeDnsD
 {
     public class Program
     {
-        public static void Main(string[] args)
-        {
-            MainAsync(args).Wait();
-        }
-
-        public static async Task MainAsync(string[] args)
+        public static async Task Main(string[] args)
         {
             try
             {
                 Network network = args.Contains("-testnet")
                     ? NetworkRegistration.Register(new RedstoneTest())
                     : args.Contains("-regnet")
-                        ? NetworkRegistration.Register(new RedstoneRegTest())
-                        : NetworkRegistration.Register(new RedstoneMain());
+                    ? NetworkRegistration.Register(new RedstoneRegTest())
+                    : NetworkRegistration.Register(new RedstoneMain());
 
-                NodeSettings nodeSettings = new NodeSettings(network, ProtocolVersion.ALT_PROTOCOL_VERSION, "Redstone", args: args);
+                var nodeSettings = new NodeSettings(network: network, protocolVersion: ProtocolVersion.PROVEN_HEADER_VERSION, args: args)
+                {
+                    MinProtocolVersion = ProtocolVersion.ALT_PROTOCOL_VERSION
+                };
 
                 var dnsSettings = new DnsSettings(nodeSettings);
 

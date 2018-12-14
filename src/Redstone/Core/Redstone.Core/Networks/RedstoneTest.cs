@@ -27,7 +27,7 @@
             this.DefaultPort = 19156;
             this.RPCPort = 19157;
             this.CoinTicker = "TXRD";
-            this.MaxTipAge = RedstoneDefaultMaxTipAgeInSeconds * 12 * 365;  // set to 1 year for test net
+            this.MaxTipAge = RedstoneDefaultMaxTipAgeInSeconds * 12 * 365;
 
             var powLimit = new Target(new uint256("0000ffff00000000000000000000000000000000000000000000000000000000"));
 
@@ -42,7 +42,7 @@
 
             Block genesisBlock = CreateRedstoneGenesisBlock(consensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion, this.GenesisReward);
 
-            genesisBlock.Header.Time = 1493909211;
+            genesisBlock.Header.Time = 1544474470;
             genesisBlock.Header.Nonce = 2433759;
             genesisBlock.Header.Bits = powLimit;
 
@@ -54,8 +54,7 @@
                 maxStandardVersion: 2,
                 maxStandardTxWeight: 100_000,
                 maxBlockSigopsCost: 20_000,
-                maxStandardTxSigopsCost: 20_000 / 5, 
-                provenHeadersActivationHeight: 10_000_000 // TODO: Set it to the real value once it is known.
+                maxStandardTxSigopsCost: 20_000 / 5 
             );
 
             var buriedDeployments = new BuriedDeploymentsArray
@@ -125,7 +124,7 @@
                 // "80.211.88.201", "80.211.88.233", "80.211.88.244"
             }.ToArray(), this.DefaultPort).ToList();
 
-            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("6076e1f485f447ee49cc8d808cb3c71480d1451f3dc749325aa4ff20eb7b5538"));
+            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("5b3bce1db145b398f502782d4fbef62cbb46205a41bb4aa37cda3619729e3037"));
         }
     }
 }
