@@ -17,6 +17,7 @@ using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Features.Apps;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.ColdStaking;
+using Redstone.Features.BlockExplorer;
 
 namespace Redstone.RedstoneFullNodeD
 {
@@ -47,6 +48,7 @@ namespace Redstone.RedstoneFullNodeD
                     .AddPowPosMining()
                     .UseApi()
                     .UseApps()
+                    .UseBlockExplorer()
                     .AddRPC()
                     .Build();
 
