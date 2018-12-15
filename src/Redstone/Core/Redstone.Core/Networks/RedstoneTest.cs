@@ -3,8 +3,10 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
     using NBitcoin;
     using NBitcoin.BouncyCastle.Math;
+    using NBitcoin.Protocol;
     using Stratis.Bitcoin.Features.Wallet;
     using Redstone.Core.Networks.Deployments;
 
@@ -119,10 +121,13 @@
                 // new DNSSeedData("seednode1", "80.211.88.201"),
             };
 
-            this.SeedNodes = this.ConvertToNetworkAddresses(new List<string>()
+            this.SeedNodes = new List<NetworkAddress>
             {
-                // "80.211.88.201", "80.211.88.233", "80.211.88.244"
-            }.ToArray(), this.DefaultPort).ToList();
+               new NetworkAddress(IPAddress.Parse("80.211.88.201"), this.DefaultPort), // cryptohunter node #8
+               new NetworkAddress(IPAddress.Parse("80.211.88.233"), this.DefaultPort), // cryptohunter node #9
+               new NetworkAddress(IPAddress.Parse("80.211.88.244"), this.DefaultPort), // cryptohunter node #10
+               new NetworkAddress(IPAddress.Parse("35.178.169.232"), this.DefaultPort), // cryptohunter AWS node
+            };
 
             Assert(this.Consensus.HashGenesisBlock == uint256.Parse("5b3bce1db145b398f502782d4fbef62cbb46205a41bb4aa37cda3619729e3037"));
         }
