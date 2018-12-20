@@ -118,7 +118,7 @@
 
             this.DNSSeeds = new List<DNSSeedData>()
             {
-                // new DNSSeedData("seednode1", "80.211.88.201"),
+                new DNSSeedData("seed.redstonecoin.com", "seed.redstonecoin.com),
             };
 
             this.SeedNodes = new List<NetworkAddress>
