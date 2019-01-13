@@ -16,9 +16,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.Wallet\Stratis.Bitcoin.Features.Wallet.csproj" />
+    <ProjectReference Include="..\..\..\Stratis.Bitcoin.IntegrationTests.Common\Stratis.Bitcoin.IntegrationTests.Common.csproj" />
+    <ProjectReference Include="..\..\..\Stratis.Bitcoin.IntegrationTests\Stratis.Bitcoin.IntegrationTests.csproj" />
     <ProjectReference Include="..\..\Core\Redstone.Core\Redstone.Core.csproj" />
     <ProjectReference Include="..\..\Features\Redstone.Features.ServiceNode\Redstone.Features.ServiceNode.csproj" />
-    <ProjectReference Include="..\Redstone.IntegrationTests.Common\Redstone.IntegrationTests.Common.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,1 @@
+<Playlist Version="1.0"><Add Test="Redstone.Feature.ServiceNode.Tests.Tests.MempoolSyncTransactions" /><Add Test="Redstone.Feature.ServiceNode.Tests.Tests.RegistrationTest" /></Playlist>

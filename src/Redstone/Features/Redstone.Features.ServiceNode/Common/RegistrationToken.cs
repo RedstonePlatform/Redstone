@@ -17,7 +17,8 @@ namespace Redstone.Features.ServiceNode.Common
         client software to scan the blockchain for the most current server registrations prior to initiating
         contact with any server.
 
-        The registration token consists of a single transaction broadcast on the network of choice (e.g. Redstone mainnet/testnet). This transaction has any number of funding inputs, as normal.
+        The registration token consists of a single transaction broadcast on the network of choice (e.g. Redstone mainnet/testnet). 
+        This transaction has any number of funding inputs, as normal.
         It has precisely one nulldata output marking the entire transaction as a Redstone ServiceNode registration.
         There can be an optional change return output, which if present MUST be at the end of the entire output list.
         
@@ -34,7 +35,7 @@ namespace Redstone.Features.ServiceNode.Common
         -> 2 bytes - Length of registration header
         -> 34 bytes - Server ID of the tumbler (base58 representation of the collateral address, right padded with spaces)
         -> 4 bytes - IPV4 address of tumbler server; 00000000 indicates non-IPV4
-        -> 16 bytes - IPV6 address of tumbler server; 00000000000000000000000000000000 indicates non-IPV6
+        -> 16 bytes - IPV6address of tumbler ser ver; 00000000000000000000000000000000 indicates non-IPV6
         -> 16 bytes - Onion (Tor) address of tumbler server; 00000000000000000000000000000000 indicates non-Tor
         -> 2 bytes - IPV4/IPV6/Onion TCP port of server
         -> 2 bytes - RSA signature length
@@ -188,7 +189,7 @@ namespace Redstone.Features.ServiceNode.Common
             // Assume the nulldata transaction marker is the first output
             // Validate that the marker bytes are present before proceeding
 
-            if (tx.Outputs[0].ScriptPubKey.ToHex().ToLower() != "6a1a425245455a455f524547495354524154494f4e5f4d41524b4552")
+            if (tx.Outputs[0].ScriptPubKey.ToHex().ToLower() != "a91473f8bb02cbc5b07968e3ebde6a9c68a527aaa01787")
                 throw new Exception("Missing Breeze registration marker from first transaction output");
 
             // Peek at first non-nulldata address to get the length information,
