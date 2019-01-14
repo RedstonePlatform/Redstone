@@ -25,6 +25,20 @@ namespace Redstone.Feature.ServiceNode.Tests
         private readonly Network network = RedstoneNetworks.RegTest;
 
         [Fact]
+        public void RegistrationTransactionCanBeParsed()
+        {
+            using (NodeBuilder builder = NodeBuilder.Create(this))
+            {
+                CoreNode node1 = builder.CreateRedstonePosNode(network).WithWallet(Password, WalletName, Passphrase).Start();
+
+                var transaction = CreateRegistrationTransaction(node1);
+
+                var registrationToken = new RegistrationToken();
+                registrationToken.ParseTransaction(transaction, network);
+            }
+        }
+
+        [Fact]
         public void RegistrationTest()
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
@@ -40,7 +54,7 @@ namespace Redstone.Feature.ServiceNode.Tests
                 TestHelper.MineBlocks(node1, 1, true, WalletName, Password);
                 //TestHelper.ConnectAndSync(node1, node2);
 
-                CreateRegistrationTransactionAndBroadcast(node1, 5, Password);
+                CreateRTAndB(node1, 5);
                 TestHelper.MineBlocks(node1, 1, true, WalletName, Password);
                 TestHelper.ConnectAndSync(node1, node2);
 
@@ -79,19 +93,26 @@ namespace Redstone.Feature.ServiceNode.Tests
             });
         }
 
-        private static void CreateRegistrationTransactionAndBroadcast(CoreNode node1, int index, string walletPassword)
+        private static void CreateRTAndB(CoreNode node1, int index)
         {
-            var outputAmount = new Money(0.0123m, MoneyUnit.BTC);
             Block block = node1.FullNode.BlockStore().GetBlockAsync(node1.FullNode.Chain.GetBlock(index).HashBlock).Result;
             Transaction prevTrx = block.Transactions.First();
+
+            var transaction = CreateRegistrationTransaction(node1);
+            transaction.AddInput(new TxIn(new OutPoint(prevTrx.GetHash(), 0), PayToPubkeyHashTemplate.Instance.GenerateScriptPubKey(node1.MinerSecret.PubKey)));
+            transaction.Sign(node1.FullNode.Network, node1.MinerSecret, false);
+            node1.Broadcast(transaction);
+        }
+
+        private static Transaction CreateRegistrationTransaction(CoreNode node1)
+        {
+            var outputAmount = new Money(0.0123m, MoneyUnit.BTC);
 
             var redstonemarker = Encoding.UTF8.GetBytes("REDSTONE_SN_REGISTRATION_MARKER");
             var scriptPubKey = TxNullDataTemplate.Instance.GenerateScriptPubKey(redstonemarker);
 
             Transaction tx = node1.FullNode.Network.CreateTransaction();
-            tx.AddInput(new TxIn(new OutPoint(prevTrx.GetHash(), 0), PayToPubkeyHashTemplate.Instance.GenerateScriptPubKey(node1.MinerSecret.PubKey)));
             tx.AddOutput(new TxOut(outputAmount, scriptPubKey.Hash));
-
 
             var rsa = new RsaKey();
             var ecdsa = new BitcoinSecret(new Key(), node1.FullNode.Network);
@@ -102,7 +123,7 @@ namespace Redstone.Feature.ServiceNode.Tests
                 IPAddress.Parse("127.0.0.1"),
                 IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
                 "0123456789ABCDEF",
-                "",
+                "0123456789012345678901234567890123456789",
                 37123,
                 ecdsa.PubKey);
 
@@ -112,15 +133,12 @@ namespace Redstone.Feature.ServiceNode.Tests
 
             byte[] msgBytes = token.GetRegistrationTokenBytes(rsa, ecdsa);
 
-            var dest = new BitcoinSecret(new Key(), node1.FullNode.Network);
-
             foreach (PubKey pubKey in BlockChainDataConversions.BytesToPubKeys(msgBytes))
             {
                 tx.AddOutput(new TxOut(outputAmount, pubKey.ScriptPubKey));
             }
 
-            tx.Sign(node1.FullNode.Network, node1.MinerSecret, false);
-            node1.Broadcast(tx);
+            return tx;
         }
 
         private static void CreateRegistrationTransactionsAndBroadcast(CoreNode node1, string walletPassword)
