@@ -89,7 +89,7 @@ namespace Redstone.Feature.ServiceNode.Tests
             });
         }
 
-        private static void CreateRTAndB(CoreNode node1, int index)
+        private static void CreateRegistrationTransactionAndBroadcast(CoreNode node1, int index)
         {
             Block block = node1.FullNode.BlockStore().GetBlockAsync(node1.FullNode.Chain.GetBlock(index).HashBlock).Result;
             Transaction prevTrx = block.Transactions.First();

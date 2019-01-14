@@ -33,16 +33,16 @@ namespace Redstone.Features.ServiceNode.Common
         - Encoded public key transaction outputs
         -> 1 byte - Protocol version byte (255 = test registration to be ignored by mainnet wallets)
         -> 2 bytes - Length of registration header
-        -> 34 bytes - Server ID of the tumbler (base58 representation of the collateral address, right padded with spaces)
-        -> 4 bytes - IPV4 address of tumbler server; 00000000 indicates non-IPV4
-        -> 16 bytes - IPV6address of tumbler ser ver; 00000000000000000000000000000000 indicates non-IPV6
-        -> 16 bytes - Onion (Tor) address of tumbler server; 00000000000000000000000000000000 indicates non-Tor
+        -> 34 bytes - Server ID of the service node (base58 representation of the collateral address, right padded with spaces)
+        -> 4 bytes - IPV4 address of service node server; 00000000 indicates non-IPV4
+        -> 16 bytes - IPV6address of service node server; 00000000000000000000000000000000 indicates non-IPV6
+        -> 16 bytes - Onion (Tor) address of service node server; 00000000000000000000000000000000 indicates non-Tor
         -> 2 bytes - IPV4/IPV6/Onion TCP port of server
         -> 2 bytes - RSA signature length
         -> n bytes - RSA signature proving ownership of the Redstone ServiceNode server's private key (to prevent spoofing)
         -> 2 bytes - ECDSA signature length
         -> n bytes - ECDSA signature proving ownership of the Redstone ServiceNode server's private key
-        -> 40 bytes - Hash of the tumbler server's configuration file
+        -> 40 bytes - Hash of the service node server's configuration file
         <...>
         -> Protocol does not preclude additional data being appended in future without breaking compatibility
 
