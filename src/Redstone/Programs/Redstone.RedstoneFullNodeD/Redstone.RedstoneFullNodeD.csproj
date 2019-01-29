@@ -33,7 +33,8 @@
     <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.Wallet\Stratis.Bitcoin.Features.Wallet.csproj" />
     <ProjectReference Include="..\..\Core\Redstone.Core\Redstone.Core.csproj" />
     <ProjectReference Include="..\..\Features\Redstone.Features.Api\Redstone.Features.Api.csproj" />
-    <ProjectReference Include="..\..\Features\Redstone.Features.BlockExplorer\Redstone.Features.BlockExplorer.csproj" />    
+    <ProjectReference Include="..\..\Features\Redstone.Features.BlockExplorer\Redstone.Features.BlockExplorer.csproj" />
+    <ProjectReference Include="..\..\Features\Redstone.Features.ServiceNode\Redstone.Features.ServiceNode.csproj" />    
   </ItemGroup>
 
   <ItemGroup>

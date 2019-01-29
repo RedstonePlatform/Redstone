@@ -131,7 +131,7 @@ namespace Redstone.Features.ServiceNode
 
     public static class RegistrationFeatureExtension
     {
-        public static IFullNodeBuilder UseServiceRegistration(this IFullNodeBuilder fullNodeBuilder)
+        public static IFullNodeBuilder AddServiceNodeRegistration(this IFullNodeBuilder fullNodeBuilder)
         {
             fullNodeBuilder.ConfigureFeature(features =>
             {
@@ -141,6 +141,8 @@ namespace Redstone.Features.ServiceNode
                     {
                         services.AddSingleton<RegistrationStore>();
                         services.AddSingleton<RegistrationManager>();
+                        services.AddSingleton<RegistrationController>();
+                        services.AddSingleton<ServiceNodeSettings>();
                     });
             });
 

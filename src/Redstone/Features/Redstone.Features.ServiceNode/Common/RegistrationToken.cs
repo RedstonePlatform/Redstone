@@ -4,6 +4,7 @@ using System.Net;
 using System.Text;
 using NBitcoin;
 using Newtonsoft.Json;
+using Redstone.Features.ServiceNode.Models;
 
 namespace Redstone.Features.ServiceNode.Common
 {
@@ -52,6 +53,10 @@ namespace Redstone.Features.ServiceNode.Common
 
     public class RegistrationToken
     {
+        public static string Marker => "REDSTONE_SN_REGISTRATION_MARKER";
+
+        public static string MarkerHex => "a91473f8bb02cbc5b07968e3ebde6a9c68a527aaa01787";
+
         public int ProtocolVersion { get; set; }
 
         public string ServerId { get; set; }
@@ -72,7 +77,7 @@ namespace Redstone.Features.ServiceNode.Common
 
         [JsonConverter(typeof(PubKeyConverter))]
         public PubKey EcdsaPubKey { get; set; }
-        
+
         public RegistrationToken(int protocolVersion, string serverId, IPAddress ipv4Addr, IPAddress ipv6Addr, string onionAddress, string configurationHash, int port, PubKey ecdsaPubKey)
         {
             this.ProtocolVersion = protocolVersion;
@@ -137,7 +142,7 @@ namespace Redstone.Features.ServiceNode.Common
 
             return token;
         }
-        
+
         public byte[] GetRegistrationTokenBytes(RsaKey rsaKey, BitcoinSecret privateKeyEcdsa)
         {
             var token = GetHeaderBytes();
@@ -164,7 +169,7 @@ namespace Redstone.Features.ServiceNode.Common
 
             // Server configuration hash
             token.AddRange(Encoding.ASCII.GetBytes(this.ConfigurationHash));
-            
+
             byte[] ecdsaPubKeyLength = BitConverter.GetBytes(this.EcdsaPubKey.ToBytes().Length);
             token.Add(ecdsaPubKeyLength[0]);
             token.Add(ecdsaPubKeyLength[1]);
@@ -189,7 +194,7 @@ namespace Redstone.Features.ServiceNode.Common
             // Assume the nulldata transaction marker is the first output
             // Validate that the marker bytes are present before proceeding
 
-            if (tx.Outputs[0].ScriptPubKey.ToHex().ToLower() != "a91473f8bb02cbc5b07968e3ebde6a9c68a527aaa01787")
+            if (tx.Outputs[0].ScriptPubKey.ToHex().ToLower() != MarkerHex)
                 throw new Exception("Missing Breeze registration marker from first transaction output");
 
             // Peek at first non-nulldata address to get the length information,
@@ -339,7 +344,7 @@ namespace Redstone.Features.ServiceNode.Common
 
             this.EcdsaPubKey = new PubKey(GetSubArray(bitstream, position, ecdsaPubKeyLength));
             position += ecdsaPubKeyLength;
-            
+
             // TODO: Validate signatures
         }
 
@@ -358,20 +363,20 @@ namespace Redstone.Features.ServiceNode.Common
 
             if (this.ServerId == null)
                 return false;
-            
+
             if (this.EcdsaPubKey.GetAddress(network).ToString() != this.ServerId)
                 return false;
-            
+
             if (!VerifySignatures())
                 return false;
 
             if (this.OnionAddress == null)
                 return false;
-            
+
             // TODO: What other validation is required?
             return true;
         }
-        
+
         private byte[] GetSubArray(byte[] data, int index, int length)
         {
             byte[] result = new byte[length];

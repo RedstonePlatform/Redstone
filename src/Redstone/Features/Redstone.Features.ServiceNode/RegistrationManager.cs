@@ -50,9 +50,9 @@ namespace Redstone.Features.ServiceNode
                     if (tx.Outputs.Count < 2)
                         continue;
 
-                    // Check if the transaction has the Redstone Service Node registration marker output (literal text REDSTONE_SN_REGISTRATION_MARKER)
+                    // Check if the transaction has the Redstone Service Node registration marker output
                     if (!tx.Outputs[0].ScriptPubKey.ToHex().ToLower()
-                        .Equals("a91473f8bb02cbc5b07968e3ebde6a9c68a527aaa01787")) continue;
+                        .Equals(RegistrationToken.MarkerHex)) continue;
 
                     this.logger.LogDebug("Received a new registration transaction: " + tx.GetHash());
 

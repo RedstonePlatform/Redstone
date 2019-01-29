@@ -42,7 +42,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.Runners
                 .AddRPC()
                 .UseApi()
                 .UseTestChainedHeaderTree()
-                .UseServiceRegistration()
+                .AddServiceNodeRegistration()
                 .MockIBD();
 
             if (this.OverrideDateTimeProvider)

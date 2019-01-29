@@ -52,7 +52,7 @@ namespace Redstone.Feature.ServiceNode.Tests
                 CreateTransactionsAndBroadcast(node1, 4);
                 TestHelper.MineBlocks(node1, 1, true, WalletName, Password);
 
-                CreateRTAndB(node1, 5);
+                CreateRegistrationTransactionAndBroadcast(node1, 5);
                 TestHelper.MineBlocks(node1, 1, true, WalletName, Password);
                 TestHelper.ConnectAndSync(node1, node2);
 
@@ -104,7 +104,7 @@ namespace Redstone.Feature.ServiceNode.Tests
         {
             var outputAmount = new Money(0.0123m, MoneyUnit.BTC);
 
-            var redstonemarker = Encoding.UTF8.GetBytes("REDSTONE_SN_REGISTRATION_MARKER");
+            var redstonemarker = Encoding.UTF8.GetBytes(RegistrationToken.Marker);
             var scriptPubKey = TxNullDataTemplate.Instance.GenerateScriptPubKey(redstonemarker);
 
             Transaction tx = node1.FullNode.Network.CreateTransaction();

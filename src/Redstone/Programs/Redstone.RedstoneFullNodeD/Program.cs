@@ -18,6 +18,9 @@ using Stratis.Bitcoin.Features.Apps;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.ColdStaking;
 using Redstone.Features.BlockExplorer;
+using Redstone.Features.ServiceNode;
+using Stratis.Bitcoin.Features.Notifications;
+using Stratis.Bitcoin.Features.WatchOnlyWallet;
 
 namespace Redstone.RedstoneFullNodeD
 {
@@ -47,6 +50,12 @@ namespace Redstone.RedstoneFullNodeD
                     //.UseColdStakingWallet()
                     .AddPowPosMining()
                     .UseApi()
+
+                    .UseWatchOnlyWallet()
+                    .UseBlockNotification()
+                    .UseTransactionNotification()
+                    .AddServiceNodeRegistration()
+                    
                     .UseApps()
                     .UseBlockExplorer()
                     .AddRPC()
