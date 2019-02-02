@@ -12,14 +12,13 @@ UNDERLINE='\033[4m'
 declare -r NODE_IP=$(curl --silent ipinfo.io/ip)
 declare -r NODE_USER=redstone
 declare -r CONF=release
-declare -r DOTNETBIN=https://download.visualstudio.microsoft.com/download/pr/1de01e2e-aa87-4535-af42-8a8a9b4df215/a2fc245f1c26130a2ec22bbf5d0cb3e6/dotnet-sdk-2.2.103-linux-arm.tar.gz
 declare -r COINGITHUB=https://github.com/RedstonePlatform/Redstone.git
 declare -r COINPORT=19156
 declare -r COINRPCPORT=19157
 declare -r COINDAEMON=redstoned
 declare -r COINCORE=/home/${NODE_USER}/.redstonenode/redstone/RedstoneTest
 declare -r COINCONFIG=redstone.conf
-declare -r COINRUNCMD=sudo dotnet ./Redstone.RedstoneFullNodeD.dll -testnet -maxblkmem=1 -datadir=/home/${NODE_USER}/.redstonenode ## additional commands can be used here e.g. -testnet or -stake=1
+declare -r COINRUNCMD="sudo dotnet ./Redstone.RedstoneFullNodeD.dll -testnet -maxblkmem=1 -datadir=/home/${NODE_USER}/.redstonenode" ## additional commands can be used here e.g. -testnet or -stake=1
 declare -r COINSTARTUP=/home/${NODE_USER}/redstoned
 declare -r COINSRCLOC=/home/${NODE_USER}/Redstone
 declare -r COINDLOC=/home/${NODE_USER}/RedstoneNode   
@@ -30,6 +29,7 @@ declare -r DATE_STAMP="$(date +%y-%m-%d-%s)"
 declare -r SCRIPT_LOGFILE="/tmp/${NODE_USER}_${DATE_STAMP}_output.log"
 declare -r SWAPSIZE="1024" ## =1GB
 declare -r OS_VER="Raspbian GNU/Linux*"
+declare -r DOTNETBIN=https://download.visualstudio.microsoft.com/download/pr/1de01e2e-aa87-4535-af42-8a8a9b4df215/a2fc245f1c26130a2ec22bbf5d0cb3e6/dotnet-sdk-2.2.103-linux-arm.tar.gz
 
 function check_root() {
 if [ "$(id -u)" != "0" ]; then
@@ -239,11 +239,11 @@ echo -e "${RED}╚═╝  ╚═╝╚══════╝╚═════╝
 echo -e ${RED}
 echo -e "${PURPLE}**********************************************************************${NONE}"
 #echo -e "${PURPLE}*                                                                    *${NONE}"
-echo -e "${PURPLE}*    ${NONE}This script will install and configure your Redstone node.      *${NONE}"
+echo -e "${PURPLE}*    ${NONE}This script will install and configure your ${NODE_USER} node.      *${NONE}"
 #echo -e "${PURPLE}*                                                                    *${NONE}"
 echo -e "${PURPLE}**********************************************************************${NONE}"
 echo -e "${BOLD}"
-read -p "Please run this script as the root user. Do you want to setup (y) or upgrade (u) your Redstone node. (y/n/u)?" response
+read -p "Please run this script as the root user. Do you want to setup (y) or upgrade (u) your ${NODE_USER} node. (y/n/u)?" response
 echo
 
 echo -e "${NONE}"
@@ -266,19 +266,19 @@ if [[ "$response" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
     startWallet
     set_permissions
     displayServiceStatus
-	
 
-echo
-echo -e "${GREEN} Installation complete. Check service with: journalctl -f -u ${COINSERVICENAME} ${NONE}"
-echo -e "${GREEN} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
-echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
-else
+    echo
+    echo -e "${GREEN} Installation complete. Check service with: journalctl -f -u ${COINSERVICENAME} ${NONE}"
+    echo -e "${GREEN} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
+    echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
+    else
     if [[ "$response" =~ ^([uU])+$ ]]; then
         check_root
         stopWallet
 	updateAndUpgrade
         compileWallet
         startWallet
+        displayServiceStatus
         echo -e "${GREEN} Upgrade complete. Check service with: sudo journalctl -f -u ${COINSERVICENAME} ${NONE}"
 	echo -e "${GREEN} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
         echo -e "${GREEN} thecrypt0hunter 2018${NONE}"

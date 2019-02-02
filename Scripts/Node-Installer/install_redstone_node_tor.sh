@@ -20,7 +20,7 @@ declare -r COINCLI=redstone-cli
 declare -r COINTX=redstone-tx
 declare -r COINCORE=/home/${MNODE_USER}/.stratisnode/redstone/RedstoneTest
 declare -r COINCONFIG=redstone.conf
-declare -r COINRUNCMD='sudo dotnet ./Redstone.RedstoneFullNodeD.dll -testnet' #'sudo dotnet run -testnet'
+declare -r COINRUNCMD="sudo dotnet ./Redstone.RedstoneFullNodeD.dll -testnet -datadir=/home/${NODE_USER}/.redstonenode" #'sudo dotnet run -testnet'
 declare -r COINSTARTUP=/home/${MNODE_USER}/redstoned
 declare -r COINSRCLOC=/home/${MNODE_USER}/Redstone
 declare -r COINDLOC=/home/${MNODE_USER}/RedstoneNode   
