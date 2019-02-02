@@ -18,7 +18,7 @@ declare -r COINRPCPORT=19157
 declare -r COINDAEMON=redstoned
 declare -r COINCORE=/home/${NODE_USER}/.redstonenode/redstone/RedstoneTest
 declare -r COINCONFIG=redstone.conf
-declare -r COINRUNCMD='sudo dotnet ./Redstone.RedstoneFullNodeDnsD.dll -testnet -iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=seed.redstonecoin.com -dnsnameserver=testdns1.seed.redstonecoin.com -dnsmailbox=admin@redstonecoin.com -dnsfullnode=1'  
+declare -r COINRUNCMD="sudo dotnet ./Redstone.RedstoneFullNodeDnsD.dll -testnet -datadir=/home/${NODE_USER}/.redstonenode -iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=seed.redstonecoin.com -dnsnameserver=testdns1.seed.redstonecoin.com -dnsmailbox=admin@redstonecoin.com -dnsfullnode=1"
 declare -r COINSTARTUP=/home/${NODE_USER}/redstoned
 declare -r COINSRCLOC=/home/${NODE_USER}/Redstone
 declare -r COINDLOC=/home/${NODE_USER}/RedstoneNode   
@@ -29,7 +29,6 @@ declare -r DATE_STAMP="$(date +%y-%m-%d-%s)"
 declare -r SCRIPT_LOGFILE="/tmp/${NODE_USER}_${DATE_STAMP}_output.log"
 declare -r SWAPSIZE="1024" ## =1GB
 declare -r OS_VER="Ubuntu*"
-
 
 function check_root() {
 if [ "$(id -u)" != "0" ]; then

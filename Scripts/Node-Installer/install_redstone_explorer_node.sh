@@ -17,7 +17,7 @@ declare -r COINRPCPORT=19157
 declare -r COINDAEMON=redstoned
 declare -r COINCORE=/home/${NODE_USER}/.redstonenode/redstone/RedstoneTest
 declare -r COINCONFIG=redstone.conf
-declare -r COINRUNCMD='sudo dotnet ./Redstone.RedstoneFullNodeD.dll -testnet' ## additional commands can be used here e.g. -testnet or -stake=1
+declare -r COINRUNCMD="sudo dotnet ./Redstone.RedstoneFullNodeD.dll -testnet -datadir=/home/${NODE_USER}/.redstonenode" ## additional commands can be used here e.g. -testnet or -stake=1
 declare -r COINSTARTUP=/home/${NODE_USER}/redstoned
 declare -r COINSRCLOC=/home/${NODE_USER}/Redstone
 declare -r COINDLOC=/home/${NODE_USER}/RedstoneNode   
