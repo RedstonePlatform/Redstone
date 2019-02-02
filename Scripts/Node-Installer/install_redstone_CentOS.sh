@@ -219,34 +219,22 @@ displayServiceStatus() {
 clear
 cd
 echo && echo
-echo -e "${WHITE}            --------------------------------------------------------------------------${NONE}"
-echo -e "${WHITE}            ${NONE}"
-echo -e "${WHITE}                                          444444444   222222222222222    ${NONE}"
-echo -e "${WHITE}                                         4::::::::4  2:::::::::::::::22  ${NONE}"
-echo -e "${WHITE}                                        4:::::::::4  2::::::222222:::::2 ${NONE}"
-echo -e "${WHITE}                                       4::::44::::4  2222222     2:::::2 ${NONE}"
-echo -e "${WHITE}                  xxxxxxx      xxxxxxx4::::4 4::::4              2:::::2 ${NONE}"
-echo -e "${WHITE}                   x:::::x    x:::::x4::::4  4::::4              2:::::2 ${NONE}"
-echo -e "${WHITE}                    x:::::x  x:::::x4::::4   4::::4           2222::::2  ${NONE}"
-echo -e "${WHITE}                     x:::::xx:::::x4::::444444::::444    22222::::::22   ${NONE}"
-echo -e "${WHITE}                      x::::::::::x 4::::::::::::::::4  22::::::::222     ${NONE}"
-echo -e "${WHITE}                       x::::::::x  4444444444:::::444 2:::::22222        ${NONE}"
-echo -e "${WHITE}                       x::::::::x            4::::4  2:::::2             ${NONE}"
-echo -e "${WHITE}                      x::::::::::x           4::::4  2:::::2             ${NONE}"
-echo -e "${WHITE}                     x:::::xx:::::x          4::::4  2:::::2       222222${NONE}"
-echo -e "${WHITE}                    x:::::x  x:::::x       44::::::442::::::2222222:::::2${NONE}"
-echo -e "${WHITE}                   x:::::x    x:::::x      4::::::::42::::::::::::::::::2${NONE}"
-echo -e "${WHITE}                  xxxxxxx      xxxxxxx     444444444422222222222222222222${NONE}"
-echo -e "${WHITE}                  ${NONE}"
-echo -e "${WHITE}            --------------------------------------------------------------------------${NONE}"
-echo -e ${WHITE}
-echo -e ${WHITE}
-echo -e "${WHITE}**********************************************************************${NONE}"
-echo -e "${WHITE}      This script will install and configure your ${NODE_USER} node.${NONE}"
-echo -e "${WHITE}**********************************************************************${NONE}"
+echo -e ${RED}
+echo -e "${RED}██████╗ ███████╗██████╗ ███████╗████████╗ ██████╗ ███╗   ██╗███████╗${NONE}"  
+echo -e "${RED}██╔══██╗██╔════╝██╔══██╗██╔════╝╚══██╔══╝██╔═══██╗████╗  ██║██╔════╝${NONE}"    
+echo -e "${RED}██████╔╝█████╗  ██║  ██║███████╗   ██║   ██║   ██║██╔██╗ ██║█████╗  ${NONE}"    
+echo -e "${RED}██╔══██╗██╔══╝  ██║  ██║╚════██║   ██║   ██║   ██║██║╚██╗██║██╔══╝  ${NONE}"    
+echo -e "${RED}██║  ██║███████╗██████╔╝███████║   ██║   ╚██████╔╝██║ ╚████║███████╗${NONE}"    
+echo -e "${RED}╚═╝  ╚═╝╚══════╝╚═════╝ ╚══════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═══╝╚══════╝${NONE}"  
+echo -e ${RED}
+echo -e "${PURPLE}**********************************************************************${NONE}"
+#echo -e "${PURPLE}*                                                                    *${NONE}"
+echo -e "${PURPLE}*    ${NONE}This script will install and configure your Redstone node.      *${NONE}"
+#echo -e "${PURPLE}*                                                                    *${NONE}"
+echo -e "${PURPLE}**********************************************************************${NONE}"
 echo -e "${BOLD}"
-read -p "Please run this script as the root user. Do you want to setup (y) or upgrade (u) your ${NODE_USER} node. (y/n/u)?" response
-echo -e "${NONE}"
+read -p "Please run this script as the root user. Do you want to setup (y) or upgrade (u) your Redstone node. (y/n/u)?" response
+echo
 
 if [[ "$response" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
 
