@@ -130,9 +130,9 @@
             Network network = RedstoneNetworks.TestNet;
 
             Assert.Empty(network.Checkpoints);
-            Assert.Empty(network.DNSSeeds);
-            Assert.Empty(network.SeedNodes);
-
+            Assert.Equal("seed.redstonecoin.com",network.DNSSeeds[0].Host);
+            Assert.True(network.SeedNodes.Count > 0);
+            
             Assert.Equal("RedstoneTest", network.Name);
             Assert.Equal(RedstoneMain.RedstoneRootFolderName, network.RootFolderName);
             Assert.Equal(RedstoneMain.RedstoneDefaultConfigFilename, network.DefaultConfigFilename);
@@ -140,7 +140,7 @@
             Assert.Equal(19156, network.DefaultPort);
             Assert.Equal(19157, network.RPCPort);
             Assert.Equal(RedstoneMain.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
-            Assert.Equal(RedstoneMain.RedstoneDefaultMaxTipAgeInSeconds, network.MaxTipAge);
+            Assert.Equal(RedstoneMain.RedstoneDefaultMaxTipAgeInSeconds * 12 * 365, network.MaxTipAge);
             Assert.Equal(10000, network.MinTxFee);
             Assert.Equal(60000, network.FallbackFee);
             Assert.Equal(10000, network.MinRelayTxFee);
