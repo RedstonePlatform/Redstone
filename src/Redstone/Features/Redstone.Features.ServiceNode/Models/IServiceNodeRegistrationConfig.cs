@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using NBitcoin;
+using Redstone.Features.ServiceNode.Common;
 
 namespace Redstone.Features.ServiceNode.Models
 {
@@ -19,5 +20,6 @@ namespace Redstone.Features.ServiceNode.Models
         string ServerId { get; set; }
 
         PubKey EcdsaPubKey { get; set; }
+        RegistrationToken CreateRegistrationToken();
     }
 }

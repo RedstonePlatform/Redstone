@@ -6,6 +6,18 @@ namespace Redstone.Features.ServiceNode.Models
 {
     public class ServiceNodeRegistrationConfig : IServiceNodeRegistrationConfig
     {
+        public RegistrationToken CreateRegistrationToken()
+        {
+            return new RegistrationToken(
+                this.ProtocolVersion,
+                this.ServiceEcdsaKeyAddress,
+                this.Ipv4Address,
+                this.Ipv6Address,
+                this.OnionAddress,
+                this.ConfigurationHash,
+                this.Port,
+                this.EcdsaPubKey);
+        }
         public int ProtocolVersion { get; set; }
         public string ServerId { get; set; }
         public string ServiceEcdsaKeyAddress { get; set; }

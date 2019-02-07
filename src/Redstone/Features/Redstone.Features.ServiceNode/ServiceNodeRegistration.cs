@@ -2,17 +2,17 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using NBitcoin;
-using Newtonsoft.Json.Linq;
 using Redstone.Features.ServiceNode.Common;
 using Redstone.Features.ServiceNode.Models;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.Wallet;
+using Stratis.Bitcoin.Features.Wallet.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Features.Wallet.Models;
+using Stratis.Bitcoin.Utilities.JsonErrors;
 
 namespace Redstone.Features.ServiceNode
 {
@@ -28,15 +28,18 @@ namespace Redstone.Features.ServiceNode
 
         private readonly IWalletManager walletManager;
 
+        private readonly IWalletTransactionHandler walletTransactionHandler;
+
         private readonly IBroadcasterManager broadcasterManager;
 
         private readonly string regStorePath;
 
-        public ServiceNodeRegistration(Network network, NodeSettings nodeSettings, IWalletManager walletManager, IBroadcasterManager broadcasterManager)
+        public ServiceNodeRegistration(Network network, NodeSettings nodeSettings, IWalletManager walletManager, IBroadcasterManager broadcasterManager, IWalletTransactionHandler walletTransactionHandler)
         {
             this.network = network;
             this.walletManager = walletManager;
             this.broadcasterManager = broadcasterManager;
+            this.walletTransactionHandler = walletTransactionHandler;
             this.regStorePath = Path.Combine(nodeSettings.DataDir, "registrationHistory.json");
         }
 
@@ -125,38 +128,60 @@ namespace Redstone.Features.ServiceNode
             return true;
         }
 
-        public async Task<Transaction> PerformRegistrationAsync(IServiceNodeRegistrationConfig registrationConfig, string walletName, string accountName, BitcoinSecret privateKeyEcdsa, RsaKey serviceRsaKey)
+        public async Task<Transaction> PerformRegistrationNewAsync(IServiceNodeRegistrationConfig registrationConfig,
+            string walletName, string walletPassword, string accountName, BitcoinSecret privateKeyEcdsa,
+            RsaKey serviceRsaKey)
         {
-            RegistrationToken registrationToken = new RegistrationToken(this.PROTOCOL_VERSION_TO_USE, registrationConfig.ServiceEcdsaKeyAddress, registrationConfig.Ipv4Address, registrationConfig.Ipv6Address, registrationConfig.OnionAddress, registrationConfig.ConfigurationHash, registrationConfig.Port, privateKeyEcdsa.PubKey);
-            byte[] msgBytes = registrationToken.GetRegistrationTokenBytes(serviceRsaKey, privateKeyEcdsa);
+            var tx = await TransactionUtils2.PerformRegistrationAsync(this.network,
+                registrationConfig,
+                this.walletTransactionHandler,
+                this.walletManager,
+                this.broadcasterManager,
+                walletName,
+                accountName,
+                walletPassword,
+                this.regStorePath,
+                privateKeyEcdsa,
+                serviceRsaKey).ConfigureAwait(false);
 
-            // Create the registration transaction using the bytes generated above
-            Transaction rawTx = CreateBreezeRegistrationTx(network, msgBytes, registrationConfig.TxOutputValue);
+            return tx;
+        }
 
-            RegistrationStore regStore = new RegistrationStore(regStorePath);
-
+        public async Task<Transaction> PerformRegistrationAsync(IServiceNodeRegistrationConfig registrationConfig, string walletName, string walletPassword, string accountName, BitcoinSecret privateKeyEcdsa, RsaKey serviceRsaKey)
+        {
             try
-            {
-                IEnumerable<UnspentOutputReference> spendableTransactions = this.walletManager.GetSpendableTransactionsInAccount(new WalletAccountReference(walletName, accountName));
+            {   
+                (RegistrationToken registrationToken, Transaction transaction) = TransactionUtils.CreateRegistrationTransaction(
+                    this.network,
+                    registrationConfig,
+                    serviceRsaKey,
+                    privateKeyEcdsa);
 
-                Transaction fundedTx = TransactionUtils.FundTransaction(spendableTransactions,
-                    rawTx,
+                TransactionUtils.FundTransaction(this.walletManager,
+                    walletName, 
+                    accountName,
+                    transaction,
                     registrationConfig.TxFeeValue,
                     BitcoinAddress.Create(registrationConfig.ServiceEcdsaKeyAddress));
 
-                fundedTx.Sign(this.network, privateKeyEcdsa, false);
+                TransactionUtils.SignTransaction(transaction,
+                    this.walletManager,
+                    this.network, 
+                    walletName, 
+                    walletPassword, 
+                    accountName);
+                await this.broadcasterManager.BroadcastTransactionAsync(transaction).ConfigureAwait(false);
 
+                var regStore = new RegistrationStore(this.regStorePath);
                 regStore.Add(new RegistrationRecord(
                     DateTime.Now,
                     Guid.NewGuid(),
-                    fundedTx.GetHash().ToString(),
-                    fundedTx.ToHex(),
+                    transaction.GetHash().ToString(),
+                    transaction.ToHex(),
                     registrationToken,
                     null));
 
-                await this.broadcasterManager.BroadcastTransactionAsync(fundedTx).ConfigureAwait(false);
-
-                return fundedTx;
+                return transaction;
             }
             catch (Exception e)
             {
@@ -165,48 +190,6 @@ namespace Redstone.Features.ServiceNode
             }
 
             return null;
-        }
-
-
-
-        /// <remarks>
-        /// Funding of the transaction is handled by the 'fundrawtransaction' RPC
-        /// call or its equivalent reimplementation.
-        /// Only construct the transaction outputs; the change address is handled
-        /// automatically by the funding logic
-        /// You need to control *where* the change address output appears inside the
-        /// transaction to prevent decoding errors with the addresses. Note that if
-        /// the fundrawtransaction RPC call is used there is an option that can be
-        /// passed to specify the position of the change output (it is randomly
-        /// positioned otherwise)
-        /// </remarks>
-        public Transaction CreateBreezeRegistrationTx(Network network, byte[] data, Money outputValue)
-        {
-            Transaction sendTx = new Transaction();
-
-            byte[] bytes = Encoding.UTF8.GetBytes(RegistrationToken.Marker);
-            sendTx.Outputs.Add(new TxOut()
-            {
-                Value = outputValue,
-                ScriptPubKey = TxNullDataTemplate.Instance.GenerateScriptPubKey(bytes)
-            });
-
-            // Add each data-encoding PubKey as a TxOut
-            foreach (PubKey pubKey in BlockChainDataConversions.BytesToPubKeys(data))
-            {
-                TxOut destTxOut = new TxOut()
-                {
-                    Value = outputValue,
-                    ScriptPubKey = pubKey.ScriptPubKey
-                };
-
-                sendTx.Outputs.Add(destTxOut);
-            }
-
-            if (sendTx.Outputs.Count == 0)
-                throw new Exception("ERROR: No outputs in registration transaction, cannot proceed");
-
-            return sendTx;
         }
     }
 }

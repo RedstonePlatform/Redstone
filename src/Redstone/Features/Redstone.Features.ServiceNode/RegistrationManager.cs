@@ -46,13 +46,8 @@ namespace Redstone.Features.ServiceNode
             {
                 foreach (Transaction tx in block.Transactions)
                 {
-                    // Minor optimisation to disregard transactions that cannot be registrations
-                    if (tx.Outputs.Count < 2)
+                    if (!RegistrationToken.HasMarker(tx))
                         continue;
-
-                    // Check if the transaction has the Redstone Service Node registration marker output
-                    if (!tx.Outputs[0].ScriptPubKey.ToHex().ToLower()
-                        .Equals(RegistrationToken.MarkerHex)) continue;
 
                     this.logger.LogDebug("Received a new registration transaction: " + tx.GetHash());
 

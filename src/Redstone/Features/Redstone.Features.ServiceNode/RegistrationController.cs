@@ -114,8 +114,9 @@ namespace Redstone.Features.ServiceNode
             try
             {
                 // TODO: SN inject?
-                var registration = new ServiceNodeRegistration(this.network, this.nodeSettings, this.walletManager, this.broadcasterManager);
+                var registration = new ServiceNodeRegistration(this.network, this.nodeSettings, this.walletManager, this.broadcasterManager, this.walletTransactionHandler);
 
+                // TODO: work out what is right - pass key into endpoint or grab from config (or support both)
                 var ecdsa = new BitcoinSecret(key, this.network);
                 var serverAddress = ecdsa.GetAddress().ToString();
 
@@ -128,6 +129,8 @@ namespace Redstone.Features.ServiceNode
                     ConfigurationHash = "0123456789012345678901234567890123456789", // TODO hash of config file
                     ServiceEcdsaKeyAddress = this.serviceNodeSettings.ServiceEcdsaKeyAddress,
                     EcdsaPubKey = ecdsa.PubKey,
+                    TxFeeValue = this.serviceNodeSettings.TxFeeValue,
+                    TxOutputValue = this.serviceNodeSettings.TxOutputValue
                 };
 
                 // TODO: SN this needs to be loaded from pem file
@@ -136,14 +139,15 @@ namespace Redstone.Features.ServiceNode
                 if (!registration.IsRegistrationValid(config))
                 {
                     logger.LogInformation("{Time} Creating or updating node registration", DateTime.Now);
-                    var regTx = await registration.PerformRegistrationAsync(config, request.WalletName, request.AccountName, ecdsa, rsa);
+                    var regTx = await registration.PerformRegistrationNewAsync(config, request.WalletName, request.Password, request.AccountName, ecdsa, rsa);
+                    //var regTx = await registration.PerformRegistrationAsync(config, request.WalletName, request.Password, request.AccountName, ecdsa, rsa);
                     if (regTx != null)
                     {
-                        logger.LogInformation("{Time} Submitted transaction {TxId} via RPC for broadcast", DateTime.Now, regTx.GetHash().ToString());
+                        logger.LogInformation("{Time} Submitted node registration transaction {TxId} for broadcast", DateTime.Now, regTx.GetHash().ToString());
                     }
                     else
                     {
-                        logger.LogInformation("{Time} Unable to broadcast transaction via RPC", DateTime.Now);
+                        logger.LogInformation("{Time} Unable to broadcast transaction", DateTime.Now);
                         Environment.Exit(0);
                     }
 

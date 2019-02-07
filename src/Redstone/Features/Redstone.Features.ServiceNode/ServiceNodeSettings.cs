@@ -123,10 +123,10 @@ namespace Redstone.Features.ServiceNode
                 this.RpcPassword = config.GetOrDefault<string>("rpc.password", null);
                 this.RpcUrl = config.GetOrDefault<string>("rpc.url", null);
 
-                if (this.RpcUser == null || this.RpcPassword == null || this.RpcUrl == null)
-                {
-                    throw new Exception("ERROR: RPC information in config file is invalid");
-                }
+                //if (this.RpcUser == null || this.RpcPassword == null || this.RpcUrl == null)
+                //{
+                //    throw new Exception("ERROR: RPC information in config file is invalid");
+                //}
 
                 if (IPAddress.TryParse(config.GetOrDefault<string>("servicenode.ipv4", null), out var ipv4Address))
                 {
@@ -186,8 +186,8 @@ namespace Redstone.Features.ServiceNode
 
                 this.ServiceEcdsaKeyAddress = config.GetOrDefault<string>("service.ecdsakeyaddress", null);
 
-                this.TxOutputValue = new Money(config.GetOrDefault<int>("servicenode.regtxoutputvalue", 1000), MoneyUnit.Satoshi);
-                this.TxFeeValue = new Money(config.GetOrDefault<int>("servicenode.regtxfeevalue", 10000), MoneyUnit.Satoshi);
+                this.TxOutputValue = new Money(config.GetOrDefault<int>("servicenode.txoutputvalue", 7000), MoneyUnit.Satoshi);
+                this.TxFeeValue = new Money(config.GetOrDefault<int>("servicenode.txfeevalue", 10000), MoneyUnit.Satoshi);
             }
             catch (Exception e)
             {

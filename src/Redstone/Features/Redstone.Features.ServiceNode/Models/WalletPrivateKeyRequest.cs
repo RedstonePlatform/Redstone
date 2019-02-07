@@ -13,8 +13,5 @@ namespace Redstone.Features.ServiceNode.Models
 
         [Required(ErrorMessage = "The wallet password is required.")]
         public string Password { get; set; }
-
-        [Required(ErrorMessage = "The address of is required.")]
-        public string Address { get; set; }
     }
 }

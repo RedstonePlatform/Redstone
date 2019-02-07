@@ -253,4 +253,4 @@ ModelManifest.xml
 /src/Stratis.Bitcoin.Tests/Stratis.Bitcoin.Tests/TestData
 /src/Stratis.StratisD/Logs
 /src/Stratis.BitcoinD/Logs
-/src/Redstone/Tests/TestCase/Tests
+/src/Redstone/Tests/TestCase
