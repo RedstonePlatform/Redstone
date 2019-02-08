@@ -114,20 +114,20 @@ namespace Redstone.Features.ServiceNode
             try
             {
                 // TODO: SN inject?
-                var registration = new ServiceNodeRegistration(this.network, this.nodeSettings, this.walletManager, this.broadcasterManager, this.walletTransactionHandler);
+                var registration = new ServiceNodeRegistration(this.network, 
+                    this.nodeSettings, 
+                    this.broadcasterManager, 
+                    this.walletTransactionHandler);
 
                 // TODO: work out what is right - pass key into endpoint or grab from config (or support both)
                 var ecdsa = new BitcoinSecret(key, this.network);
-                var serverAddress = ecdsa.GetAddress().ToString();
 
                 var config = new ServiceNodeRegistrationConfig
                 {
                     ProtocolVersion = (int)ServiceNodeProtocolVersion.INITIAL,
-                    ServerId = serverAddress,
                     Ipv4Address = this.serviceNodeSettings.Ipv4Address,
                     Port = this.serviceNodeSettings.Port,
                     ConfigurationHash = "0123456789012345678901234567890123456789", // TODO hash of config file
-                    ServiceEcdsaKeyAddress = this.serviceNodeSettings.ServiceEcdsaKeyAddress,
                     EcdsaPubKey = ecdsa.PubKey,
                     TxFeeValue = this.serviceNodeSettings.TxFeeValue,
                     TxOutputValue = this.serviceNodeSettings.TxOutputValue
@@ -139,8 +139,7 @@ namespace Redstone.Features.ServiceNode
                 if (!registration.IsRegistrationValid(config))
                 {
                     logger.LogInformation("{Time} Creating or updating node registration", DateTime.Now);
-                    var regTx = await registration.PerformRegistrationNewAsync(config, request.WalletName, request.Password, request.AccountName, ecdsa, rsa);
-                    //var regTx = await registration.PerformRegistrationAsync(config, request.WalletName, request.Password, request.AccountName, ecdsa, rsa);
+                    Transaction regTx = await registration.PerformRegistrationAsync(config, request.WalletName, request.Password, request.AccountName, ecdsa, rsa);
                     if (regTx != null)
                     {
                         logger.LogInformation("{Time} Submitted node registration transaction {TxId} for broadcast", DateTime.Now, regTx.GetHash().ToString());

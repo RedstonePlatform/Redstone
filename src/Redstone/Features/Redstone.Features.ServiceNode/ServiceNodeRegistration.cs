@@ -1,18 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using NBitcoin;
 using Redstone.Features.ServiceNode.Common;
 using Redstone.Features.ServiceNode.Models;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Utilities.JsonErrors;
 
 namespace Redstone.Features.ServiceNode
 {
@@ -26,18 +20,18 @@ namespace Redstone.Features.ServiceNode
     {
         private readonly Network network;
 
-        private readonly IWalletManager walletManager;
-
         private readonly IWalletTransactionHandler walletTransactionHandler;
 
         private readonly IBroadcasterManager broadcasterManager;
 
         private readonly string regStorePath;
 
-        public ServiceNodeRegistration(Network network, NodeSettings nodeSettings, IWalletManager walletManager, IBroadcasterManager broadcasterManager, IWalletTransactionHandler walletTransactionHandler)
+        public ServiceNodeRegistration(Network network, 
+            NodeSettings nodeSettings,
+            IBroadcasterManager broadcasterManager, 
+            IWalletTransactionHandler walletTransactionHandler)
         {
             this.network = network;
-            this.walletManager = walletManager;
             this.broadcasterManager = broadcasterManager;
             this.walletTransactionHandler = walletTransactionHandler;
             this.regStorePath = Path.Combine(nodeSettings.DataDir, "registrationHistory.json");
@@ -55,7 +49,8 @@ namespace Redstone.Features.ServiceNode
 
             RegistrationStore regStore = new RegistrationStore(regStorePath);
 
-            List<RegistrationRecord> transactions = regStore.GetByServerId(registrationConfig.ServiceEcdsaKeyAddress);
+            var ecsdaPubKeyAddress = registrationConfig.EcdsaPubKey.GetAddress(this.network).ToString();
+            List<RegistrationRecord> transactions = regStore.GetByServerId(ecsdaPubKeyAddress);
 
             // If no transactions exist, the registration definitely needs to be done
             if (transactions == null || transactions.Count == 0)
@@ -128,48 +123,25 @@ namespace Redstone.Features.ServiceNode
             return true;
         }
 
-        public async Task<Transaction> PerformRegistrationNewAsync(IServiceNodeRegistrationConfig registrationConfig,
+        public async Task<Transaction> PerformRegistrationAsync(IServiceNodeRegistrationConfig registrationConfig,
             string walletName, string walletPassword, string accountName, BitcoinSecret privateKeyEcdsa,
             RsaKey serviceRsaKey)
         {
-            var tx = await TransactionUtils2.PerformRegistrationAsync(this.network,
-                registrationConfig,
-                this.walletTransactionHandler,
-                this.walletManager,
-                this.broadcasterManager,
-                walletName,
-                accountName,
-                walletPassword,
-                this.regStorePath,
-                privateKeyEcdsa,
-                serviceRsaKey).ConfigureAwait(false);
-
-            return tx;
-        }
-
-        public async Task<Transaction> PerformRegistrationAsync(IServiceNodeRegistrationConfig registrationConfig, string walletName, string walletPassword, string accountName, BitcoinSecret privateKeyEcdsa, RsaKey serviceRsaKey)
-        {
+            Transaction transaction = null;
             try
-            {   
-                (RegistrationToken registrationToken, Transaction transaction) = TransactionUtils.CreateRegistrationTransaction(
-                    this.network,
-                    registrationConfig,
-                    serviceRsaKey,
+            {
+                RegistrationToken registrationToken = registrationConfig.CreateRegistrationToken(this.network);
+
+                transaction = TransactionUtils.BuildTransaction(this.network, 
+                    this.walletTransactionHandler, 
+                    registrationConfig, 
+                    registrationToken, 
+                    walletName, 
+                    accountName, 
+                    walletPassword, 
+                    serviceRsaKey, 
                     privateKeyEcdsa);
 
-                TransactionUtils.FundTransaction(this.walletManager,
-                    walletName, 
-                    accountName,
-                    transaction,
-                    registrationConfig.TxFeeValue,
-                    BitcoinAddress.Create(registrationConfig.ServiceEcdsaKeyAddress));
-
-                TransactionUtils.SignTransaction(transaction,
-                    this.walletManager,
-                    this.network, 
-                    walletName, 
-                    walletPassword, 
-                    accountName);
                 await this.broadcasterManager.BroadcastTransactionAsync(transaction).ConfigureAwait(false);
 
                 var regStore = new RegistrationStore(this.regStorePath);
@@ -180,8 +152,6 @@ namespace Redstone.Features.ServiceNode
                     transaction.ToHex(),
                     registrationToken,
                     null));
-
-                return transaction;
             }
             catch (Exception e)
             {
@@ -189,7 +159,7 @@ namespace Redstone.Features.ServiceNode
                 Console.WriteLine(e);
             }
 
-            return null;
+            return transaction;
         }
     }
 }

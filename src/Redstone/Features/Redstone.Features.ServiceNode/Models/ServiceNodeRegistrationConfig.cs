@@ -6,11 +6,11 @@ namespace Redstone.Features.ServiceNode.Models
 {
     public class ServiceNodeRegistrationConfig : IServiceNodeRegistrationConfig
     {
-        public RegistrationToken CreateRegistrationToken()
+        public RegistrationToken CreateRegistrationToken(Network network)
         {
             return new RegistrationToken(
                 this.ProtocolVersion,
-                this.ServiceEcdsaKeyAddress,
+                this.EcdsaPubKey.GetAddress(network).ToString(),
                 this.Ipv4Address,
                 this.Ipv6Address,
                 this.OnionAddress,
@@ -20,7 +20,6 @@ namespace Redstone.Features.ServiceNode.Models
         }
         public int ProtocolVersion { get; set; }
         public string ServerId { get; set; }
-        public string ServiceEcdsaKeyAddress { get; set; }
         public IPAddress Ipv4Address { get; set; } = IPAddress.None;
         public IPAddress Ipv6Address { get; set; } = IPAddress.IPv6None;
         public string OnionAddress { get; set; }
