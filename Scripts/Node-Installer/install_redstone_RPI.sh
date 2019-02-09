@@ -114,14 +114,6 @@ installFail2Ban() {
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
 
-setupTmpRAM() {
-    echo
-    echo -e "* Pushing tmp files to RAM for performance. Please wait..."
-    echo 'tmpfs   /tmp            tmpfs   defaults,noatime,nosuid,nodev,noexec,mode=1777,size=512M          0       0' | tee -a /etc/fstab &>> ${SCRIPT_LOGFILE}
-    echo 'tmpfs   /var/tmp        tmpfs   defaults,noatime,mode=1777,size=2M                      0       0' | tee -a /etc/fstab &>> ${SCRIPT_LOGFILE}
-    echo -e "${NONE}${GREEN}* Done${NONE}";
-}
-
 installFirewall() {
     echo
     echo -e "* Installing UFW. Please wait..."
@@ -255,7 +247,6 @@ if [[ "$response" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
     checkOSVersion
     updateAndUpgrade
     #setupSwap ### it's not best practise to use a large swap file on RPI, please do this manually if you find it's necessary https://raspberrypi.stackexchange.com/questions/70/how-to-set-up-swap-space 
-    setupTmpRAM
     installFail2Ban
     installFirewall
     installDependencies
