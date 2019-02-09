@@ -188,7 +188,7 @@ configureWallet() {
     cd /home/${NODE_USER}/
     mnip=$(curl --silent ipinfo.io/ip)
     sudo mkdir -p $COINCORE
-    echo -e "externalip=${mnip}\ntxindex=1\nserver=1\nrpcuser=${RPCUSER}\nrpcpassword=${RPCPASS}\nrpcbind=${RPCBIND}\nrpcport=${COINRPCPORT}" > $COINCONFIG
+    echo -e "externalip=${mnip}\ntxindex=1\nserver=1\nrpcuser=${RPCUSER}\nrpcpassword=${RPCPASS}\nrpcbind=${RPCBIND}\nrpcport=${COINRPCPORT}\nrpcallowip=${RPCBIND}" > $COINCONFIG
     sudo mv $COINCONFIG $COINCORE
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
