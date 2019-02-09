@@ -132,7 +132,8 @@ installDependencies() {
     echo -e "* Installing dependencies. Please wait..."
     sudo apt-get install git nano wget curl libunwind8 gettext software-properties-common -y &>> ${SCRIPT_LOGFILE}
     curl -sSL -o dotnet.tar.gz ${DOTNETBIN} &>> ${SCRIPT_LOGFILE}
-    sudo mkdir -p /opt/dotnet && sudo tar zxf dotnet.tar.gz -C /opt/dotnet &>> ${SCRIPT_LOGFILE}
+    sudo mkdir -p /opt/dotnet &>> ${SCRIPT_LOGFILE}
+    sudo tar zxf dotnet.tar.gz -C /opt/dotnet &>> ${SCRIPT_LOGFILE}
     rm dotnet.tar.gz &>> ${SCRIPT_LOGFILE}
     export DOTNET_ROOT=$HOME/dotnet 
     export PATH=$PATH:$HOME/dotnet
@@ -143,12 +144,12 @@ installDependencies() {
 compileWallet() {
     echo
     echo -e "* Compiling wallet. Please wait, this might take a while to complete..."
-    sudo rm -rf ${COINDLOC}
-    sudo mkdir -p ${COINDLOC}
+    sudo rm -rf ${COINDLOC} &>> ${SCRIPT_LOGFILE}
+    sudo mkdir -p ${COINDLOC} &>> ${SCRIPT_LOGFILE}
     cd /home/${NODE_USER}/
-    wget --https-only -O coinbin.tar ${COINBIN} &>> ${SCRIPT_LOGFILE}
-    sudo tar zxf coinbin.tar -C ${COINDLOC} &>> ${SCRIPT_LOGFILE}
-    rm coinbin.tar.gz &>> ${SCRIPT_LOGFILE}
+    sudo wget --https-only -O coinbin.tar ${COINBIN} &>> ${SCRIPT_LOGFILE}
+    sudo tar xvf coinbin.tar -C ${COINDLOC} &>> ${SCRIPT_LOGFILE}
+    sudo rm coinbin.tar &>> ${SCRIPT_LOGFILE}
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
 
