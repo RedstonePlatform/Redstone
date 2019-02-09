@@ -9,6 +9,8 @@ WHITE='\033[01;37m'
 BOLD='\033[1m'
 UNDERLINE='\033[4m'
 
+#### Update for each Dot Net release
+declare -r DOTNETBIN=https://download.visualstudio.microsoft.com/download/pr/1de01e2e-aa87-4535-af42-8a8a9b4df215/a2fc245f1c26130a2ec22bbf5d0cb3e6/dotnet-sdk-2.2.103-linux-arm.tar.gz
 declare -r NODE_IP=$(curl --silent ipinfo.io/ip)
 declare -r NODE_USER=redstone
 declare -r CONF=release
@@ -29,7 +31,6 @@ declare -r DATE_STAMP="$(date +%y-%m-%d-%s)"
 declare -r SCRIPT_LOGFILE="/tmp/${NODE_USER}_${DATE_STAMP}_output.log"
 declare -r SWAPSIZE="1024" ## =1GB
 declare -r OS_VER="Raspbian GNU/Linux*"
-declare -r DOTNETBIN=https://download.visualstudio.microsoft.com/download/pr/1de01e2e-aa87-4535-af42-8a8a9b4df215/a2fc245f1c26130a2ec22bbf5d0cb3e6/dotnet-sdk-2.2.103-linux-arm.tar.gz
 
 function check_root() {
 if [ "$(id -u)" != "0" ]; then

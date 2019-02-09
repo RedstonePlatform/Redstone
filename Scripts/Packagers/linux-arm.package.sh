@@ -35,7 +35,7 @@ function compileWallet {
     echo -e "* Compiling wallet. Please wait, this might take a while to complete..."
     #dotnet --info  
     mkdir -p $publish_directory
-    dotnet publish $project_path -c $configuration -v m -r $runtime --self-contained --no-dependencies -o $publish_directory
+    dotnet publish $project_path -c $configuration -v m -r $runtime --no-dependencies -o $publish_directory #--self-contained
     cd $publish_directory
     tar -cvf $release_directory/Redstone-$runtime-$git_commit.tar *
     rm -rf $publish_directory
