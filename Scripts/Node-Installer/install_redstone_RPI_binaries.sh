@@ -146,8 +146,8 @@ compileWallet() {
     sudo rm -rf ${COINDLOC}
     sudo mkdir -p ${COINDLOC}
     cd /home/${NODE_USER}/
-    wget --https-only -o coinbin.tar ${COINBIN} &>> ${SCRIPT_LOGFILE}
-    sudo tar zxf coinbin.tar.gz -C ${COINDLOC} &>> ${SCRIPT_LOGFILE}
+    wget --https-only -O coinbin.tar ${COINBIN} &>> ${SCRIPT_LOGFILE}
+    sudo tar zxf coinbin.tar -C ${COINDLOC} &>> ${SCRIPT_LOGFILE}
     rm coinbin.tar.gz &>> ${SCRIPT_LOGFILE}
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
