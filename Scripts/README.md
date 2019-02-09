@@ -11,6 +11,8 @@ To install a  Node on a Raspberry Pi running Raspian - as <code>sudo su root</co
 
 <code>bash <( curl https://raw.githubusercontent.com/RedstonePlatform/Redstone/master/Scripts/Node-Installer/install_redstone_RPI.sh )</code>
 
+<code>bash <( curl https://raw.githubusercontent.com/RedstonePlatform/Redstone/master/Scripts/Node-Installer/install_redstone_RPI_binaries.sh )</code>
+
 If you get the error "bash: curl: command not found", run this first: <code>apt-get -y install curl</code>
 
 To install a Node on CentOS - as <code>sudo su root</code> run the following:
