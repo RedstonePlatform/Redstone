@@ -143,9 +143,10 @@ installDependencies() {
 compileWallet() {
     echo
     echo -e "* Compiling wallet. Please wait, this might take a while to complete..."
-    cd /home/${NODE_USER}/
-    curl -sSL -o coinbin.tar.gz ${COINBIN} &>> ${SCRIPT_LOGFILE}
+    sudo rm -rf ${COINDLOC}
     sudo mkdir -p ${COINDLOC}
+    cd /home/${NODE_USER}/
+    wget --https-only -o coinbin.tar ${COINBIN} &>> ${SCRIPT_LOGFILE}
     sudo tar zxf coinbin.tar.gz -C ${COINDLOC} &>> ${SCRIPT_LOGFILE}
     rm coinbin.tar.gz &>> ${SCRIPT_LOGFILE}
     echo -e "${NONE}${GREEN}* Done${NONE}";
