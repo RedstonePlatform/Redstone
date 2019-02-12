@@ -24,6 +24,6 @@
         /// <summary>
         /// Redstone
         /// </summary>
-        Redstone = 787264
+        Redstone = 251
     }
 }
