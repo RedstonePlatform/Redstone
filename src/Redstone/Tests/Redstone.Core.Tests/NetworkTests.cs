@@ -96,7 +96,7 @@
             Assert.Null(network.Consensus.BIP9Deployments[RedstoneBIP9Deployments.TestDummy]);
             Assert.Equal(129600, network.Consensus.LastPOWBlock);
             Assert.True(network.Consensus.IsProofOfStake);
-            Assert.Equal(787264, network.Consensus.CoinType);
+            Assert.Equal(251, network.Consensus.CoinType);
             Assert.Equal(
                 new BigInteger(uint256.Parse("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
                     .ToBytes(false)), network.Consensus.ProofOfStakeLimit);
@@ -191,7 +191,7 @@
             Assert.Null(network.Consensus.BIP9Deployments[RedstoneBIP9Deployments.TestDummy]);
             Assert.Equal(1440, network.Consensus.LastPOWBlock);
             Assert.True(network.Consensus.IsProofOfStake);
-            Assert.Equal(787264, network.Consensus.CoinType);
+            Assert.Equal(251, network.Consensus.CoinType);
             Assert.Equal(
                 new BigInteger(uint256.Parse("0000ffff00000000000000000000000000000000000000000000000000000000")
                     .ToBytes(false)), network.Consensus.ProofOfStakeLimit);
@@ -287,7 +287,7 @@
             Assert.Null(network.Consensus.BIP9Deployments[RedstoneBIP9Deployments.TestDummy]);
             Assert.Equal(1440, network.Consensus.LastPOWBlock);
             Assert.True(network.Consensus.IsProofOfStake);
-            Assert.Equal(787264, network.Consensus.CoinType);
+            Assert.Equal(251, network.Consensus.CoinType);
             Assert.Equal(
                 new BigInteger(uint256.Parse("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
                     .ToBytes(false)), network.Consensus.ProofOfStakeLimit);

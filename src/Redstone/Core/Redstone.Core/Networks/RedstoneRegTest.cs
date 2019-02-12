@@ -69,7 +69,7 @@ namespace Redstone.Core.Networks
             this.Consensus = new Consensus(
                 consensusFactory: consensusFactory,
                 consensusOptions: consensusOptions,
-                coinType: (int)CoinType.Redstone, // unique coin type TODO how do we get this added
+                coinType: (int)CoinType.Redstone, 
                 hashGenesisBlock: genesisBlock.GetHash(),
                 subsidyHalvingInterval: 210000,
                 majorityEnforceBlockUpgrade: 750,
