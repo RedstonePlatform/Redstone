@@ -293,7 +293,7 @@ namespace Redstone.Features.ServiceNode.Common
             }
             else
             {
-                this.Ipv4Addr = null;
+                this.Ipv4Addr = IPAddress.None;
             }
 
             position += 4;
@@ -314,7 +314,7 @@ namespace Redstone.Features.ServiceNode.Common
             }
             else
             {
-                this.Ipv6Addr = null;
+                this.Ipv6Addr = IPAddress.IPv6None;
             }
 
             position += 16;
@@ -391,10 +391,10 @@ namespace Redstone.Features.ServiceNode.Common
             if (this.EcdsaPubKey.GetAddress(network).ToString() != this.ServerId)
                 return false;
 
-            if (!VerifySignatures())
+            if (this.Ipv4Addr == null && this.Ipv6Addr == null &&  this.OnionAddress == null)
                 return false;
 
-            if (this.OnionAddress == null)
+            if (!this.VerifySignatures())
                 return false;
 
             // TODO: What other validation is required?

@@ -125,7 +125,9 @@ namespace Redstone.Features.ServiceNode
                 var config = new ServiceNodeRegistrationConfig
                 {
                     ProtocolVersion = (int)ServiceNodeProtocolVersion.INITIAL,
-                    Ipv4Address = this.serviceNodeSettings.Ipv4Address,
+                    Ipv4Address = this.serviceNodeSettings.Ipv4Address ?? IPAddress.None,
+                    Ipv6Address = this.serviceNodeSettings.Ipv6Address ?? IPAddress.IPv6None,
+                    OnionAddress = null,
                     Port = this.serviceNodeSettings.Port,
                     ConfigurationHash = "0123456789012345678901234567890123456789", // TODO hash of config file
                     EcdsaPubKey = ecdsa.PubKey,
