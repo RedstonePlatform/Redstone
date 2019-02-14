@@ -121,7 +121,7 @@ namespace Redstone.Feature.ServiceNode.Tests
                 Ipv4Address = IPAddress.Parse("127.0.0.1"),
                 Port = 37123,
                 ConfigurationHash = "0123456789012345678901234567890123456789", // TODO hash of config file
-                EcdsaPubKey = ecdsa.PubKey,
+                EcdsaPrivateKey = ecdsa,
             };
 
             RegistrationToken registrationToken = config.CreateRegistrationToken(this.network);
@@ -135,8 +135,7 @@ namespace Redstone.Feature.ServiceNode.Tests
                 WalletName,
                 Account,
                 Password,
-                rsa, 
-                ecdsa);
+                rsa);
 
             return transaction;
         }

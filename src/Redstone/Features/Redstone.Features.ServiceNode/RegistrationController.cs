@@ -92,7 +92,7 @@ namespace Redstone.Features.ServiceNode
 
             try
             {
-                key = this.GetPrivateKey(request.WalletName, request.Password);
+                key = this.GetPrivateKey(request.WalletName, request.Password, this.serviceNodeSettings.ServiceEcdsaKeyAddress);
             }
             catch (FileNotFoundException e)
             {
@@ -119,9 +119,6 @@ namespace Redstone.Features.ServiceNode
                     this.broadcasterManager, 
                     this.walletTransactionHandler);
 
-                // TODO: work out what is right - pass key into endpoint or grab from config (or support both)
-                var ecdsa = new BitcoinSecret(key, this.network);
-
                 var config = new ServiceNodeRegistrationConfig
                 {
                     ProtocolVersion = (int)ServiceNodeProtocolVersion.INITIAL,
@@ -130,7 +127,7 @@ namespace Redstone.Features.ServiceNode
                     OnionAddress = null,
                     Port = this.serviceNodeSettings.Port,
                     ConfigurationHash = "0123456789012345678901234567890123456789", // TODO hash of config file
-                    EcdsaPubKey = ecdsa.PubKey,
+                    EcdsaPrivateKey = key.GetBitcoinSecret(this.network),
                     TxFeeValue = this.serviceNodeSettings.TxFeeValue,
                     TxOutputValue = this.serviceNodeSettings.TxOutputValue
                 };
@@ -141,7 +138,7 @@ namespace Redstone.Features.ServiceNode
                 if (!registration.IsRegistrationValid(config))
                 {
                     logger.LogInformation("{Time} Creating or updating node registration", DateTime.Now);
-                    Transaction regTx = await registration.PerformRegistrationAsync(config, request.WalletName, request.Password, request.AccountName, ecdsa, rsa);
+                    Transaction regTx = await registration.PerformRegistrationAsync(config, request.WalletName, request.Password, request.AccountName, rsa);
                     if (regTx != null)
                     {
                         logger.LogInformation("{Time} Submitted node registration transaction {TxId} for broadcast", DateTime.Now, regTx.GetHash().ToString());
@@ -167,14 +164,12 @@ namespace Redstone.Features.ServiceNode
             }
         }
 
-        private Key GetPrivateKey(string walletName, string walletPassword)
+        private Key GetPrivateKey(string walletName, string walletPassword, string address)
         {
             Wallet wallet = this.walletManager.LoadWallet(walletPassword, walletName);
-            Key key = HdOperations.DecryptSeed(wallet.EncryptedSeed, walletPassword, this.network);
-            return key;
-            //var hdAddress = wallet.GetAllAddressesByCoinType(CoinType.Redstone).First(hda => hda.Address == address);
-            //var privateKey = wallet.GetExtendedPrivateKeyForAddress(walletPassword, hdAddress);
-            //return privateKey;
+            HdAddress hdAddress = wallet.GetAllAddressesByCoinType(CoinType.Redstone).First(hda => hda.Address == address);
+            ISecret extendedPrivateKey = wallet.GetExtendedPrivateKeyForAddress(walletPassword, hdAddress);
+            return extendedPrivateKey.PrivateKey;
         }
     }
 }

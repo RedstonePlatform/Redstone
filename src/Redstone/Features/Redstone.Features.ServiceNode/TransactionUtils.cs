@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using NBitcoin;
 using Redstone.Features.ServiceNode.Common;
 using Redstone.Features.ServiceNode.Models;
@@ -21,8 +20,7 @@ namespace Redstone.Features.ServiceNode
             string walletName, 
             string accountName, 
             string password, 
-            RsaKey serviceRsaKey, 
-            BitcoinSecret privateKeyEcdsa)
+            RsaKey serviceRsaKey)
         {
             var accountReference = new WalletAccountReference()
             {
@@ -33,7 +31,7 @@ namespace Redstone.Features.ServiceNode
             var context = new TransactionBuildContext(network)
             {
                 AccountReference = accountReference,
-                Recipients = GetRecipients(registrationConfig, registrationToken, serviceRsaKey, privateKeyEcdsa),
+                Recipients = GetRecipients(registrationConfig, registrationToken, serviceRsaKey),
                 Shuffle = false,
                 Sign = true,
                 OverrideFeeRate = new FeeRate(registrationConfig.TxFeeValue),
@@ -48,9 +46,9 @@ namespace Redstone.Features.ServiceNode
             return transaction;
         }
 
-        private static List<Recipient> GetRecipients(IServiceNodeRegistrationConfig registrationConfig, RegistrationToken registrationToken, RsaKey serviceRsaKey, BitcoinSecret privateKeyEcdsa)
+        private static List<Recipient> GetRecipients(IServiceNodeRegistrationConfig registrationConfig, RegistrationToken registrationToken, RsaKey serviceRsaKey)
         {
-            byte[] tokenBytes = registrationToken.GetRegistrationTokenBytes(serviceRsaKey, privateKeyEcdsa);
+            byte[] tokenBytes = registrationToken.GetRegistrationTokenBytes(serviceRsaKey, registrationConfig.EcdsaPrivateKey);
             byte[] markerBytes = Encoding.UTF8.GetBytes(RegistrationToken.Marker);
 
             var recipients = new List<Recipient>

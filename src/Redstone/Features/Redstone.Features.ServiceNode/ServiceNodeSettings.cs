@@ -73,7 +73,7 @@ namespace Redstone.Features.ServiceNode
 
         public string ServiceApiBaseUrl { get; set; }
         public string ServiceRsaKeyFile { get; set; }
-        public string ServiceEcdsaPubKeyAddress { get; set; }
+        public string ServiceEcdsaKeyAddress { get; set; }
 
         public ServiceNodeSettings(NodeSettings nodeSettings)
         {
@@ -185,7 +185,7 @@ namespace Redstone.Features.ServiceNode
                 //    this.ServiceRsaKeyFile
                 //);
 
-                this.ServiceEcdsaPubKeyAddress = config.GetOrDefault<string>("service.ecdsapubkeyaddress", null);
+                this.ServiceEcdsaKeyAddress = config.GetOrDefault<string>("service.ecdsakeyaddress", null);
 
                 this.TxOutputValue = new Money(config.GetOrDefault<int>("servicenode.txoutputvalue", 7000), MoneyUnit.Satoshi);
                 this.TxFeeValue = new Money(config.GetOrDefault<int>("servicenode.txfeevalue", 10000), MoneyUnit.Satoshi);
@@ -311,7 +311,7 @@ namespace Redstone.Features.ServiceNode
             builder.AppendLine("#servicenode.regtxfeevalue=");
             builder.AppendLine("#service.url=");
             builder.AppendLine("#service.rsakeyfile=");
-            builder.AppendLine("#service.ecdsapubkeyaddress=");
+            builder.AppendLine("#service.ecdsakeyaddress=");
 
             //ConnectionManagerSettings.BuildDefaultConfigurationFile(builder, network);
         }

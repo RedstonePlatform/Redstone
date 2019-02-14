@@ -17,7 +17,7 @@ namespace Redstone.Features.ServiceNode.Models
         // Not sure how this works? Is ConfigurationHash is obtained after registration for checks (null for first reg)
         string ConfigurationHash { get; }
 
-        PubKey EcdsaPubKey { get; set; }
+        BitcoinSecret EcdsaPrivateKey { get; set; }
 
         RegistrationToken CreateRegistrationToken(Network network);
     }

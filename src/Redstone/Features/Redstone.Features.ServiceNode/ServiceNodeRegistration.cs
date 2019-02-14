@@ -49,7 +49,7 @@ namespace Redstone.Features.ServiceNode
 
             RegistrationStore regStore = new RegistrationStore(regStorePath);
 
-            var ecsdaPubKeyAddress = registrationConfig.EcdsaPubKey.GetAddress(this.network).ToString();
+            var ecsdaPubKeyAddress = registrationConfig.EcdsaPrivateKey.GetAddress().ToString();
             List<RegistrationRecord> transactions = regStore.GetByServerId(ecsdaPubKeyAddress);
 
             // If no transactions exist, the registration definitely needs to be done
@@ -124,8 +124,7 @@ namespace Redstone.Features.ServiceNode
         }
 
         public async Task<Transaction> PerformRegistrationAsync(IServiceNodeRegistrationConfig registrationConfig,
-            string walletName, string walletPassword, string accountName, BitcoinSecret privateKeyEcdsa,
-            RsaKey serviceRsaKey)
+            string walletName, string walletPassword, string accountName, RsaKey serviceRsaKey)
         {
             Transaction transaction = null;
             try
@@ -139,8 +138,7 @@ namespace Redstone.Features.ServiceNode
                     walletName, 
                     accountName, 
                     walletPassword, 
-                    serviceRsaKey, 
-                    privateKeyEcdsa);
+                    serviceRsaKey);
 
                 await this.broadcasterManager.BroadcastTransactionAsync(transaction).ConfigureAwait(false);
 

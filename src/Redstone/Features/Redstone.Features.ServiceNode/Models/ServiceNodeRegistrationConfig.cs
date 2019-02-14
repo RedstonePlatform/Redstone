@@ -10,13 +10,13 @@ namespace Redstone.Features.ServiceNode.Models
         {
             return new RegistrationToken(
                 this.ProtocolVersion,
-                this.EcdsaPubKey.GetAddress(network).ToString(),
+                this.EcdsaPrivateKey.GetAddress().ToString(),
                 this.Ipv4Address,
                 this.Ipv6Address,
                 this.OnionAddress,
                 this.ConfigurationHash,
                 this.Port,
-                this.EcdsaPubKey);
+                this.EcdsaPrivateKey.PubKey);
         }
         public int ProtocolVersion { get; set; }
         public string ServerId { get; set; }
@@ -27,6 +27,6 @@ namespace Redstone.Features.ServiceNode.Models
         public Money TxOutputValue { get; set; } = new Money(1000);
         public Money TxFeeValue { get; set; } = new Money(10000);       
         public string ConfigurationHash { get; set; }
-        public PubKey EcdsaPubKey { get; set; }
+        public BitcoinSecret EcdsaPrivateKey { get; set; }
     }
 }
