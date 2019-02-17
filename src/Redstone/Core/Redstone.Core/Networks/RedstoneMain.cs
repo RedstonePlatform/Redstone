@@ -3,11 +3,13 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
     using NBitcoin;
     using NBitcoin.BouncyCastle.Math;
-    using NBitcoin.DataEncoders;
-    using Redstone.Core.Networks.Deployments;
+    using NBitcoin.Protocol;
     using Stratis.Bitcoin.Features.Wallet;
+    using Redstone.Core.Networks.Deployments;
+    using NBitcoin.DataEncoders;
 
     public class RedstoneMain : Network
     {
@@ -29,12 +31,12 @@
             // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
             // a large 4-byte int at any alignment.
             var messageStart = new byte[4];
-            messageStart[0] = 0x70; 
-            messageStart[1] = 0x35; 
-            messageStart[2] = 0x22; 
-            messageStart[3] = 0x05;
-            uint magic = BitConverter.ToUInt32(messageStart, 0); // 0x5223570;
-
+            messageStart[0] = 0x14; 
+            messageStart[1] = 0x94; 
+            messageStart[2] = 0x21; 
+            messageStart[3] = 0x85;
+            uint magic = BitConverter.ToUInt32(messageStart, 0); // 0x85219414
+            
             this.Name = "RedstoneMain";
             this.Magic = magic;
             this.DefaultPort = 19056;

@@ -9,6 +9,7 @@
     using NBitcoin.Protocol;
     using Stratis.Bitcoin.Features.Wallet;
     using Redstone.Core.Networks.Deployments;
+    using NBitcoin.DataEncoders;
 
     public class RedstoneTest : RedstoneMain
     {
