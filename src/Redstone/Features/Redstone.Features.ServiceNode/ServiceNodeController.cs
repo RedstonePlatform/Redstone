@@ -4,23 +4,18 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Security;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Redstone.Features.ServiceNode.Common;
 using Redstone.Features.ServiceNode.Models;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Broadcasting;
-using Stratis.Bitcoin.Features.Wallet.Controllers;
-using Stratis.Bitcoin.Features.Wallet.Helpers;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Utilities.JsonErrors;
-using Stratis.Bitcoin.Utilities.ModelStateErrors;
 
 namespace Redstone.Features.ServiceNode
 {
@@ -28,65 +23,72 @@ namespace Redstone.Features.ServiceNode
     /// Controller providing operations on a service node.
     /// </summary>
     [Route("api/[controller]")]
-    public class RegistrationController : Controller
+    public class ServiceNodeController : Controller
     {
         private readonly IWalletManager walletManager;
 
         private readonly IWalletTransactionHandler walletTransactionHandler;
 
-        private readonly IWalletSyncManager walletSyncManager;
-
-        private readonly CoinType coinType;
-
         /// <summary>Specification of the network the node runs on - regtest/testnet/mainnet.</summary>
         private readonly Network network;
-
-        private readonly IConnectionManager connectionManager;
-
-        private readonly ConcurrentChain chain;
 
         /// <summary>Instance logger.</summary>
         private readonly ILogger logger;
 
         private readonly IBroadcasterManager broadcasterManager;
 
-        /// <summary>Provider of date time functionality.</summary>
-        private readonly IDateTimeProvider dateTimeProvider;
+        private readonly RegistrationStore registrationStore;
 
         private readonly NodeSettings nodeSettings;
 
         private readonly ServiceNodeSettings serviceNodeSettings;
 
-        public RegistrationController(
+        public ServiceNodeController(
             ILoggerFactory loggerFactory,
             IWalletManager walletManager,
             IWalletTransactionHandler walletTransactionHandler,
-            IWalletSyncManager walletSyncManager,
-            IConnectionManager connectionManager,
             Network network,
-            ConcurrentChain chain,
             IBroadcasterManager broadcasterManager,
-            IDateTimeProvider dateTimeProvider,
+            RegistrationStore registrationStore,
             NodeSettings nodeSettings,
             ServiceNodeSettings serviceNodeSettings)
         {
             this.walletManager = walletManager;
             this.walletTransactionHandler = walletTransactionHandler;
-            this.walletSyncManager = walletSyncManager;
-            this.connectionManager = connectionManager;
             this.network = network;
-            this.coinType = (CoinType)network.Consensus.CoinType;
-            this.chain = chain;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.broadcasterManager = broadcasterManager;
-            this.dateTimeProvider = dateTimeProvider;
+            this.registrationStore = registrationStore;
             this.nodeSettings = nodeSettings;
             this.serviceNodeSettings = serviceNodeSettings;
         }
 
-        [Route("registerservicenode")]
+        [HttpGet("registrations")]
+        public IActionResult GetRegistrations()
+        {
+            try
+            {
+                List<RegistrationRecord> registrationRecords = this.registrationStore.GetAll();
+                IEnumerable<RegistrationModel> models = registrationRecords.Select(m => new RegistrationModel
+                {
+                    ServerId = m.Record.ServerId,
+                    BlockReceived = m.BlockReceived,
+                    RecordTimestamp = m.RecordTimestamp,
+                    RecordTxHex = m.RecordTxHex,
+                    RecordTxId = m.RecordTxId
+                });
+                return this.Json(models);
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError("Exception occurred: {0}", e.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
+            }
+        }
+
+        [Route("register")]
         [HttpPost]
-        public async Task<IActionResult> RegisterServiceNodeAsync(RegisterServiceNodeRequest request)
+        public async Task<IActionResult> RegisterAsync(RegisterServiceNodeRequest request)
         {
             Key key;
 
@@ -114,9 +116,9 @@ namespace Redstone.Features.ServiceNode
             try
             {
                 // TODO: SN inject?
-                var registration = new ServiceNodeRegistration(this.network, 
-                    this.nodeSettings, 
-                    this.broadcasterManager, 
+                var registration = new ServiceNodeRegistration(this.network,
+                    this.nodeSettings,
+                    this.broadcasterManager,
                     this.walletTransactionHandler);
 
                 var config = new ServiceNodeRegistrationConfig

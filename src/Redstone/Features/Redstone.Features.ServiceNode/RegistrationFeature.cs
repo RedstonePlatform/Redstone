@@ -143,7 +143,7 @@ namespace Redstone.Features.ServiceNode
                     {
                         services.AddSingleton<RegistrationStore>();
                         services.AddSingleton<RegistrationManager>();
-                        services.AddSingleton<RegistrationController>();
+                        services.AddSingleton<ServiceNodeController>();
                         services.AddSingleton<ServiceNodeSettings>();
                     });
             });
