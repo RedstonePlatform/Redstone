@@ -58,7 +58,7 @@ if [ "$(id -u)" != "0" ]; then
 fi
 }
 
-create_mn_user() {
+function create_mn_user() {
     echo
     echo "* Checking for user & add if required. Please wait..."
     # our new mnode unpriv user acc is added
@@ -276,6 +276,7 @@ if [[ "$response" =~ ^([mM])+$ ]]; then
     setMainVars
     setGeneralVars
     checkOSVersion
+    create_mn_user
     updateAndUpgrade
     setupSwap
     installFail2Ban
@@ -300,6 +301,7 @@ echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
         setTestVars
         setGeneralVars
         checkOSVersion
+        create_mn_user
         updateAndUpgrade
         setupSwap
         installFail2Ban
