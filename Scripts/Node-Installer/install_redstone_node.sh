@@ -12,43 +12,43 @@ UNDERLINE='\033[4m'
 
 function setMainVars() {
 ## set network dependent variables
-declare NETWORK=""
-declare NODE_USER=redstone${NETWORK}
-declare COINCORE=/home/${NODE_USER}/.redstonenode/redstone/RedstoneMain
-declare COINPORT=19056
-declare COINRPCPORT=19057
-declare COINAPIPORT=
+NETWORK=""
+NODE_USER=redstone${NETWORK}
+COINCORE=/home/${NODE_USER}/.redstonenode/redstone/RedstoneMain
+COINPORT=19056
+COINRPCPORT=19057
+COINAPIPORT=
 }
 
 function setTestVars() {
 ## set network dependent variables
-declare NETWORK="-testnet"
-declare NODE_USER=redstone${NETWORK}
-declare COINCORE=/home/${NODE_USER}/.redstonenode/redstone/RedstoneTest
-declare COINPORT=19156
-declare COINRPCPORT=19157
-declare COINAPIPORT=
+NETWORK="-testnet"
+NODE_USER=redstone${NETWORK}
+COINCORE=/home/${NODE_USER}/.redstonenode/redstone/RedstoneTest
+COINPORT=19156
+COINRPCPORT=19157
+COINAPIPORT=
 }
 
 function setGeneralVars() {
 ## set general variables
-declare -r COINRUNCMD="sudo dotnet ./Redstone.RedstoneFullNodeD.dll ${NETWORK} -datadir=/home/${NODE_USER}/.redstonenode" ## additional commands can be used here e.g. -testnet or -stake=1
-declare -r CONF=release
-declare -r OS_VER="Ubuntu*"
-declare -r ARCH="linux-x64"
-declare -r COINGITHUB=https://github.com/RedstonePlatform/Redstone.git
-declare -r COINDAEMON=redstoned
-declare -r COINCONFIG=redstone.conf
-declare -r COINSTARTUP=/home/${NODE_USER}/redstoned
-declare -r COINSRCLOC=/home/${NODE_USER}/Redstone ##TODO: this can be removed 
-declare -r COINDLOC=/home/${NODE_USER}/RedstoneNode   
-declare -r COINDSRC=/home/${NODE_USER}/Redstone/src/Redstone/Programs/Redstone.RedstoneFullNodeD
-declare -r COINSERVICELOC=/etc/systemd/system/
-declare -r COINSERVICENAME=${COINDAEMON}@${NODE_USER}
-declare -r DATE_STAMP="$(date +%y-%m-%d-%s)"
-declare -r SCRIPT_LOGFILE="/tmp/${NODE_USER}_${DATE_STAMP}_output.log"
-declare -r SWAPSIZE="1024" ## =1GB
-declare -r NODE_IP=$(curl --silent ipinfo.io/ip)
+COINRUNCMD="sudo dotnet ./Redstone.RedstoneFullNodeD.dll ${NETWORK} -datadir=/home/${NODE_USER}/.redstonenode" ## additional commands can be used here e.g. -testnet or -stake=1
+CONF=release
+OS_VER="Ubuntu*"
+ARCH="linux-x64"
+COINGITHUB=https://github.com/RedstonePlatform/Redstone.git
+COINDAEMON=redstoned
+COINCONFIG=redstone.conf
+COINSTARTUP=/home/${NODE_USER}/redstoned
+COINSRCLOC=/home/${NODE_USER}/Redstone ##TODO: this can be removed 
+COINDLOC=/home/${NODE_USER}/RedstoneNode   
+COINDSRC=/home/${NODE_USER}/Redstone/src/Redstone/Programs/Redstone.RedstoneFullNodeD
+COINSERVICELOC=/etc/systemd/system/
+COINSERVICENAME=${COINDAEMON}@${NODE_USER}
+DATE_STAMP="$(date +%y-%m-%d-%s)"
+SCRIPT_LOGFILE="/tmp/${NODE_USER}_${DATE_STAMP}_output.log"
+SWAPSIZE="1024" ## =1GB
+NODE_IP=$(curl --silent ipinfo.io/ip)
 }
 
 function check_root() {
