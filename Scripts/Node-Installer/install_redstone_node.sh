@@ -150,12 +150,28 @@ installDependencies() {
     echo -e "* Installing dependencies. Please wait..."
     sudo timedatectl set-ntp no &>> ${SCRIPT_LOGFILE}
     sudo apt-get install git ntp nano wget curl software-properties-common -y &>> ${SCRIPT_LOGFILE}
-    sudo wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb &>> ${SCRIPT_LOGFILE}
-    sudo dpkg -i packages-microsoft-prod.deb &>> ${SCRIPT_LOGFILE}
-    sudo apt-get install apt-transport-https -y &>> ${SCRIPT_LOGFILE}
-    sudo apt-get update -y &>> ${SCRIPT_LOGFILE}
-    sudo apt-get install dotnet-sdk-2.2 -y --allow-unauthenticated &>> ${SCRIPT_LOGFILE}
-    echo -e "${NONE}${GREEN}* Done${NONE}";
+    if [[ -r /etc/os-release ]]; then
+        . /etc/os-release
+        if [[ "${VERSION_ID}" = "16.04" ]]; then
+            wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb &>> ${SCRIPT_LOGFILE}
+            sudo dpkg -i packages-microsoft-prod.deb &>> ${SCRIPT_LOGFILE}
+            sudo apt-get install apt-transport-https &>> ${SCRIPT_LOGFILE}
+            sudo apt-get update &>> ${SCRIPT_LOGFILE}
+            sudo apt-get install dotnet-sdk-2.2 &>> ${SCRIPT_LOGFILE}
+            echo -e "${NONE}${GREEN}* Done${NONE}";
+        fi
+        if [[ "${VERSION_ID}" = "18.04" ]]; then
+            wget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb &>> ${SCRIPT_LOGFILE}
+            sudo dpkg -i packages-microsoft-prod.deb &>> ${SCRIPT_LOGFILE}
+            sudo add-apt-repository universe &>> ${SCRIPT_LOGFILE}
+            sudo apt-get install apt-transport-https &>> ${SCRIPT_LOGFILE}
+            sudo apt-get update &>> ${SCRIPT_LOGFILE}
+            sudo apt-get install dotnet-sdk-2.2 &>> ${SCRIPT_LOGFILE}
+            echo -e "${NONE}${GREEN}* Done${NONE}";
+        fi
+        else
+        echo -e "${NONE}${RED}* Version: ${VERSION_ID} not supported.${NONE}";
+    fi
 }
 
 compileWallet() {
@@ -247,7 +263,7 @@ echo -e "${RED}██║  ██║███████╗██████╔
 echo -e "${RED}╚═╝  ╚═╝╚══════╝╚═════╝ ╚══════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═══╝╚══════╝${NONE}"  
 echo -e ${RED}
 echo -e "${PURPLE}**********************************************************************${NONE}"
-echo -e "${PURPLE}*    ${NONE}This script will install and configure your Redstone node.      *${NONE}"
+echo -e "${PURPLE}*    This script will install and configure your Redstone node.      *${NONE}"
 echo -e "${PURPLE}**********************************************************************${NONE}"
 echo -e "${BOLD}"
 read -p "Please run this script as the root user. Do you want to setup on Mainnet (m), Testnet (t) or upgrade (u) your Redstone node. (m/t/u)?" response
