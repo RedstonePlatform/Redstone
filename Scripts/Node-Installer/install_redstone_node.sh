@@ -17,7 +17,7 @@ NODE_USER=redstone${NETWORK}
 COINCORE=/home/${NODE_USER}/.redstonenode/redstone/RedstoneMain
 COINPORT=19056
 COINRPCPORT=19057
-COINAPIPORT=
+COINAPIPORT=37222
 }
 
 function setTestVars() {
@@ -27,7 +27,7 @@ NODE_USER=redstone${NETWORK}
 COINCORE=/home/${NODE_USER}/.redstonenode/redstone/RedstoneTest
 COINPORT=19156
 COINRPCPORT=19157
-COINAPIPORT=
+COINAPIPORT=38222
 }
 
 function setGeneralVars() {

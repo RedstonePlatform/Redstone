@@ -31,11 +31,11 @@
             // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
             // a large 4-byte int at any alignment.
             var messageStart = new byte[4];
-            messageStart[0] = 0x14; 
-            messageStart[1] = 0x94; 
-            messageStart[2] = 0x21; 
-            messageStart[3] = 0x85;
-            uint magic = BitConverter.ToUInt32(messageStart, 0); // 0x85219414
+            messageStart[0] = 0xb9; 
+            messageStart[1] = 0xd0; 
+            messageStart[2] = 0xae; 
+            messageStart[3] = 0xd7;
+            uint magic = BitConverter.ToUInt32(messageStart, 0); // 0xd7aed0b9 = ×®Ð¹
             
             this.Name = "RedstoneMain";
             this.Magic = magic;
@@ -55,7 +55,7 @@
             var consensusFactory = new PosConsensusFactory();
 
             // Create the genesis block.
-            this.GenesisTime = 1470467000;
+            this.GenesisTime = 1550609400; // Tuesday, 19 February 2019 20:50:00 was 1470467000;
             this.GenesisNonce = 1831645;
             this.GenesisBits = 0x1e0fffff;
             this.GenesisVersion = 1;

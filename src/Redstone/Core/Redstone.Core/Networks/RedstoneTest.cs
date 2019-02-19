@@ -23,7 +23,7 @@
             messageStart[1] = 0x31;
             messageStart[2] = 0x23;
             messageStart[3] = 0x11;
-            uint magic = BitConverter.ToUInt32(messageStart, 0); // 0x5223570;
+            uint magic = BitConverter.ToUInt32(messageStart, 0); // 0x11233171 TODO: d7aed0b2 = ×®Ð²
 
             this.Name = "RedstoneTest";
             this.Magic = magic;

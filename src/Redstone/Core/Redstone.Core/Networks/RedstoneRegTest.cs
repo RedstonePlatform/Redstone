@@ -14,11 +14,11 @@ namespace Redstone.Core.Networks
         public RedstoneRegTest()
         {
             var messageStart = new byte[4];
-            messageStart[0] = 0xcd;
-            messageStart[1] = 0xf2;
-            messageStart[2] = 0xc0;
-            messageStart[3] = 0xef;
-            uint magic = BitConverter.ToUInt32(messageStart, 0); // 0xefc0f2cd
+            messageStart[0] = 0xb3;
+            messageStart[1] = 0xd0;
+            messageStart[2] = 0xae;
+            messageStart[3] = 0xd7;
+            uint magic = BitConverter.ToUInt32(messageStart, 0); // 0xd7aed0b3 = ×®Ð³
 
             this.Name = "RedstoneRegTest";
             this.Magic = magic;

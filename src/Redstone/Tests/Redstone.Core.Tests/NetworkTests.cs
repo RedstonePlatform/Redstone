@@ -35,13 +35,13 @@
             Network network = RedstoneNetworks.Main;
 
             Assert.Empty(network.Checkpoints);
-            Assert.Empty(network.DNSSeeds);
-            Assert.Empty(network.SeedNodes);
+            Assert.Equal("seed.redstonecoin.com",network.DNSSeeds[0].Host);
+            Assert.True(network.SeedNodes.Count > 0);
 
             Assert.Equal("RedstoneMain", network.Name);
             Assert.Equal(RedstoneMain.RedstoneRootFolderName, network.RootFolderName);
             Assert.Equal(RedstoneMain.RedstoneDefaultConfigFilename, network.DefaultConfigFilename);
-            Assert.Equal(0x5223570.ToString(), network.Magic.ToString());
+            Assert.Equal(0xd7aed0b9.ToString(), network.Magic.ToString());
             Assert.Equal(19056, network.DefaultPort);
             Assert.Equal(19057, network.RPCPort);
             Assert.Equal(RedstoneMain.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
@@ -136,7 +136,7 @@
             Assert.Equal("RedstoneTest", network.Name);
             Assert.Equal(RedstoneMain.RedstoneRootFolderName, network.RootFolderName);
             Assert.Equal(RedstoneMain.RedstoneDefaultConfigFilename, network.DefaultConfigFilename);
-            Assert.Equal(0x11233171.ToString(), network.Magic.ToString());
+            Assert.Equal(0x11233171.ToString(), network.Magic.ToString()); //TODO: 0xd7aed0b2
             Assert.Equal(19156, network.DefaultPort);
             Assert.Equal(19157, network.RPCPort);
             Assert.Equal(RedstoneMain.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
@@ -232,7 +232,7 @@
             Assert.Equal("RedstoneRegTest", network.Name);
             Assert.Equal(RedstoneMain.RedstoneRootFolderName, network.RootFolderName);
             Assert.Equal(RedstoneMain.RedstoneDefaultConfigFilename, network.DefaultConfigFilename);
-            Assert.Equal(0xefc0f2cd, network.Magic);
+            Assert.Equal(0xd7aed0b3, network.Magic);
             Assert.Equal(19256, network.DefaultPort);
             Assert.Equal(19257, network.RPCPort);
             Assert.Equal(RedstoneMain.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
