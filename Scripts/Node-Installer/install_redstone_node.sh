@@ -9,18 +9,38 @@ WHITE='\033[01;37m'
 BOLD='\033[1m'
 UNDERLINE='\033[4m'
 
-declare -r NODE_IP=$(curl --silent ipinfo.io/ip)
-declare -r NODE_USER=redstone
+
+function setMainVars() {
+## set network dependent variables
+declare NETWORK=""
+declare NODE_USER=redstone${NETWORK}
+declare COINCORE=/home/${NODE_USER}/.redstonenode/redstone/RedstoneMain
+declare COINPORT=19056
+declare COINRPCPORT=19057
+declare COINAPIPORT=
+}
+
+function setTestVars() {
+## set network dependent variables
+declare NETWORK="-testnet"
+declare NODE_USER=redstone${NETWORK}
+declare COINCORE=/home/${NODE_USER}/.redstonenode/redstone/RedstoneTest
+declare COINPORT=19156
+declare COINRPCPORT=19157
+declare COINAPIPORT=
+}
+
+function setGeneralVars() {
+## set general variables
+declare -r COINRUNCMD="sudo dotnet ./Redstone.RedstoneFullNodeD.dll ${NETWORK} -datadir=/home/${NODE_USER}/.redstonenode" ## additional commands can be used here e.g. -testnet or -stake=1
 declare -r CONF=release
+declare -r OS_VER="Ubuntu*"
+declare -r ARCH="linux-x64"
 declare -r COINGITHUB=https://github.com/RedstonePlatform/Redstone.git
-declare -r COINPORT=19156
-declare -r COINRPCPORT=19157
 declare -r COINDAEMON=redstoned
-declare -r COINCORE=/home/${NODE_USER}/.redstonenode/redstone/RedstoneTest
 declare -r COINCONFIG=redstone.conf
-declare -r COINRUNCMD="sudo dotnet ./Redstone.RedstoneFullNodeD.dll -testnet -datadir=/home/${NODE_USER}/.redstonenode" ## additional commands can be used here e.g. -testnet or -stake=1
 declare -r COINSTARTUP=/home/${NODE_USER}/redstoned
-declare -r COINSRCLOC=/home/${NODE_USER}/Redstone
+declare -r COINSRCLOC=/home/${NODE_USER}/Redstone ##TODO: this can be removed 
 declare -r COINDLOC=/home/${NODE_USER}/RedstoneNode   
 declare -r COINDSRC=/home/${NODE_USER}/Redstone/src/Redstone/Programs/Redstone.RedstoneFullNodeD
 declare -r COINSERVICELOC=/etc/systemd/system/
@@ -28,7 +48,8 @@ declare -r COINSERVICENAME=${COINDAEMON}@${NODE_USER}
 declare -r DATE_STAMP="$(date +%y-%m-%d-%s)"
 declare -r SCRIPT_LOGFILE="/tmp/${NODE_USER}_${DATE_STAMP}_output.log"
 declare -r SWAPSIZE="1024" ## =1GB
-declare -r OS_VER="Ubuntu*"
+declare -r NODE_IP=$(curl --silent ipinfo.io/ip)
+}
 
 function check_root() {
 if [ "$(id -u)" != "0" ]; then
@@ -47,7 +68,6 @@ create_mn_user() {
         echo -e "${NONE}${GREEN}* Adding new system user ${NODE_USER}${NONE}"
         sudo adduser --disabled-password --gecos "" ${NODE_USER} &>> ${SCRIPT_LOGFILE}
         sudo echo -e "${NODE_USER} ALL=(ALL) NOPASSWD:ALL" &>> /etc/sudoers.d/90-cloud-init-users
-
     fi
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
@@ -128,12 +148,13 @@ installFirewall() {
 installDependencies() {
     echo
     echo -e "* Installing dependencies. Please wait..."
-    sudo apt-get install git nano wget curl software-properties-common -y &>> ${SCRIPT_LOGFILE}
+    sudo timedatectl set-ntp no &>> ${SCRIPT_LOGFILE}
+    sudo apt-get install git ntp nano wget curl software-properties-common -y &>> ${SCRIPT_LOGFILE}
     sudo wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb &>> ${SCRIPT_LOGFILE}
     sudo dpkg -i packages-microsoft-prod.deb &>> ${SCRIPT_LOGFILE}
     sudo apt-get install apt-transport-https -y &>> ${SCRIPT_LOGFILE}
     sudo apt-get update -y &>> ${SCRIPT_LOGFILE}
-    sudo apt-get install dotnet-sdk-2.1 -y --allow-unauthenticated &>> ${SCRIPT_LOGFILE}
+    sudo apt-get install dotnet-sdk-2.2 -y --allow-unauthenticated &>> ${SCRIPT_LOGFILE}
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
 
@@ -145,7 +166,7 @@ compileWallet() {
     cd ${COINSRCLOC} 
     git submodule update --init --recursive &>> ${SCRIPT_LOGFILE}
     cd ${COINDSRC} 
-    dotnet publish -c ${CONF} -r linux-x64 -v m -o ${COINDLOC} &>> ${SCRIPT_LOGFILE}	   ### compile & publish code 
+    dotnet publish -c ${CONF} -r ${ARCH} -v m -o ${COINDLOC} &>> ${SCRIPT_LOGFILE}	   ### compile & publish code 
     rm -rf ${COINSRCLOC} &>> ${SCRIPT_LOGFILE} 	   ### Remove source
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
@@ -168,11 +189,10 @@ configureWallet() {
     echo
     echo -e "* Configuring wallet. Please wait..."
     cd /home/${NODE_USER}/
-    mnip=$(curl --silent ipinfo.io/ip)
     rpcuser=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
     rpcpass=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
     sudo mkdir -p $COINCORE
-    echo -e "externalip=${mnip}\ntxindex=1\nlisten=1\ndaemon=1\nmaxconnections=64" > $COINCONFIG
+    echo -e "externalip=${NODE_IP}\ntxindex=1\nlisten=1\ndaemon=1\nmaxconnections=64" > $COINCONFIG
     sudo mv $COINCONFIG $COINCORE
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
@@ -193,7 +213,6 @@ stopWallet() {
 }
 
 function installUnattendedUpgrades() {
-
     echo
     echo "* Installing Unattended Upgrades..."
     sudo apt install unattended-upgrades -y &>> ${SCRIPT_LOGFILE}
@@ -228,19 +247,18 @@ echo -e "${RED}██║  ██║███████╗██████╔
 echo -e "${RED}╚═╝  ╚═╝╚══════╝╚═════╝ ╚══════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═══╝╚══════╝${NONE}"  
 echo -e ${RED}
 echo -e "${PURPLE}**********************************************************************${NONE}"
-#echo -e "${PURPLE}*                                                                    *${NONE}"
 echo -e "${PURPLE}*    ${NONE}This script will install and configure your Redstone node.      *${NONE}"
-#echo -e "${PURPLE}*                                                                    *${NONE}"
 echo -e "${PURPLE}**********************************************************************${NONE}"
 echo -e "${BOLD}"
-read -p "Please run this script as the root user. Do you want to setup (y) or upgrade (u) your Redstone node. (y/n/u)?" response
+read -p "Please run this script as the root user. Do you want to setup on Mainnet (m), Testnet (t) or upgrade (u) your Redstone node. (m/t/u)?" response
 echo
 
 echo -e "${NONE}"
 
-if [[ "$response" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
-
+if [[ "$response" =~ ^([mM])+$ ]]; then
     check_root
+    setMainVars
+    setGeneralVars
     checkOSVersion
     updateAndUpgrade
     setupSwap
@@ -254,17 +272,55 @@ if [[ "$response" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
     startWallet
     set_permissions
     displayServiceStatus
+
+echo
+echo -e "${GREEN} Installation complete. Check service with: journalctl -f -u ${COINSERVICENAME} ${NONE}"
+echo -e "${GREEN} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
+echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
+
+ else
+    if [[ "$response" =~ ^([tT])+$ ]]; then
+        check_root
+        setTestVars
+        setGeneralVars
+        checkOSVersion
+        updateAndUpgrade
+        setupSwap
+        installFail2Ban
+        installFirewall
+        installDependencies
+        compileWallet
+        installWallet
+        #configureWallet ### commented out so uses the default configuration
+        installUnattendedUpgrades
+        startWallet
+        set_permissions
+        displayServiceStatus
 	
 echo
 echo -e "${GREEN} Installation complete. Check service with: journalctl -f -u ${COINSERVICENAME} ${NONE}"
 echo -e "${GREEN} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
 echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
-else
+ else
     if [[ "$response" =~ ^([uU])+$ ]]; then
         check_root
+        #Stop Test Service
+        setTestVars
+        setGeneralVars
         stopWallet
-	updateAndUpgrade
+        #Stop Main Service
+        setMainVars
+        setGeneralVars
+        stopWallet
+	    updateAndUpgrade
         compileWallet
+        #Start Test Service
+        setTestVars
+        setGeneralVars
+        startWallet
+        #Start Main Service
+        setMainVars
+        setGeneralVars
         startWallet
         echo -e "${GREEN} Upgrade complete. Check service with: sudo journalctl -f -u ${COINSERVICENAME} ${NONE}"
 	echo -e "${GREEN} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
@@ -272,6 +328,6 @@ else
     else
       echo && echo -e "${RED} Installation cancelled! ${NONE}" && echo
     fi
-    
+  fi
 fi
     cd ~

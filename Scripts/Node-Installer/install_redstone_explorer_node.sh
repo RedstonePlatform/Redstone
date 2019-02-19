@@ -146,12 +146,13 @@ installFirewall() {
 installDependencies() {
     echo
     echo -e "* Installing dependencies. Please wait..."
-    sudo apt-get install git nano wget curl software-properties-common -y &>> ${SCRIPT_LOGFILE}
+    sudo timedatectl set-ntp no &>> ${SCRIPT_LOGFILE}
+    sudo apt-get install git nano ntp wget curl software-properties-common -y &>> ${SCRIPT_LOGFILE}
     sudo wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb &>> ${SCRIPT_LOGFILE}
     sudo dpkg -i packages-microsoft-prod.deb &>> ${SCRIPT_LOGFILE}
     sudo apt-get install apt-transport-https -y &>> ${SCRIPT_LOGFILE}
     sudo apt-get update -y &>> ${SCRIPT_LOGFILE}
-    sudo apt-get install dotnet-sdk-2.1 -y --allow-unauthenticated &>> ${SCRIPT_LOGFILE}
+    sudo apt-get install dotnet-sdk-2.2 -y --allow-unauthenticated &>> ${SCRIPT_LOGFILE}
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
 

@@ -118,7 +118,8 @@ installFirewall() {
 installDependencies() {
     echo
     echo -e "* Installing dependencies. Please wait..."
-    sudo yum install git nano wget curl software-properties-common -y &>> ${SCRIPT_LOGFILE}
+    sudo timedatectl set-ntp no &>> ${SCRIPT_LOGFILE}
+    sudo yum install git nano wget ntp curl software-properties-common -y &>> ${SCRIPT_LOGFILE}
     sudo rpm -Uvh https://packages.microsoft.com/config/rhel/7/packages-microsoft-prod.rpm &>> ${SCRIPT_LOGFILE}
     sudo yum update -y &>> ${SCRIPT_LOGFILE}
     sudo yum install dotnet-sdk-2.2 -y &>> ${SCRIPT_LOGFILE}

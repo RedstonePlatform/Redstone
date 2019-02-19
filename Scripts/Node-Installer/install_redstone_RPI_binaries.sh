@@ -130,7 +130,8 @@ installFirewall() {
 installDependencies() {
     echo
     echo -e "* Installing dependencies. Please wait..."
-    sudo apt-get install git nano wget curl libunwind8 gettext software-properties-common -y &>> ${SCRIPT_LOGFILE}
+    sudo timedatectl set-ntp no &>> ${SCRIPT_LOGFILE}
+    sudo apt-get install git ntp nano wget curl libunwind8 gettext software-properties-common -y &>> ${SCRIPT_LOGFILE}
     curl -sSL -o dotnet.tar.gz ${DOTNETBIN} &>> ${SCRIPT_LOGFILE}
     sudo mkdir -p /opt/dotnet &>> ${SCRIPT_LOGFILE}
     sudo tar zxf dotnet.tar.gz -C /opt/dotnet &>> ${SCRIPT_LOGFILE}
