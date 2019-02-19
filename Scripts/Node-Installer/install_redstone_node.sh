@@ -215,14 +215,14 @@ configureWallet() {
 
 startWallet() {
     echo
-    echo -e "* Starting wallet daemon..."
+    echo -e "* Starting wallet daemon...${COINSERVICENAME}"
     sudo service ${COINSERVICENAME} start &>> ${SCRIPT_LOGFILE}
     sleep 2
     echo -e "${GREEN}* Done${NONE}";
 }
 stopWallet() {
     echo
-    echo -e "* Stopping wallet daemon..."
+    echo -e "* Stopping wallet daemon...${COINSERVICENAME}"
     sudo service ${COINSERVICENAME} stop &>> ${SCRIPT_LOGFILE}
     sleep 2
     echo -e "${GREEN}* Done${NONE}";
@@ -340,8 +340,7 @@ echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
         setMainVars
         setGeneralVars
         startWallet
-        echo -e "${GREEN} Upgrade complete. Check service with: sudo journalctl -f -u ${COINSERVICENAME} ${NONE}"
-	echo -e "${GREEN} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
+    	echo -e "${GREEN} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
         echo -e "${GREEN} thecrypt0hunter 2018${NONE}"
     else
       echo && echo -e "${RED} Installation cancelled! ${NONE}" && echo
