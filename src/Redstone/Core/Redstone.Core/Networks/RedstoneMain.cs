@@ -157,8 +157,8 @@
                new NetworkAddress(IPAddress.Parse("35.178.169.232"), this.DefaultPort), // cryptohunter AWS node
             };
 
-            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("c25b823deb69fdc740c3142dfdfb155274655905e2120e82ebf88818a552a5a0"));
-            Assert(this.Genesis.Header.HashMerkleRoot == uint256.Parse("0ad80b454d4060b0f9bc821d94ec14da59ea7194a9fd3875b31c14873d202b7d"));
+            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("8e21759b1aefe10358fef84da1ac428af6ba17990b7eee71c47de9582fa31806"));
+            Assert(this.Genesis.Header.HashMerkleRoot == uint256.Parse("c89473b52c9a1afbc3784b0306fd06e86d016c13d68b56343c78a9377491a2f7"));
         }
 
         protected static Block CreateRedstoneGenesisBlock(ConsensusFactory consensusFactory, uint nTime, uint nNonce, uint nBits, int nVersion, Money genesisReward)
