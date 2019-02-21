@@ -1,4 +1,5 @@
 ﻿using Redstone.Core.Networks.Deployments;
+using Redstone.Core.Policies;
 using Stratis.Bitcoin.Features.Wallet;
 
 namespace Redstone.Core.Networks
@@ -110,6 +111,8 @@ namespace Redstone.Core.Networks
             this.Checkpoints = new Dictionary<int, CheckpointInfo>();
             this.DNSSeeds = new List<DNSSeedData>();
             this.SeedNodes = new List<NetworkAddress>();
+
+            this.StandardScriptsRegistry = new RedstoneStandardScriptsRegistry();
 
             Assert(this.Consensus.HashGenesisBlock == uint256.Parse("4442244290302b76a11951ba648e40bcdc6cc3965a99c30018ade95a4bc6e6bd"));
         }

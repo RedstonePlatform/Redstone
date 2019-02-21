@@ -1,4 +1,6 @@
-﻿namespace Redstone.Core.Networks
+﻿using Redstone.Core.Policies;
+
+namespace Redstone.Core.Networks
 {
     using System;
     using System.Collections.Generic;
@@ -45,7 +47,7 @@
             this.RPCPort = 19057;
             this.MaxTipAge = RedstoneDefaultMaxTipAgeInSeconds;
             this.MinTxFee = 10000;
-            this.FallbackFee = 60000;
+            this.FallbackFee = 10000;
             this.MinRelayTxFee = 10000;
             this.RootFolderName = RedstoneRootFolderName;
             this.DefaultConfigFilename = RedstoneDefaultConfigFilename;
@@ -156,6 +158,8 @@
                new NetworkAddress(IPAddress.Parse("80.211.88.244"), this.DefaultPort), // cryptohunter node #10
                new NetworkAddress(IPAddress.Parse("35.178.169.232"), this.DefaultPort), // cryptohunter AWS node
             };
+
+            this.StandardScriptsRegistry = new RedstoneStandardScriptsRegistry();
 
             Assert(this.Consensus.HashGenesisBlock == uint256.Parse("8e21759b1aefe10358fef84da1ac428af6ba17990b7eee71c47de9582fa31806"));
             Assert(this.Genesis.Header.HashMerkleRoot == uint256.Parse("c89473b52c9a1afbc3784b0306fd06e86d016c13d68b56343c78a9377491a2f7"));
