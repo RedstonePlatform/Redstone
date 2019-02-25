@@ -10,7 +10,7 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
     /// This date time provider substitutes the node's usual DTP when running certain
     /// integration tests so that we can generate coins faster.
     /// </summary>
-    public sealed class GenerateCoinsFastDateTimeProvider : SignalObserver<ChainedHeaderBlock>, IDateTimeProvider
+    public sealed class GenerateCoinsFastDateTimeProvider : IDateTimeProvider
     {
         private static TimeSpan adjustedTimeOffset;
         private static DateTime startFrom;
@@ -21,9 +21,9 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
             startFrom = new DateTime(2018, 1, 1);
         }
 
-        public GenerateCoinsFastDateTimeProvider(Signals signals)
+        public GenerateCoinsFastDateTimeProvider(ISignals signals)
         {
-            signals.SubscribeForBlocksConnected(this);
+            signals.OnBlockConnected.Attach(this.OnBlockConnected);
         }
 
         public long GetTime()
@@ -35,7 +35,7 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
         {
             return startFrom;
         }
-
+        
         /// <summary>
         /// This gets called when the Transaction's time gets set in <see cref="Features.Miner.PowBlockDefinition"/>.
         /// </summary>
@@ -83,7 +83,7 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
         /// Every time a new block gets generated, this date time provider will be signaled,
         /// updating the last block time by 65 seconds.
         /// </summary>
-        protected override void OnNextCore(ChainedHeaderBlock value)
+        private void OnBlockConnected(ChainedHeaderBlock value)
         {
             startFrom = startFrom.AddSeconds(65);
         }
