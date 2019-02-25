@@ -36,7 +36,7 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
         {
             return startFrom;
         }
-
+        
         /// <summary>
         /// This gets called when the Transaction's time gets set in <see cref="PowBlockDefinition"/>.
         /// </summary>
