@@ -47,7 +47,7 @@
             Assert.Equal(RedstoneMain.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
             Assert.Equal(RedstoneMain.RedstoneDefaultMaxTipAgeInSeconds, network.MaxTipAge);
             Assert.Equal(10000, network.MinTxFee);
-            Assert.Equal(60000, network.FallbackFee);
+            Assert.Equal(10000, network.FallbackFee);
             Assert.Equal(10000, network.MinRelayTxFee);
             Assert.Equal("XRD", network.CoinTicker);
 
@@ -142,7 +142,7 @@
             Assert.Equal(RedstoneMain.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
             Assert.Equal(RedstoneMain.RedstoneDefaultMaxTipAgeInSeconds * 12 * 365, network.MaxTipAge);
             Assert.Equal(10000, network.MinTxFee);
-            Assert.Equal(60000, network.FallbackFee);
+            Assert.Equal(10000, network.FallbackFee);
             Assert.Equal(10000, network.MinRelayTxFee);
             Assert.Equal("TXRD", network.CoinTicker);
 
