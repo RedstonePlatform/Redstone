@@ -10,6 +10,7 @@ using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Bitcoin.Utilities.Extensions;
 
 namespace Stratis.Bitcoin.Features.BlockStore
 {
@@ -36,10 +37,13 @@ namespace Stratis.Bitcoin.Features.BlockStore
         private const int BatchMaxSaveIntervalSeconds = 37;
 
         /// <summary>Maximum number of bytes the batch can hold until the downloaded blocks are stored to the disk.</summary>
-        internal const int BatchThresholdSizeBytes = 5 * 1000 * 1000;
+        internal long BatchThresholdSizeBytes;
 
         /// <summary>The current batch size in bytes.</summary>
         private long currentBatchSizeBytes;
+
+        /// <summary>The current pending blocks size in bytes.</summary>
+        private long blocksQueueSizeBytes;
 
         /// <summary>The highest stored block in the repository.</summary>
         private ChainedHeader storeTip;
@@ -110,6 +114,8 @@ namespace Stratis.Bitcoin.Features.BlockStore
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.cancellation = new CancellationTokenSource();
 
+            this.BatchThresholdSizeBytes = storeSettings.MaxCacheSize * 1024 * 1024;
+
             nodeStats.RegisterStats(this.AddComponentStats, StatsType.Component);
         }
 
@@ -175,6 +181,10 @@ namespace Stratis.Bitcoin.Features.BlockStore
         /// <inheritdoc/>
         public Task<Transaction> GetTransactionByIdAsync(uint256 trxid)
         {
+            // Only look for transactions if they're indexed.
+            if (!this.storeSettings.TxIndex)
+                return Task.FromResult(default(Transaction));
+
             lock (this.blocksCacheLock)
             {
                 foreach (ChainedHeaderBlock chainedHeaderBlock in this.pendingBlocksCache.Values)
@@ -290,7 +300,8 @@ namespace Stratis.Bitcoin.Features.BlockStore
             {
                 log.AppendLine();
                 log.AppendLine("======BlockStore======");
-                log.AppendLine($"Batch Size: {this.currentBatchSizeBytes / 1000} kb / {BatchThresholdSizeBytes / 1000} kb  ({this.batch.Count} blocks)");
+                log.AppendLine($"Batch Size: {this.currentBatchSizeBytes.BytesToMegaBytes()} MB / {this.BatchThresholdSizeBytes.BytesToMegaBytes()} MB ({this.batch.Count} batched blocks)");
+                log.AppendLine($"Queue Size: {this.blocksQueueSizeBytes.BytesToMegaBytes()} MB ({this.blocksQueue.Count} queued blocks)");
             }
         }
 
@@ -315,6 +326,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
             }
 
             this.blocksQueue.Enqueue(chainedHeaderBlock);
+            this.blocksQueueSizeBytes += chainedHeaderBlock.Block.BlockSize.Value;
         }
 
         /// <summary>
@@ -363,9 +375,10 @@ namespace Stratis.Bitcoin.Features.BlockStore
                         this.batch.Add(item);
                     }
 
+                    this.blocksQueueSizeBytes -= item.Block.BlockSize.Value;
                     this.currentBatchSizeBytes += item.Block.BlockSize.Value;
 
-                    saveBatch = saveBatch || (this.currentBatchSizeBytes >= BatchThresholdSizeBytes) || this.blockStoreQueueFlushCondition.ShouldFlush;
+                    saveBatch = saveBatch || (this.currentBatchSizeBytes >= this.BatchThresholdSizeBytes) || this.blockStoreQueueFlushCondition.ShouldFlush;
                 }
                 else
                 {
@@ -486,6 +499,10 @@ namespace Stratis.Bitcoin.Features.BlockStore
             while (currentHeader.HashBlock != expectedStoreTip.HashBlock)
             {
                 blocksToDelete.Add(currentHeader.HashBlock);
+
+                if (currentHeader.Previous == null)
+                    break;
+
                 currentHeader = currentHeader.Previous;
             }
 

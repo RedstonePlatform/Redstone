@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
@@ -19,7 +21,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Rules
 
             foreach (Transaction transaction in block.Transactions)
             {
-                CheckTransaction(transaction);
+                this.CheckTransaction(transaction);
             }
 
             return Task.CompletedTask;
@@ -27,7 +29,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Rules
 
         public void CheckTransaction(MempoolValidationContext context)
         {
-            CheckTransaction(context.Transaction);
+            this.CheckTransaction(context.Transaction);
         }
 
         private void CheckTransaction(Transaction transaction)
@@ -39,12 +41,12 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Rules
             {
                 foreach (TxOut output in transaction.Outputs)
                 {
-                    CheckOutput(output);
+                    this.CheckOutput(output);
                 }
 
                 foreach (TxIn input in transaction.Inputs)
                 {
-                    CheckInput(input);
+                    this.CheckInput(input);
                 }
             }
         }
@@ -61,10 +63,18 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Rules
                 return;
 
             // For cross-chain transfers
+            if (PayToScriptHashTemplate.Instance.CheckScriptPubKey(output.ScriptPubKey))
+                return;
+
+            // For cross-chain transfers
             if (PayToMultiSigTemplate.Instance.CheckScriptPubKey(output.ScriptPubKey))
                 return;
 
-            new ConsensusError("disallowed-output-script", "Only P2PKH and smart contract scripts are allowed.").Throw();
+            // For cross-chain transfers
+            if (TxNullDataTemplate.Instance.CheckScriptPubKey(output.ScriptPubKey))
+                return;
+
+            new ConsensusError("disallowed-output-script", "Only the following script types are allowed on smart contracts network: P2PKH, P2SH, P2MultiSig, OP_RETURN and smart contracts").Throw();
         }
 
         private void CheckInput(TxIn input)
@@ -79,11 +89,14 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Rules
             if (PayToPubkeyTemplate.Instance.CheckScriptSig(this.Parent.Network, input.ScriptSig, null))
                 return;
 
+            if (PayToScriptHashTemplate.Instance.CheckScriptSig(this.Parent.Network, input.ScriptSig, null))
+                return;
+
             // For cross-chain transfers
             if (PayToMultiSigTemplate.Instance.CheckScriptSig(this.Parent.Network, input.ScriptSig, null))
                 return;
 
-            new ConsensusError("disallowed-input-script", "Only P2PKH and smart contract scripts are allowed.").Throw();
+            new ConsensusError("disallowed-input-script", "Only the following script types are allowed on smart contracts network: P2PKH, P2SH, P2MultiSig, OP_RETURN and smart contracts").Throw();
         }
     }
 }

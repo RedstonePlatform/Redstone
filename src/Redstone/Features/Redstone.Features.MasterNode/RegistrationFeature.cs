@@ -12,6 +12,7 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.Notifications.Interfaces;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.WatchOnlyWallet;
+using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Signals;
 
 namespace Redstone.Features.MasterNode
@@ -33,7 +34,6 @@ namespace Redstone.Features.MasterNode
 
         private readonly ILoggerFactory loggerFactory;
         private readonly IRegistrationManager registrationManager;
-        private IDisposable blockSubscriberdDisposable;
 
         private readonly bool isBitcoin;
         private readonly Network network;
@@ -74,9 +74,8 @@ namespace Redstone.Features.MasterNode
             else
                 VerifyRegistrationStore(registrationRecords);
 
-            // Only need to subscribe to receive blocks and transactions on the Stratis network.
-            this.blockSubscriberdDisposable =
-                this.signals.SubscribeForBlocksConnected(new RegistrationBlockObserver(this.chain, this.registrationManager));
+            this.signals.OnBlockConnected.Attach(this.OnBlockConnected);
+            this.signals.OnTransactionReceived.Attach(this.ProcessTransaction);        
 
             this.logger.LogTrace("(-)");
 
@@ -86,9 +85,20 @@ namespace Redstone.Features.MasterNode
             return Task.CompletedTask;
         }
 
-        public override void Dispose()
+        private void OnBlockConnected(ChainedHeaderBlock chBlock)
         {
-            this.blockSubscriberdDisposable?.Dispose();
+            this.watchOnlyWalletManager.ProcessBlock(chBlock.Block);
+        }
+        
+        public void ProcessTransaction(Transaction transaction)
+        {
+            this.watchOnlyWalletManager.ProcessTransaction(transaction);
+        }
+
+        public void Dispose()
+        {
+            this.signals.OnBlockConnected.Detach(this.OnBlockConnected);
+            this.signals.OnTransactionReceived.Detach(this.ProcessTransaction);
         }
 
         private void RevertRegistrations()

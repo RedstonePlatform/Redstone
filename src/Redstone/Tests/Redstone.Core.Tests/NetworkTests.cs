@@ -35,19 +35,19 @@
             Network network = RedstoneNetworks.Main;
 
             Assert.Empty(network.Checkpoints);
-            Assert.Empty(network.DNSSeeds);
-            Assert.Empty(network.SeedNodes);
+            Assert.Equal("seed.redstonecoin.com",network.DNSSeeds[0].Host);
+            Assert.True(network.SeedNodes.Count > 0);
 
             Assert.Equal("RedstoneMain", network.Name);
             Assert.Equal(RedstoneMain.RedstoneRootFolderName, network.RootFolderName);
             Assert.Equal(RedstoneMain.RedstoneDefaultConfigFilename, network.DefaultConfigFilename);
-            Assert.Equal(0x5223570.ToString(), network.Magic.ToString());
+            Assert.Equal(0xd7aed0b9.ToString(), network.Magic.ToString());
             Assert.Equal(19056, network.DefaultPort);
             Assert.Equal(19057, network.RPCPort);
             Assert.Equal(RedstoneMain.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
             Assert.Equal(RedstoneMain.RedstoneDefaultMaxTipAgeInSeconds, network.MaxTipAge);
             Assert.Equal(10000, network.MinTxFee);
-            Assert.Equal(60000, network.FallbackFee);
+            Assert.Equal(10000, network.FallbackFee);
             Assert.Equal(10000, network.MinRelayTxFee);
             Assert.Equal("XRD", network.CoinTicker);
 
@@ -117,9 +117,9 @@
             Assert.Equal(long.MaxValue, network.Consensus.MaxMoney);
 
             Block genesis = network.GetGenesis();
-            Assert.Equal(uint256.Parse("0xc25b823deb69fdc740c3142dfdfb155274655905e2120e82ebf88818a552a5a0"),
+            Assert.Equal(uint256.Parse("0x8e21759b1aefe10358fef84da1ac428af6ba17990b7eee71c47de9582fa31806"),
                 genesis.GetHash());
-            Assert.Equal(uint256.Parse("0x0ad80b454d4060b0f9bc821d94ec14da59ea7194a9fd3875b31c14873d202b7d"),
+            Assert.Equal(uint256.Parse("0xc89473b52c9a1afbc3784b0306fd06e86d016c13d68b56343c78a9377491a2f7"),
                 genesis.Header.HashMerkleRoot);
         }
 
@@ -130,19 +130,19 @@
             Network network = RedstoneNetworks.TestNet;
 
             Assert.Empty(network.Checkpoints);
-            Assert.Empty(network.DNSSeeds);
-            Assert.Empty(network.SeedNodes);
-
+            Assert.Equal("seed.redstonecoin.com",network.DNSSeeds[0].Host);
+            Assert.True(network.SeedNodes.Count > 0);
+            
             Assert.Equal("RedstoneTest", network.Name);
             Assert.Equal(RedstoneMain.RedstoneRootFolderName, network.RootFolderName);
             Assert.Equal(RedstoneMain.RedstoneDefaultConfigFilename, network.DefaultConfigFilename);
-            Assert.Equal(0x11233171.ToString(), network.Magic.ToString());
+            Assert.Equal(0x11233171.ToString(), network.Magic.ToString()); //TODO: 0xd7aed0b2
             Assert.Equal(19156, network.DefaultPort);
             Assert.Equal(19157, network.RPCPort);
             Assert.Equal(RedstoneMain.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);
-            Assert.Equal(RedstoneMain.RedstoneDefaultMaxTipAgeInSeconds, network.MaxTipAge);
+            Assert.Equal(RedstoneMain.RedstoneDefaultMaxTipAgeInSeconds * 12 * 365, network.MaxTipAge);
             Assert.Equal(10000, network.MinTxFee);
-            Assert.Equal(60000, network.FallbackFee);
+            Assert.Equal(10000, network.FallbackFee);
             Assert.Equal(10000, network.MinRelayTxFee);
             Assert.Equal("TXRD", network.CoinTicker);
 
@@ -232,7 +232,7 @@
             Assert.Equal("RedstoneRegTest", network.Name);
             Assert.Equal(RedstoneMain.RedstoneRootFolderName, network.RootFolderName);
             Assert.Equal(RedstoneMain.RedstoneDefaultConfigFilename, network.DefaultConfigFilename);
-            Assert.Equal(0xefc0f2cd, network.Magic);
+            Assert.Equal(0xd7aed0b3, network.Magic);
             Assert.Equal(19256, network.DefaultPort);
             Assert.Equal(19257, network.RPCPort);
             Assert.Equal(RedstoneMain.RedstoneMaxTimeOffsetSeconds, network.MaxTimeOffsetSeconds);

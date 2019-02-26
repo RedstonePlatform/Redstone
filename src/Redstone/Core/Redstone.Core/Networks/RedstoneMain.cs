@@ -1,13 +1,17 @@
-﻿namespace Redstone.Core.Networks
+﻿using Redstone.Core.Policies;
+
+namespace Redstone.Core.Networks
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
     using NBitcoin;
     using NBitcoin.BouncyCastle.Math;
-    using NBitcoin.DataEncoders;
-    using Redstone.Core.Networks.Deployments;
+    using NBitcoin.Protocol;
     using Stratis.Bitcoin.Features.Wallet;
+    using Redstone.Core.Networks.Deployments;
+    using NBitcoin.DataEncoders;
 
     public class RedstoneMain : Network
     {
@@ -29,12 +33,12 @@
             // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
             // a large 4-byte int at any alignment.
             var messageStart = new byte[4];
-            messageStart[0] = 0x70;
-            messageStart[1] = 0x35;
-            messageStart[2] = 0x22;
-            messageStart[3] = 0x05;
-            uint magic = BitConverter.ToUInt32(messageStart, 0); // 0x5223570;
-
+            messageStart[0] = 0xb9; 
+            messageStart[1] = 0xd0; 
+            messageStart[2] = 0xae; 
+            messageStart[3] = 0xd7;
+            uint magic = BitConverter.ToUInt32(messageStart, 0); // 0xd7aed0b9 = ×®Ð¹
+            
             this.Name = "RedstoneMain";
             this.Magic = magic;
             this.DefaultPort = 19056;
@@ -43,7 +47,7 @@
             this.RPCPort = 19057;
             this.MaxTipAge = RedstoneDefaultMaxTipAgeInSeconds;
             this.MinTxFee = 10000;
-            this.FallbackFee = 60000;
+            this.FallbackFee = 10000;
             this.MinRelayTxFee = 10000;
             this.RootFolderName = RedstoneRootFolderName;
             this.DefaultConfigFilename = RedstoneDefaultConfigFilename;
@@ -53,7 +57,7 @@
             var consensusFactory = new PosConsensusFactory();
 
             // Create the genesis block.
-            this.GenesisTime = 1470467000;
+            this.GenesisTime = 1550609400; // Tuesday, 19 February 2019 20:50:00 was 1470467000;
             this.GenesisNonce = 1831645;
             this.GenesisBits = 0x1e0fffff;
             this.GenesisVersion = 1;
@@ -84,7 +88,7 @@
             this.Consensus = new Consensus(
                 consensusFactory: consensusFactory,
                 consensusOptions: consensusOptions,
-                coinType: (int)CoinType.Redstone, // unique coin type TODO how do we get this added
+                coinType: (int)CoinType.Redstone,
                 hashGenesisBlock: genesisBlock.GetHash(),
                 subsidyHalvingInterval: 210000,
                 majorityEnforceBlockUpgrade: 750,
@@ -142,19 +146,23 @@
             this.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS] = encoder;
             this.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS] = encoder;
 
-            // TODO:Redstone - need seed
             this.DNSSeeds = new List<DNSSeedData>()
-            /*
             {
-                new DNSSeedData("seednode1.stratisplatform.com", "seednode1.stratisplatform.com"),
-                new DNSSeedData("seednode2.stratis.cloud", "seednode2.stratis.cloud"),
-                new DNSSeedData("seednode3.stratisplatform.com", "seednode3.stratisplatform.com"),
-                new DNSSeedData("seednode4.stratis.cloud", "seednode4.stratis.cloud")
-            })*/;
+                new DNSSeedData("seed.redstonecoin.com", "seed.redstonecoin.com"),
+            };
 
-            this.SeedNodes = this.ConvertToNetworkAddresses(new string[] { /*"35.176.127.127", "35.176.127.127"*/}, this.DefaultPort).ToList();
-            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("c25b823deb69fdc740c3142dfdfb155274655905e2120e82ebf88818a552a5a0"));
-            Assert(this.Genesis.Header.HashMerkleRoot == uint256.Parse("0ad80b454d4060b0f9bc821d94ec14da59ea7194a9fd3875b31c14873d202b7d"));
+            this.SeedNodes = new List<NetworkAddress>
+            {
+               new NetworkAddress(IPAddress.Parse("80.211.88.201"), this.DefaultPort), // cryptohunter node #8
+               new NetworkAddress(IPAddress.Parse("80.211.88.233"), this.DefaultPort), // cryptohunter node #9
+               new NetworkAddress(IPAddress.Parse("80.211.88.244"), this.DefaultPort), // cryptohunter node #10
+               new NetworkAddress(IPAddress.Parse("35.178.169.232"), this.DefaultPort), // cryptohunter AWS node
+            };
+
+            this.StandardScriptsRegistry = new RedstoneStandardScriptsRegistry();
+
+            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("8e21759b1aefe10358fef84da1ac428af6ba17990b7eee71c47de9582fa31806"));
+            Assert(this.Genesis.Header.HashMerkleRoot == uint256.Parse("c89473b52c9a1afbc3784b0306fd06e86d016c13d68b56343c78a9377491a2f7"));
         }
 
         protected static Block CreateRedstoneGenesisBlock(ConsensusFactory consensusFactory, uint nTime, uint nNonce, uint nBits, int nVersion, Money genesisReward)
