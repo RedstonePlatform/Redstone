@@ -9,6 +9,8 @@ WHITE='\033[01;37m'
 BOLD='\033[1m'
 UNDERLINE='\033[4m'
 
+OS_VER="Ubuntu*"
+ARCH="linux-x64"
 
 function setMainVars() {
 ## set network dependent variables
@@ -30,12 +32,18 @@ COINRPCPORT=19157
 COINAPIPORT=38222
 }
 
+function setDNSVars() {
+## set DNS specific variables
+NODE_IP=$(curl --silent ipinfo.io/ip)
+DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=seed.redstonecoin.com -dnsnameserver=testdns1.seed.redstonecoin.com -dnsmailbox=admin@redstonecoin.com"
+}
+
 function setGeneralVars() {
 ## set general variables
-COINRUNCMD="sudo dotnet ./Redstone.RedstoneFullNodeD.dll ${NETWORK} -datadir=/home/${NODE_USER}/.redstonenode" ## additional commands can be used here e.g. -testnet or -stake=1
+DATE_STAMP="$(date +%y-%m-%d-%s)"
+SCRIPT_LOGFILE="/tmp/${NODE_USER}_${DATE_STAMP}_output.log"
+COINRUNCMD="sudo dotnet ./Redstone.RedstoneFullNodeD.dll ${NETWORK} -datadir=/home/${NODE_USER}/.redstonenode ${DNS}"  ## additional commands can be used here e.g. -testnet or -stake=1
 CONF=release
-OS_VER="Ubuntu*"
-ARCH="linux-x64"
 COINGITHUB=https://github.com/RedstonePlatform/Redstone.git
 COINDAEMON=redstoned
 COINCONFIG=redstone.conf
@@ -45,20 +53,18 @@ COINDLOC=/home/${NODE_USER}/RedstoneNode
 COINDSRC=/home/${NODE_USER}/Redstone/src/Redstone/Programs/Redstone.RedstoneFullNodeD
 COINSERVICELOC=/etc/systemd/system/
 COINSERVICENAME=${COINDAEMON}@${NODE_USER}
-DATE_STAMP="$(date +%y-%m-%d-%s)"
-SCRIPT_LOGFILE="/tmp/${NODE_USER}_${DATE_STAMP}_output.log"
 SWAPSIZE="1024" ## =1GB
-NODE_IP=$(curl --silent ipinfo.io/ip)
 }
 
 function check_root() {
 if [ "$(id -u)" != "0" ]; then
-    echo "Sorry, this script needs to be run as root. Do \"sudo su root\" and then re-run this script"
+    echo -e "${RED}* Sorry, this script needs to be run as root. Do \"sudo su root\" and then re-run this script${NONE}"
     exit 1
+    echo -e "${NONE}${GREEN}* All Good!${NONE}";
 fi
 }
 
-function create_mn_user() {
+function create_user() {
     echo
     echo "* Checking for user & add if required. Please wait..."
     # our new mnode unpriv user acc is added
@@ -266,18 +272,27 @@ echo -e "${PURPLE}**************************************************************
 echo -e "${PURPLE}*    This script will install and configure your Redstone node.      *${NONE}"
 echo -e "${PURPLE}**********************************************************************${NONE}"
 echo -e "${BOLD}"
-read -p "Please run this script as the root user. Do you want to setup on Mainnet (m), Testnet (t) or upgrade (u) your Redstone node. (m/t/u)?" response
+
+    check_root
+
+read -p " Do you want to setup your Redstone node as a DNS Server (y/n)?" response
+if [[ "$response" =~ ^([yY])+$ ]]; then
+    setDNSVars
+fi
+echo -e "${BOLD}"
+read -p " Do you want to setup on Mainnet (m), Testnet (t) or upgrade (u) your Redstone node. (m/t/u)?" response
 echo
 
 echo -e "${NONE}"
 
 if [[ "$response" =~ ^([mM])+$ ]]; then
-    check_root
     setMainVars
     setGeneralVars
+    echo -e "${BOLD} The log file can be monitored here: ${SCRIPT_LOGFILE}${NONE}"
+    echo -e "${BOLD}"
     checkOSVersion
-    create_mn_user
     updateAndUpgrade
+    create_user
     setupSwap
     installFail2Ban
     installFirewall
@@ -292,17 +307,17 @@ if [[ "$response" =~ ^([mM])+$ ]]; then
 
 echo
 echo -e "${GREEN} Installation complete. Check service with: journalctl -f -u ${COINSERVICENAME} ${NONE}"
-echo -e "${GREEN} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
 echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
 
  else
     if [[ "$response" =~ ^([tT])+$ ]]; then
-        check_root
         setTestVars
         setGeneralVars
+        echo -e "${BOLD} The log file can be monitored here: ${SCRIPT_LOGFILE}${NONE}"
+        echo -e "${BOLD}"
         checkOSVersion
-        create_mn_user
         updateAndUpgrade
+        create_user
         setupSwap
         installFail2Ban
         installFirewall
@@ -317,7 +332,6 @@ echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
 	
 echo
 echo -e "${GREEN} Installation complete. Check service with: journalctl -f -u ${COINSERVICENAME} ${NONE}"
-echo -e "${GREEN} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
 echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
  else
     if [[ "$response" =~ ^([uU])+$ ]]; then
@@ -340,7 +354,6 @@ echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
         setMainVars
         setGeneralVars
         startWallet
-    	echo -e "${GREEN} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
         echo -e "${GREEN} thecrypt0hunter 2018${NONE}"
     else
       echo && echo -e "${RED} Installation cancelled! ${NONE}" && echo
