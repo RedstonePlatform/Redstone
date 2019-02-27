@@ -1,12 +1,17 @@
-﻿namespace Redstone.Core.Networks
+﻿using Redstone.Core.Policies;
+
+namespace Redstone.Core.Networks
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
     using NBitcoin;
     using NBitcoin.BouncyCastle.Math;
+    using NBitcoin.Protocol;
     using Stratis.Bitcoin.Features.Wallet;
     using Redstone.Core.Networks.Deployments;
+    using NBitcoin.DataEncoders;
 
     public class RedstoneTest : RedstoneMain
     {
@@ -20,7 +25,7 @@
             messageStart[1] = 0x31;
             messageStart[2] = 0x23;
             messageStart[3] = 0x11;
-            uint magic = BitConverter.ToUInt32(messageStart, 0); // 0x5223570;
+            uint magic = BitConverter.ToUInt32(messageStart, 0); // 0x11233171 TODO: d7aed0b2 = ×®Ð²
 
             this.Name = "RedstoneTest";
             this.Magic = magic;
@@ -69,7 +74,7 @@
             this.Consensus = new Consensus(
                 consensusFactory: consensusFactory,
                 consensusOptions: consensusOptions,
-                coinType: (int)CoinType.Redstone, // unique coin type TODO how do we get this added
+                coinType: (int)CoinType.Redstone,
                 hashGenesisBlock: genesisBlock.GetHash(),
                 subsidyHalvingInterval: 210000,
                 majorityEnforceBlockUpgrade: 750,
@@ -116,13 +121,18 @@
 
             this.DNSSeeds = new List<DNSSeedData>()
             {
-                // new DNSSeedData("seednode1", "80.211.88.201"),
+                new DNSSeedData("seed.redstonecoin.com", "seed.redstonecoin.com")
             };
 
-            this.SeedNodes = this.ConvertToNetworkAddresses(new List<string>()
+            this.SeedNodes = new List<NetworkAddress>
             {
-                // "80.211.88.201", "80.211.88.233", "80.211.88.244"
-            }.ToArray(), this.DefaultPort).ToList();
+               new NetworkAddress(IPAddress.Parse("80.211.88.201"), this.DefaultPort), // cryptohunter node #8
+               new NetworkAddress(IPAddress.Parse("80.211.88.233"), this.DefaultPort), // cryptohunter node #9
+               new NetworkAddress(IPAddress.Parse("80.211.88.244"), this.DefaultPort), // cryptohunter node #10
+               new NetworkAddress(IPAddress.Parse("35.178.169.232"), this.DefaultPort), // cryptohunter AWS node
+            };
+
+            this.StandardScriptsRegistry = new RedstoneStandardScriptsRegistry();
 
             Assert(this.Consensus.HashGenesisBlock == uint256.Parse("5b3bce1db145b398f502782d4fbef62cbb46205a41bb4aa37cda3619729e3037"));
         }

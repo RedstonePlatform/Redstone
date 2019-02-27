@@ -13,7 +13,7 @@
 Redstone Core
 ===============
 
-https://redstonecoin.com
+https://redstoneplatform.com
 
 Redstone is an implementation of the Bitcoin protocol in C# on the [.NET Core](https://dotnet.github.io/) platform.    
 Redstone is a Stratis fork based on the [NBitcoin](https://github.com/MetacoSA/NBitcoin) project.  
@@ -22,7 +22,7 @@ For Proof of Stake support on the Redstone token the node is using [NStratis](ht
 
 [.NET Core](https://dotnet.github.io/) is an open source cross platform framework and enables the development of applications and services on Windows, macOS and Linux.  
 
-Join our community on [discord](https://discord.gg/59Mx8m).  
+Join our community on [discord](https://discord.gg/BCSX854) or [telegram](https://t.me/redstoneplatform).  
 
 Development
 -----------
@@ -31,10 +31,9 @@ Up for some blockchain development?
 Check this guides for more info:
 * [Contributing Guide](Documentation/contributing.md)
 * [Coding Style](Documentation/coding-style.md)
-* [Wiki Page](https://stratisplatform.atlassian.net/wiki/spaces/WIKI/overview)
 
 There is a lot to do and we welcome contributers developers and testers who want to get some Blockchain experience.
-You can find tasks at the issues/projects or visit the dev_general channel on [discord](https://discord.gg/59Mx8m).
+You can find tasks at the issues/projects or visit the channel on [discord](https://discord.gg/BCSX854)
 
 Testing
 -------

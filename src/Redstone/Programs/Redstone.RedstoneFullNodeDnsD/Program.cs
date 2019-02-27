@@ -50,10 +50,10 @@ namespace Redstone.RedstoneFullNodeDnsD
                 if (dnsSettings.DnsFullNode)
                 {
                     builder = builder.UseBlockStore()
-                        .UsePowConsensus()
-                        .AddPowPosMining()
+                        .UsePosConsensus()
                         .UseMempool()
-                        .UseWallet();
+                        .UseWallet()
+                        .AddPowPosMining();
                 }
                 else
                 {

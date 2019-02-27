@@ -278,7 +278,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
                     request.CreationDate);
 
                 this.SyncFromBestHeightForRecoveredWallets(request.CreationDate);
-                
+
                 return this.Ok();
             }
             catch (WalletException e)
@@ -375,7 +375,8 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
                 {
                     var transactionItems = new List<TransactionItemModel>();
 
-                    List<FlatHistory> items = accountHistory.History.OrderByDescending(o => o.Transaction.CreationTime).ToList();
+                    // Sorting the history items by descending dates. That includes received and sent dates.
+                    List<FlatHistory> items = accountHistory.History.OrderByDescending(o => o.Transaction.SpendingDetails?.CreationTime ?? o.Transaction.CreationTime).ToList();
                     items = string.IsNullOrEmpty(request.SearchQuery) ? items.Take(200).ToList() : items;
 
                     // Represents a sublist containing only the transactions that have already been spent.
@@ -714,7 +715,10 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
                     AccountReference = new WalletAccountReference(request.WalletName, request.AccountName),
                     FeeType = FeeParser.Parse(request.FeeType),
                     MinConfirmations = request.AllowUnconfirmed ? 0 : 1,
-                    Recipients = recipients
+                    Recipients = recipients,
+                    OpReturnData = request.OpReturnData,
+                    OpReturnAmount = string.IsNullOrEmpty(request.OpReturnAmount) ? null : Money.Parse(request.OpReturnAmount),
+                    Sign = false
                 };
 
                 return this.Json(this.walletTransactionHandler.EstimateFee(context));
@@ -762,6 +766,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
                     MinConfirmations = request.AllowUnconfirmed ? 0 : 1,
                     Shuffle = request.ShuffleOutputs ?? true, // We shuffle transaction outputs by default as it's better for anonymity.
                     OpReturnData = request.OpReturnData,
+                    OpReturnAmount = string.IsNullOrEmpty(request.OpReturnAmount) ? null : Money.Parse(request.OpReturnAmount),
                     WalletPassword = request.Password,
                     SelectedInputs = request.Outpoints?.Select(u => new OutPoint(uint256.Parse(u.TransactionId), u.Index)).ToList(),
                     AllowOtherInputs = false,
@@ -1015,6 +1020,8 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
             {
                 Wallet wallet = this.walletManager.GetWallet(request.WalletName);
                 HdAccount account = wallet.GetAccountByCoinType(request.AccountName, this.coinType);
+                if (account == null)
+                    throw new WalletException($"No account with the name '{request.AccountName}' could be found.");
 
                 var model = new AddressesModel
                 {
@@ -1058,15 +1065,18 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
                 {
                     result = this.walletManager.RemoveAllTransactions(request.WalletName);
                 }
-                else
+                else if (request.FromDate != default(DateTime))
                 {
-                    if (request.TransactionsIds == null || request.TransactionsIds.Any(trx => trx == null))
-                    {
-                        throw new WalletException("Transaction ids need to be specified if the 'all' flag is not set.");
-                    }
-
+                    result = this.walletManager.RemoveTransactionsFromDate(request.WalletName, request.FromDate);
+                }
+                else if(request.TransactionsIds != null)
+                {
                     IEnumerable<uint256> ids = request.TransactionsIds.Select(uint256.Parse);
                     result = this.walletManager.RemoveTransactionsByIdsLocked(request.WalletName, ids);
+                }
+                else
+                {
+                    throw new WalletException("A filter specifying what transactions to remove must be set.");
                 }
 
                 // If the user chose to resync the wallet after removing transactions.
@@ -1170,6 +1180,51 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
             this.walletSyncManager.SyncFromDate(request.Date);
 
             return this.Ok();
+        }
+
+        /// <summary>Creates requested amount of UTXOs each of equal value.</summary>
+        [HttpPost]
+        [Route("splitcoins")]
+        public IActionResult SplitCoins([FromBody] SplitCoinsRequest request)
+        {
+            Guard.NotNull(request, nameof(request));
+
+            // checks the request is valid
+            if (!this.ModelState.IsValid)
+            {
+                return ModelStateErrors.BuildErrorResponse(this.ModelState);
+            }
+
+            try
+            {
+                var walletReference = new WalletAccountReference(request.WalletName, request.AccountName);
+                HdAddress address = this.walletManager.GetUnusedAddress(walletReference);
+
+                Money totalAmount = request.TotalAmountToSplit;
+                Money singleUtxoAmount = totalAmount / request.UtxosCount;
+
+                var recipients = new List<Recipient>(request.UtxosCount);
+                for (int i = 0; i < request.UtxosCount; i++)
+                    recipients.Add(new Recipient { ScriptPubKey = address.ScriptPubKey, Amount = singleUtxoAmount });
+
+                var context = new TransactionBuildContext(this.network)
+                {
+                    AccountReference = walletReference,
+                    MinConfirmations = 1,
+                    Shuffle = true,
+                    WalletPassword = request.WalletPassword,
+                    Recipients = recipients
+                };
+
+                Transaction transactionResult = this.walletTransactionHandler.BuildTransaction(context);
+
+                return this.SendTransaction(new SendTransactionRequest(transactionResult.ToHex()));
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError("Exception occurred: {0}", e.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
+            }
         }
 
         private void SyncFromBestHeightForRecoveredWallets(DateTime walletCreationDate)

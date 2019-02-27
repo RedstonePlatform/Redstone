@@ -30,7 +30,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
         /// Peer A_1 connects to Peer A_2
         /// Peer B_1 connects to Peer B_2
         /// Peer A_1 connects to Peer B_1
-        /// 
+        ///
         /// Peer A_1 asks Peer B_1 for its addresses and gets Peer B_2
         /// Peer A_1 now also connects to Peer B_2
         /// </summary>
@@ -169,6 +169,88 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
                 node1PeerNodeConnector.OnConnectAsync().GetAwaiter().GetResult();
 
                 node1.FullNode.ConnectionManager.ConnectedPeers.Should().BeEmpty();
+            }
+        }
+
+        [Fact]
+        public void NodeServer_Disabled_When_ConnectNode_Args_Specified()
+        {
+            using (NodeBuilder builder = NodeBuilder.Create(this))
+            {
+                var nodeConfig = new NodeConfigParameters
+                {
+                    { "-connect", "0" }
+                };
+
+                CoreNode node1 = builder.CreateStratisPowNode(this.powNetwork, configParameters: nodeConfig).Start();
+                CoreNode node2 = builder.CreateStratisPowNode(this.powNetwork).Start();
+
+                Assert.False(node1.FullNode.ConnectionManager.Servers.Any());
+
+                try
+                {
+                    // Manually call AddNode so that we can catch the exception.
+                    node2.CreateRPCClient().AddNode(node1.Endpoint, true);
+                }
+                catch (Exception ex)
+                {
+                    Assert.IsType<RPCException>(ex);
+                }
+
+                Assert.False(TestHelper.IsNodeConnectedTo(node2, node1));
+            }
+        }
+
+        [Fact]
+        public void NodeServer_Disabled_When_Listen_Specified_AsFalse()
+        {
+            using (NodeBuilder builder = NodeBuilder.Create(this))
+            {
+                var nodeConfig = new NodeConfigParameters
+                {
+                    { "-listen", "0" }
+                };
+
+                CoreNode node1 = builder.CreateStratisPowNode(this.powNetwork, configParameters: nodeConfig).Start();
+                CoreNode node2 = builder.CreateStratisPowNode(this.powNetwork).Start();
+
+                Assert.False(node1.FullNode.ConnectionManager.Servers.Any());
+
+                try
+                {
+                    // Manually call AddNode so that we can catch the exception.
+                    node2.CreateRPCClient().AddNode(node1.Endpoint, true);
+                }
+                catch (Exception ex)
+                {
+                    Assert.IsType<RPCException>(ex);
+                }
+
+                Assert.False(TestHelper.IsNodeConnectedTo(node2, node1));
+            }
+        }
+
+        [Fact]
+        public void NodeServer_Enabled_When_ConnectNode_Args_Specified_And_Listen_Specified()
+        {
+            using (NodeBuilder builder = NodeBuilder.Create(this))
+            {
+                var nodeConfig = new NodeConfigParameters
+                {
+                    { "-connect", "0" },
+                    { "-listen", "1" }
+                };
+
+                CoreNode node1 = builder.CreateStratisPowNode(this.powNetwork, configParameters: nodeConfig).Start();
+                CoreNode node2 = builder.CreateStratisPowNode(this.powNetwork).Start();
+
+                Assert.True(node1.FullNode.ConnectionManager.Servers.Any());
+
+                TestHelper.Connect(node1, node2);
+
+                Assert.True(TestHelper.IsNodeConnectedTo(node2, node1));
+
+                TestHelper.DisconnectAll(node1, node2);
             }
         }
 

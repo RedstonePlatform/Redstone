@@ -1,0 +1,19 @@
+{
+  "profiles": {
+    "Redstone.NodeD": {
+      "commandName": "Project"
+    },
+    "Redstone.NodeD Test": {
+      "commandName": "Project",
+      "commandLineArgs": "-testnet"
+    },
+    "Redstone.NodeD Test with RPC": {
+      "commandName": "Project",
+      "commandLineArgs": "-testnet -server -rpcpassword=password -rpcuser=user"
+    },
+    "Redstone.NodeD Test Keepalive 60s": {
+      "commandName": "Project",
+      "commandLineArgs": "-testnet -keepalive=60"
+    }
+  }
+}
