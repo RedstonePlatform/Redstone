@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 NONE='\033[00m'
 RED='\033[01;31m'
 GREEN='\033[01;32m'
@@ -9,46 +9,77 @@ WHITE='\033[01;37m'
 BOLD='\033[1m'
 UNDERLINE='\033[4m'
 
-declare -r NODE_USER=redstone
-declare -r CONF=release
-declare -r COINGITHUB=https://github.com/RedstonePlatform/Redstone.git
-declare -r COINPORT=19156
-declare -r COINRPCPORT=19157
-declare -r COINDAEMON=redstoned
-declare -r COINCORE=/home/${NODE_USER}/.redstonenode/redstone/RedstoneTest
-declare -r COINCONFIG=redstone.conf
-declare -r COINRUNCMD="sudo dotnet ./Redstone.RedstoneFullNodeD.dll -testnet -datadir=/home/${NODE_USER}/.redstonenode" ## additional commands can be used here e.g. -testnet or -stake=1
-declare -r COINSTARTUP=/home/${NODE_USER}/redstoned
-declare -r COINSRCLOC=/home/${NODE_USER}/Redstone
-declare -r COINDLOC=/home/${NODE_USER}/RedstoneNode   
-declare -r COINDSRC=/home/${NODE_USER}/Redstone/src/Redstone/Programs/Redstone.RedstoneFullNodeD
-declare -r COINSERVICELOC=/etc/systemd/system/
-declare -r COINSERVICENAME=${COINDAEMON}@${NODE_USER}
-declare -r DATE_STAMP="$(date +%y-%m-%d-%s)"
-declare -r SCRIPT_LOGFILE="/tmp/${NODE_USER}_${DATE_STAMP}_output.log"
-declare -r SWAPSIZE="1024" ## =1GB
+OS_VER="Ubuntu*"
+ARCH="linux-x64"
 
-declare -r NAKOGITHUB=https://github.com/RedstonePlatform/Redstone-indexer.git
-declare -r NAKOSRCLOC=/home/${NODE_USER}/Redstone-indexer/core
-declare -r NAKODLOC=/home/${NODE_USER}/RedstoneIndexer
+function setMainVars() {
+## set network dependent variables
+    NETWORK=""
+    NODE_USER=redstone${NETWORK}
+    COINCORE=/home/${NODE_USER}/.redstonenode/redstone/RedstoneMain
+    COINPORT=19056
+    COINRPCPORT=19057
+    COINAPIPORT=37222
+}
 
-declare -r EXPLGITHUB=https://github.com/RedstonePlatform/Redstone-explorer.git
-declare -r EXPLSRCLOC=/home/${NODE_USER}/Redstone-explorer/Stratis.Guru
-declare -r EXPLDLOC=/var/www/explorer
+function setTestVars() {
+    ## set network dependent variables
+    NETWORK="-testnet"
+    NODE_USER=redstone${NETWORK}
+    COINCORE=/home/${NODE_USER}/.redstonenode/redstone/RedstoneTest
+    COINPORT=19156
+    COINRPCPORT=19157
+    COINAPIPORT=38222
+}
 
-declare -r RPCUSER=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
-declare -r RPCPASS=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
-declare -r RPCBIND='127.0.0.1'
-declare -r SYNCAPIPORT=9000
+function setDNSVars() {
+    ## set DNS specific variables
+    NODE_IP=$(curl --silent ipinfo.io/ip)
+    DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=seed.redstonecoin.com -dnsnameserver=testdns1.seed.redstonecoin.com -dnsmailbox=admin@redstonecoin.com"
+}
+
+function setGeneralVars() {
+    ## set general variables
+    DATE_STAMP="$(date +%y-%m-%d-%s)"
+    SCRIPT_LOGFILE="/tmp/${NODE_USER}_${DATE_STAMP}_output.log"
+    COINRUNCMD="sudo dotnet ./Redstone.RedstoneFullNodeD.dll ${NETWORK} -datadir=/home/${NODE_USER}/.redstonenode ${DNS}"  ## additional commands can be used here e.g. -testnet or -stake=1
+    CONF=release
+    COINGITHUB=https://github.com/RedstonePlatform/Redstone.git
+    COINDAEMON=redstoned
+    COINCONFIG=redstone.conf
+    COINSTARTUP=/home/${NODE_USER}/redstoned
+    COINSRCLOC=/home/${NODE_USER}/Redstone ##TODO: this can be removed 
+    COINDLOC=/home/${NODE_USER}/RedstoneNode   
+    COINDSRC=/home/${NODE_USER}/Redstone/src/Redstone/Programs/Redstone.RedstoneFullNodeD
+    COINSERVICELOC=/etc/systemd/system/
+    COINSERVICENAME=${COINDAEMON}@${NODE_USER}
+    SWAPSIZE="1024" ## =1GB
+}
+
+function setExplorerIndexerVars() {
+    NAKOGITHUB=https://github.com/RedstonePlatform/Redstone-indexer.git
+    NAKOSRCLOC=/home/${NODE_USER}/Redstone-indexer/core
+    NAKODLOC=/home/${NODE_USER}/RedstoneIndexer
+
+    EXPLGITHUB=https://github.com/RedstonePlatform/Redstone-explorer.git
+    EXPLSRCLOC=/home/${NODE_USER}/Redstone-explorer/Stratis.Guru
+    EXPLDLOC=/var/www/explorer
+
+    RPCUSER=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
+    RPCPASS=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
+    RPCBIND='127.0.0.1'
+    SYNCAPIPORT=9000
+}
 
 function check_root() {
 if [ "$(id -u)" != "0" ]; then
-    echo "Sorry, this script needs to be run as root. Do \"sudo su root\" and then re-run this script"
+    echo -e "${RED}* Sorry, this script needs to be run as root. Do \"sudo su root\" and then re-run this script${NONE}"
     exit 1
+    echo -e "${NONE}${GREEN}* All Good!${NONE}";
 fi
 }
 
-create_mn_user() {
+function create_user() {
     echo
     echo "* Checking for user & add if required. Please wait..."
     # our new mnode unpriv user acc is added
@@ -58,7 +89,6 @@ create_mn_user() {
         echo -e "${NONE}${GREEN}* Adding new system user ${NODE_USER}${NONE}"
         sudo adduser --disabled-password --gecos "" ${NODE_USER} &>> ${SCRIPT_LOGFILE}
         sudo echo -e "${NODE_USER} ALL=(ALL) NOPASSWD:ALL" &>> /etc/sudoers.d/90-cloud-init-users
-
     fi
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
@@ -69,13 +99,13 @@ function set_permissions() {
     chmod -R g=u ${COINCORE} ${COINSTARTUP} ${COINDLOC} ${COINSERVICELOC} &>> ${SCRIPT_LOGFILE}
 }
 
-checkForUbuntuVersion() {
+checkOSVersion() {
    echo
-   echo "* Checking Ubuntu version..."
-    if [[ `cat /etc/issue.net`  == *16.04* ]]; then
+   echo "* Checking OS version..."
+    if [[ `cat /etc/issue.net`  == ${OS_VER} ]]; then
         echo -e "${GREEN}* You are running `cat /etc/issue.net` . Setup will continue.${NONE}";
     else
-        echo -e "${RED}* You are not running Ubuntu 16.04.X. You are running `cat /etc/issue.net` ${NONE}";
+        echo -e "${RED}* You are not running ${OS_VER}. You are running `cat /etc/issue.net` ${NONE}";
         echo && echo "Installation cancelled" && echo;
         exit;
     fi
@@ -124,13 +154,6 @@ installFail2Ban() {
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
 
-setupTmpRAM() {
-    echo
-    echo -e "* Pushing tmp files to RAM for performance. Please wait..."
-    echo 'tmpfs   /tmp            tmpfs   defaults,noatime,nosuid,nodev,noexec,mode=1777,size=512M          0       0' | tee -a /etc/fstab &>> ${SCRIPT_LOGFILE}
-    echo 'tmpfs   /var/tmp        tmpfs   defaults,noatime,mode=1777,size=2M                      0       0' | tee -a /etc/fstab &>> ${SCRIPT_LOGFILE}
-    echo -e "${NONE}${GREEN}* Done${NONE}";
-}
 
 installFirewall() {
     echo
@@ -147,13 +170,29 @@ installDependencies() {
     echo
     echo -e "* Installing dependencies. Please wait..."
     sudo timedatectl set-ntp no &>> ${SCRIPT_LOGFILE}
-    sudo apt-get install git nano ntp wget curl software-properties-common -y &>> ${SCRIPT_LOGFILE}
-    sudo wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb &>> ${SCRIPT_LOGFILE}
-    sudo dpkg -i packages-microsoft-prod.deb &>> ${SCRIPT_LOGFILE}
-    sudo apt-get install apt-transport-https -y &>> ${SCRIPT_LOGFILE}
-    sudo apt-get update -y &>> ${SCRIPT_LOGFILE}
-    sudo apt-get install dotnet-sdk-2.2 -y --allow-unauthenticated &>> ${SCRIPT_LOGFILE}
-    echo -e "${NONE}${GREEN}* Done${NONE}";
+    sudo apt-get install git ntp nano wget curl software-properties-common -y &>> ${SCRIPT_LOGFILE}
+    if [[ -r /etc/os-release ]]; then
+        . /etc/os-release
+        if [[ "${VERSION_ID}" = "16.04" ]]; then
+            wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb &>> ${SCRIPT_LOGFILE}
+            sudo dpkg -i packages-microsoft-prod.deb &>> ${SCRIPT_LOGFILE}
+            sudo apt-get install apt-transport-https -y &>> ${SCRIPT_LOGFILE}
+            sudo apt-get update -y &>> ${SCRIPT_LOGFILE}
+            sudo apt-get install dotnet-sdk-2.2 -y &>> ${SCRIPT_LOGFILE}
+            echo -e "${NONE}${GREEN}* Done${NONE}";
+        fi
+        if [[ "${VERSION_ID}" = "18.04" ]]; then
+            wget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb &>> ${SCRIPT_LOGFILE}
+            sudo dpkg -i packages-microsoft-prod.deb &>> ${SCRIPT_LOGFILE}
+            sudo add-apt-repository universe -y &>> ${SCRIPT_LOGFILE}
+            sudo apt-get install apt-transport-https -y &>> ${SCRIPT_LOGFILE}
+            sudo apt-get update -y &>> ${SCRIPT_LOGFILE}
+            sudo apt-get install dotnet-sdk-2.2 -y &>> ${SCRIPT_LOGFILE}
+            echo -e "${NONE}${GREEN}* Done${NONE}";
+        fi
+        else
+        echo -e "${NONE}${RED}* Version: ${VERSION_ID} not supported.${NONE}";
+    fi
 }
 
 compileWallet() {
@@ -164,7 +203,7 @@ compileWallet() {
     cd ${COINSRCLOC} 
     git submodule update --init --recursive &>> ${SCRIPT_LOGFILE}
     cd ${COINDSRC} 
-    dotnet publish -c ${CONF} -r linux-x64 -v m -o ${COINDLOC} &>> ${SCRIPT_LOGFILE}	   ### compile & publish code 
+    dotnet publish -c ${CONF} -r ${ARCH} -v m -o ${COINDLOC} &>> ${SCRIPT_LOGFILE}	   ### compile & publish code 
     rm -rf ${COINSRCLOC} &>> ${SCRIPT_LOGFILE} 	   ### Remove source
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
@@ -196,21 +235,20 @@ configureWallet() {
 
 startWallet() {
     echo
-    echo -e "* Starting wallet daemon..."
+    echo -e "* Starting wallet daemon...${COINSERVICENAME}"
     sudo service ${COINSERVICENAME} start &>> ${SCRIPT_LOGFILE}
     sleep 2
     echo -e "${GREEN}* Done${NONE}";
 }
 stopWallet() {
     echo
-    echo -e "* Stopping wallet daemon..."
+    echo -e "* Stopping wallet daemon...${COINSERVICENAME}"
     sudo service ${COINSERVICENAME} stop &>> ${SCRIPT_LOGFILE}
     sleep 2
     echo -e "${GREEN}* Done${NONE}";
 }
 
 function installUnattendedUpgrades() {
-
     echo
     echo "* Installing Unattended Upgrades..."
     sudo apt install unattended-upgrades -y &>> ${SCRIPT_LOGFILE}
@@ -332,24 +370,28 @@ echo -e "${RED}██║  ██║███████╗██████╔
 echo -e "${RED}╚═╝  ╚═╝╚══════╝╚═════╝ ╚══════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═══╝╚══════╝${NONE}"  
 echo -e ${RED}
 echo -e "${PURPLE}**********************************************************************${NONE}"
-#echo -e "${PURPLE}*                                                                    *${NONE}"
 echo -e "${PURPLE}*    ${NONE}This script will install and configure your Redstone node,      *${NONE}"
 echo -e "${PURPLE}*    ${NONE}including Mongo, Nako Indexer & Block Explorer                  *${NONE}"
+echo -e "${PURPLE}*    ${NONE}on Mainnet or Testnet.  Upgrade updates the node only!          *${NONE}"
 echo -e "${PURPLE}**********************************************************************${NONE}"
 echo -e "${BOLD}"
-read -p "Please run this script as the root user. Do you want to setup (y) or upgrade (u) your Redstone node. (y/n/u)?" response
+
+check_root
+
+read -p " Do you want to setup on Mainnet (m), Testnet (t) or upgrade (u) your Redstone node. (m/t/u)?" response
 echo
 
 echo -e "${NONE}"
 
-if [[ "$response" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
-
-    check_root
-    create_mn_user
-    checkForUbuntuVersion
+if [[ "$response" =~ ^([mM])+$ ]]; then
+    setMainVars
+    setGeneralVars
+    echo -e "${BOLD} The log file can be monitored here: ${SCRIPT_LOGFILE}${NONE}"
+    echo -e "${BOLD}"
+    checkOSVersion
     updateAndUpgrade
+    create_user
     setupSwap
-    setupTmpRAM
     installFail2Ban
     installFirewall
     installDependencies
@@ -357,36 +399,80 @@ if [[ "$response" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
     installWallet
     configureWallet 
     installUnattendedUpgrades
-	startWallet
-	installMongodDB
-	installNako
-	installNginx
-	installExplorer
-	set_permissions
-	displayServiceStatus
+    startWallet
+    installMongodDB
+    installNako
+    installNginx
+    installExplorer
+    set_permissions
+    displayServiceStatus
 
-echo
-echo -e "${GREEN} Installation complete. ${NONE}"
-echo -e "${NONE} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
-echo -e "${NONE} Please ensure to check the service journal as follows:"
-echo -e "${NONE} Redstone Node   : ${PURPLE}journalctl -f -u ${COINSERVICENAME}${NONE}"
-echo -e "${NONE} Indexer         : ${PURPLE}journalctl -f -u indexer@redstone${NONE}"
-echo -e "${NONE} Explorer Service: ${PURPLE}journalctl -f -u explorer@redstone${NONE}"
+    echo
+    echo -e "${GREEN} Installation complete. ${NONE}"
+    echo -e "${NONE} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
+    echo -e "${NONE} Please ensure to check the service journal as follows:"
+    echo -e "${NONE} Redstone Node   : ${PURPLE}journalctl -f -u ${COINSERVICENAME}${NONE}"
+    echo -e "${NONE} Indexer         : ${PURPLE}journalctl -f -u indexer@redstone${NONE}"
+    echo -e "${NONE} Explorer Service: ${PURPLE}journalctl -f -u explorer@redstone${NONE}"
 
-echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
-else
+ else
+    if [[ "$response" =~ ^([tT])+$ ]]; then
+        setTestVars
+        setGeneralVars
+        echo -e "${BOLD} The log file can be monitored here: ${SCRIPT_LOGFILE}${NONE}"
+        echo -e "${BOLD}"
+        checkOSVersion
+        updateAndUpgrade
+        create_user
+        setupSwap
+        installFail2Ban
+        installFirewall
+        installDependencies
+        compileWallet
+        installWallet
+        configureWallet 
+        installUnattendedUpgrades
+        startWallet
+        installMongodDB
+        installNako
+        installNginx
+        installExplorer		
+        set_permissions
+        displayServiceStatus
+
+        echo
+        echo -e "${GREEN} Installation complete. ${NONE}"
+        echo -e "${NONE} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
+        echo -e "${NONE} Please ensure to check the service journal as follows:"
+        echo -e "${NONE} Redstone Node   : ${PURPLE}journalctl -f -u ${COINSERVICENAME}${NONE}"
+        echo -e "${NONE} Indexer         : ${PURPLE}journalctl -f -u indexer@redstone${NONE}"
+        echo -e "${NONE} Explorer Service: ${PURPLE}journalctl -f -u explorer@redstone${NONE}"
+ else
     if [[ "$response" =~ ^([uU])+$ ]]; then
         check_root
+        #Stop Test Service
+        setTestVars
+        setGeneralVars
         stopWallet
-		updateAndUpgrade
+        #Stop Main Service
+        setMainVars
+        setGeneralVars
+        stopWallet
+	    updateAndUpgrade
         compileWallet
+        #Start Test Service
+        setTestVars
+        setGeneralVars
         startWallet
-        echo -e "${GREEN} Upgrade complete. Check service with: sudo journalctl -f -u ${COINSERVICENAME} ${NONE}"
-		echo -e "${GREEN} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
-        echo -e "${GREEN} thecrypt0hunter 2018${NONE}"
+        #Start Main Service
+        setMainVars
+        setGeneralVars
+        startWallet
     else
       echo && echo -e "${RED} Installation cancelled! ${NONE}" && echo
     fi
-    
+  fi
 fi
-    cd ~
+
+echo -e "${GREEN} thecrypt0hunter 2019${NONE}"
+cd ~
