@@ -266,7 +266,14 @@ installMongodDB() {
     echo
 	echo -e "* Installing MongoDB. Please wait..."
 	sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4 &>> ${SCRIPT_LOGFILE}
-	echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list &>> ${SCRIPT_LOGFILE}
+	if [[ -r /etc/os-release ]]; then
+	. /etc/os-release
+	if [[ "${VERSION_ID}" = "16.04" ]]; then
+		echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list
+	fi
+	if [[ "${VERSION_ID}" = "18.04" ]]; then
+		echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list
+	fi
 	sudo apt-get update &>> ${SCRIPT_LOGFILE}
 	sudo apt-get install -y mongodb-org &>> ${SCRIPT_LOGFILE}
 	echo "mongodb-org hold" | sudo dpkg --set-selections &>> ${SCRIPT_LOGFILE}
@@ -285,8 +292,8 @@ installNako() {
 	cd /home/${NODE_USER} 
 	git clone ${NAKOGITHUB} &>> ${SCRIPT_LOGFILE}
 	cd ${NAKOSRCLOC}
-	sudo dotnet publish core.csproj -c ${CONF} -r linux-x64 -v m -o ${NAKODLOC} &>> ${SCRIPT_LOGFILE}
-	sudo rm -rf /home/${NODE_USER}/Redstone-indexer &>> ${SCRIPT_LOGFILE}
+	sudo dotnet publish core.csproj -c ${CONF} -r ${ARCH} -v m -o ${NAKODLOC} &>> ${SCRIPT_LOGFILE}
+	#sudo rm -rf /home/${NODE_USER}/Redstone-indexer &>> ${SCRIPT_LOGFILE}
 	cd /home/${NODE_USER} 
 	sudo chmod +x ${NAKODLOC}/core.dll &>> ${SCRIPT_LOGFILE}
 
@@ -329,7 +336,7 @@ installExplorer() {
 	git clone ${EXPLGITHUB} &>> ${SCRIPT_LOGFILE}
 	cd ${EXPLSRCLOC}
 	sudo mkdir ${EXPLDLOC} &>> ${SCRIPT_LOGFILE}
-	sudo dotnet publish -c ${CONF} -r linux-x64 -v m -o ${EXPLDLOC} &>> ${SCRIPT_LOGFILE}
+	sudo dotnet publish -c ${CONF} -r ${ARCH} -v m -o ${EXPLDLOC} &>> ${SCRIPT_LOGFILE}
 	sudo rm -rf /home/${NODE_USER}/Redstone-explorer &>> ${SCRIPT_LOGFILE}
 	sudo mkdir ${EXPLDLOC}/Documentation  ## temp fix as site will fail without these two folders
 	sudo mkdir ${EXPLDLOC}/Documentation/site
@@ -386,6 +393,7 @@ echo -e "${NONE}"
 if [[ "$response" =~ ^([mM])+$ ]]; then
     setMainVars
     setGeneralVars
+	setExplorerIndexerVars
     echo -e "${BOLD} The log file can be monitored here: ${SCRIPT_LOGFILE}${NONE}"
     echo -e "${BOLD}"
     checkOSVersion
@@ -419,6 +427,7 @@ if [[ "$response" =~ ^([mM])+$ ]]; then
     if [[ "$response" =~ ^([tT])+$ ]]; then
         setTestVars
         setGeneralVars
+		setExplorerIndexerVars
         echo -e "${BOLD} The log file can be monitored here: ${SCRIPT_LOGFILE}${NONE}"
         echo -e "${BOLD}"
         checkOSVersion
