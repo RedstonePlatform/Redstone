@@ -121,7 +121,7 @@ namespace Redstone.Core.Networks
 
             this.DNSSeeds = new List<DNSSeedData>()
             {
-                new DNSSeedData("seed.redstonecoin.com", "seed.redstonecoin.com")
+                new DNSSeedData("test.seed.redstonecoin.com", "test.seed.redstonecoin.com")
             };
 
             this.SeedNodes = new List<NetworkAddress>
