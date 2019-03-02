@@ -35,7 +35,11 @@ COINAPIPORT=38222
 function setDNSVars() {
 ## set DNS specific variables
 NODE_IP=$(curl --silent ipinfo.io/ip)
-DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=seed.redstonecoin.com -dnsnameserver=testdns1.seed.redstonecoin.com -dnsmailbox=admin@redstonecoin.com"
+if [ "${NETWORK}" = "" ] ; then
+   DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=seed.redstonecoin.com -dnsnameserver=dns1.seed.redstonecoin.com -dnsmailbox=admin@redstonecoin.com -dnsfullnode=1 -dnslistenport=53"
+ else
+   DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=test.seed.redstonecoin.com -dnsnameserver=testdns1.seed.redstonecoin.com -dnsmailbox=admin@redstonecoin.com -dnsfullnode=1 -dnslistenport=5333"
+fi
 }
 
 function setGeneralVars() {
@@ -275,18 +279,20 @@ echo -e "${BOLD}"
 
     check_root
 
-read -p " Do you want to setup your Redstone node as a DNS Server (y/n)?" response
-if [[ "$response" =~ ^([yY])+$ ]]; then
-    setDNSVars
-fi
+#read -p " Do you want to setup your Redstone node as a DNS Server (y/n)?" response
+#if [[ "$response" =~ ^([yY])+$ ]]; then
+#    setDNSVars
+#fi
 echo -e "${BOLD}"
 read -p " Do you want to setup on Mainnet (m), Testnet (t) or upgrade (u) your Redstone node. (m/t/u)?" response
-echo
-
-echo -e "${NONE}"
 
 if [[ "$response" =~ ^([mM])+$ ]]; then
     setMainVars
+    read -p " Do you want to setup your Redstone node as a DNS Server (y/n)?" response
+    echo -e "${NONE}"
+    if [[ "$response" =~ ^([yY])+$ ]]; then
+        setDNSVars
+    fi
     setGeneralVars
     echo -e "${BOLD} The log file can be monitored here: ${SCRIPT_LOGFILE}${NONE}"
     echo -e "${BOLD}"
@@ -312,6 +318,11 @@ echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
  else
     if [[ "$response" =~ ^([tT])+$ ]]; then
         setTestVars
+        read -p " Do you want to setup your Redstone node as a DNS Server (y/n)?" response
+        echo -e "${NONE}"
+        if [[ "$response" =~ ^([yY])+$ ]]; then
+           setDNSVars
+        fi
         setGeneralVars
         echo -e "${BOLD} The log file can be monitored here: ${SCRIPT_LOGFILE}${NONE}"
         echo -e "${BOLD}"
