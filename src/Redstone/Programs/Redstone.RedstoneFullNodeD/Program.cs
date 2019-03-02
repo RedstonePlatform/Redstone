@@ -41,9 +41,9 @@ namespace Redstone.RedstoneFullNodeD
 
                 var dnsSettings = new DnsSettings(nodeSettings);
 
-                var isDns = IsNullOrWhiteSpace(dnsSettings.DnsHostName) &&
-                    IsNullOrWhiteSpace(dnsSettings.DnsNameServer) &&
-                    IsNullOrWhiteSpace(dnsSettings.DnsMailBox);
+                var isDns = !IsNullOrWhiteSpace(dnsSettings.DnsHostName) &&
+                    !IsNullOrWhiteSpace(dnsSettings.DnsNameServer) &&
+                    !IsNullOrWhiteSpace(dnsSettings.DnsMailBox);
 
                 var builder = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings);
