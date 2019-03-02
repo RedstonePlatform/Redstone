@@ -53,7 +53,8 @@ namespace Redstone.RedstoneFullNodeD
                     // Run as a full node with DNS or just a DNS service?
                     if (dnsSettings.DnsFullNode)
                     {
-                        builder = builder.UseBlockStore()
+                        builder = builder
+                            .UseBlockStore()
                             .UsePosConsensus()
                             .UseMempool()
                             .UseWallet()
