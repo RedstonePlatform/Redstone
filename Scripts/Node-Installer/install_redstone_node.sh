@@ -20,6 +20,7 @@ COINCORE=/home/${NODE_USER}/.redstonenode/redstone/RedstoneMain
 COINPORT=19056
 COINRPCPORT=19057
 COINAPIPORT=37222
+DNSPORT=53
 }
 
 function setTestVars() {
@@ -30,15 +31,16 @@ COINCORE=/home/${NODE_USER}/.redstonenode/redstone/RedstoneTest
 COINPORT=19156
 COINRPCPORT=19157
 COINAPIPORT=38222
+DNSPORT=53
 }
 
 function setDNSVars() {
 ## set DNS specific variables
 NODE_IP=$(curl --silent ipinfo.io/ip)
 if [ "${NETWORK}" = "" ] ; then
-   DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=seed.redstonecoin.com -dnsnameserver=dns1.seed.redstonecoin.com -dnsmailbox=admin@redstonecoin.com -dnsfullnode=1 -dnslistenport=53"
+   DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=seed.redstonecoin.com -dnsnameserver=dns1.seed.redstonecoin.com -dnsmailbox=admin@redstonecoin.com -dnsfullnode=1 -dnslistenport=${DNSPORT}"
  else
-   DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=test.seed.redstonecoin.com -dnsnameserver=testdns1.seed.redstonecoin.com -dnsmailbox=admin@redstonecoin.com -dnsfullnode=1 -dnslistenport=5333"
+   DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=test.seed.redstonecoin.com -dnsnameserver=testdns1.test.seed.redstonecoin.com -dnsmailbox=admin@redstonecoin.com -dnsfullnode=1 -dnslistenport=${DNSPORT}"
 fi
 }
 
@@ -151,6 +153,10 @@ installFirewall() {
     sudo ufw allow OpenSSH &>> ${SCRIPT_LOGFILE}
     sudo ufw allow $COINPORT/tcp &>> ${SCRIPT_LOGFILE}
     sudo ufw allow $COINRPCPORT/tcp &>> ${SCRIPT_LOGFILE}
+    if [ "${DNSPORT}" != "" ] ; then
+        sudo ufw allow ${DNSPORT}/tcp &>> ${SCRIPT_LOGFILE}
+        sudo ufw allow ${DNSPORT}/udp &>> ${SCRIPT_LOGFILE}
+    fi
     echo "y" | sudo ufw enable &>> ${SCRIPT_LOGFILE}
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }

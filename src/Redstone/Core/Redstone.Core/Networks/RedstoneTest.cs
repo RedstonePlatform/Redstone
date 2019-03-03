@@ -121,7 +121,7 @@ namespace Redstone.Core.Networks
 
             this.DNSSeeds = new List<DNSSeedData>()
             {
-                new DNSSeedData("testseed.redstonecoin.com", "testseed.redstonecoin.com")
+                new DNSSeedData("test.seed.redstonecoin.com", "test.seed.redstonecoin.com")
             };
 
             this.SeedNodes = new List<NetworkAddress>
@@ -129,7 +129,7 @@ namespace Redstone.Core.Networks
                new NetworkAddress(IPAddress.Parse("80.211.88.201"), this.DefaultPort), // cryptohunter node #8
                new NetworkAddress(IPAddress.Parse("80.211.88.233"), this.DefaultPort), // cryptohunter node #9
                new NetworkAddress(IPAddress.Parse("80.211.88.244"), this.DefaultPort), // cryptohunter node #10
-               new NetworkAddress(IPAddress.Parse("35.178.169.232"), this.DefaultPort), // cryptohunter AWS node
+               new NetworkAddress(IPAddress.Parse("80.211.84.170"), this.DefaultPort), // cryptohunter node #4
             };
 
             this.StandardScriptsRegistry = new RedstoneStandardScriptsRegistry();
