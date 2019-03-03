@@ -42,6 +42,9 @@ if [ "${NETWORK}" = "" ] ; then
  else
    DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=test.seed.redstonecoin.com -dnsnameserver=testdns1.test.seed.redstonecoin.com -dnsmailbox=admin@redstonecoin.com -dnsfullnode=1 -dnslistenport=${DNSPORT}"
 fi
+## Stop port 53 from being used by systemd-resovled
+echo 'DNSStubListener=no' | sudo tee -a /etc/systemd/resolved.conf &>> ${SCRIPT_LOGFILE}
+sudo service systemd-resolved restart
 }
 
 function setGeneralVars() {
@@ -144,7 +147,6 @@ installFail2Ban() {
     fi
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
-
 
 installFirewall() {
     echo
@@ -285,10 +287,6 @@ echo -e "${BOLD}"
 
     check_root
 
-#read -p " Do you want to setup your Redstone node as a DNS Server (y/n)?" response
-#if [[ "$response" =~ ^([yY])+$ ]]; then
-#    setDNSVars
-#fi
 echo -e "${BOLD}"
 read -p " Do you want to setup on Mainnet (m), Testnet (t) or upgrade (u) your Redstone node. (m/t/u)?" response
 
@@ -319,7 +317,7 @@ if [[ "$response" =~ ^([mM])+$ ]]; then
 
 echo
 echo -e "${GREEN} Installation complete. Check service with: journalctl -f -u ${COINSERVICENAME} ${NONE}"
-echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
+echo -e "${GREEN} thecrypt0hunter(2019)${NONE}"
 
  else
     if [[ "$response" =~ ^([tT])+$ ]]; then
@@ -349,19 +347,21 @@ echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
 	
 echo
 echo -e "${GREEN} Installation complete. Check service with: journalctl -f -u ${COINSERVICENAME} ${NONE}"
-echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
+echo -e "${GREEN} thecrypt0hunter(2019)${NONE}"
  else
     if [[ "$response" =~ ^([uU])+$ ]]; then
         check_root
+        ##TODO: Test for servicefile and only upgrade as required 
         #Stop Test Service
         setTestVars
         setGeneralVars
         stopWallet
+	    updateAndUpgrade
+        compileWallet
         #Stop Main Service
         setMainVars
         setGeneralVars
         stopWallet
-	    updateAndUpgrade
         compileWallet
         #Start Test Service
         setTestVars
@@ -371,7 +371,7 @@ echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
         setMainVars
         setGeneralVars
         startWallet
-        echo -e "${GREEN} thecrypt0hunter 2018${NONE}"
+        echo -e "${GREEN} thecrypt0hunter 2019${NONE}"
     else
       echo && echo -e "${RED} Installation cancelled! ${NONE}" && echo
     fi
