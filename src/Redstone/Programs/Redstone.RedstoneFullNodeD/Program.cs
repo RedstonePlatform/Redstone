@@ -1,29 +1,28 @@
 namespace Redstone.RedstoneFullNodeD
 {
-    
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using NBitcoin;
-using NBitcoin.Protocol;
-using Redstone.Core.Networks;
-using Redstone.Features.Api;
-using Stratis.Bitcoin.Builder;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.ColdStaking;
-using Stratis.Bitcoin.Features.Consensus;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.Miner;
-using Stratis.Bitcoin.Features.RPC;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Features.Apps;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.ColdStaking;
-using Redstone.Features.BlockExplorer;
-using Redstone.Features.ServiceNode;
-using Stratis.Bitcoin.Features.Notifications;
-using Stratis.Bitcoin.Features.WatchOnlyWallet;
+    using System;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using NBitcoin;
+    using NBitcoin.Protocol;
+    using NBitcoin.Networks;
+    using Redstone.Core.Networks;
+    using Redstone.Features.Api;
+    using Stratis.Bitcoin.Builder;
+    using Stratis.Bitcoin.Configuration;
+    using Stratis.Bitcoin.Features.BlockStore;
+    using Stratis.Bitcoin.Features.ColdStaking;
+    using Stratis.Bitcoin.Features.Consensus;
+    using Stratis.Bitcoin.Features.MemoryPool;
+    using Stratis.Bitcoin.Features.Miner;
+    using Stratis.Bitcoin.Features.RPC;
+    using Stratis.Bitcoin.Utilities;
+    using Stratis.Bitcoin.Features.Apps;
+    using Stratis.Bitcoin.Features.Wallet;
+    using Redstone.Features.BlockExplorer;
+    using Redstone.Features.ServiceNode;
+    using Stratis.Bitcoin.Features.Notifications;
+    using Stratis.Bitcoin.Features.WatchOnlyWallet;
 
     public class Program
     {
@@ -56,7 +55,7 @@ using Stratis.Bitcoin.Features.WatchOnlyWallet;
                     .UseBlockNotification()
                     .UseTransactionNotification()
                     .AddServiceNodeRegistration()
-                    
+
                     .UseApps()
                     .UseBlockExplorer()
                     .AddRPC()
