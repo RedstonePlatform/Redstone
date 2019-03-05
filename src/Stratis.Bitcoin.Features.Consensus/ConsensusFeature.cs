@@ -20,7 +20,7 @@ namespace Stratis.Bitcoin.Features.Consensus
 
         private readonly IConnectionManager connectionManager;
 
-        private readonly Signals.Signals signals;
+        private readonly Signals.ISignals signals;
 
         private readonly IConsensusManager consensusManager;
 
@@ -30,7 +30,7 @@ namespace Stratis.Bitcoin.Features.Consensus
             Network network,
             IChainState chainState,
             IConnectionManager connectionManager,
-            Signals.Signals signals,
+            Signals.ISignals signals,
             IConsensusManager consensusManager,
             NodeDeployments nodeDeployments)
         {

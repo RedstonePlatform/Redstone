@@ -1,4 +1,7 @@
 ﻿using NBitcoin.Protocol;
+using Redstone.Core.Networks.Deployments;
+using Redstone.Core.Policies;
+using Stratis.Bitcoin.Features.Wallet;
 
 namespace Redstone.Core.Networks
 {
@@ -18,11 +21,11 @@ namespace Redstone.Core.Networks
             // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
             // a large 4-byte int at any alignment.
             var messageStart = new byte[4];
-            messageStart[0] = 0x71;
-            messageStart[1] = 0x31;
-            messageStart[2] = 0x23;
-            messageStart[3] = 0x11;
-            uint magic = BitConverter.ToUInt32(messageStart, 0); // 0x5223570;
+            messageStart[0] = 0xb3;
+            messageStart[1] = 0xd0;
+            messageStart[2] = 0xae;
+            messageStart[3] = 0xd7;
+            uint magic = BitConverter.ToUInt32(messageStart, 0); // 0xd7aed0b3 = ×®Ð³
 
             this.Name = "RedstoneRegTest";
             this.Magic = magic;
@@ -115,7 +118,9 @@ namespace Redstone.Core.Networks
             this.DNSSeeds = new List<DNSSeedData>();
             this.SeedNodes = new List<NetworkAddress>();
 
-            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("9f1288387bb087920fd5d3b48c6f1928b25a8167b5d40fb2ded439f208e8ef7d"));
+            this.StandardScriptsRegistry = new RedstoneStandardScriptsRegistry();
+
+            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("4442244290302b76a11951ba648e40bcdc6cc3965a99c30018ade95a4bc6e6bd"));
         }
     }
 }

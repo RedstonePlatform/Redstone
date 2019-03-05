@@ -28,7 +28,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
         private readonly ConcurrentChain chain;
 
         /// <summary>Node notifications available to subscribe to.</summary>
-        private readonly Signals.Signals signals;
+        private readonly Signals.ISignals signals;
 
         /// <summary>Coin view of the memory pool.</summary>
         private readonly ICoinView coinView;
@@ -68,7 +68,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
 
         public MempoolOrphans(
             ConcurrentChain chain,
-            Signals.Signals signals,
+            Signals.ISignals signals,
             IMempoolValidator validator,
             ICoinView coinView,
             IDateTimeProvider dateTimeProvider,
@@ -122,7 +122,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
             {
                 result = this.mapOrphanTransactions.Values.ToList();
             }
-            
+
             return result;
         }
 
@@ -136,7 +136,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
             {
                 result = this.mapOrphanTransactions.Count;
             }
-            
+
             return result;
         }
 
@@ -184,7 +184,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
             {
                 isTxPresent = await this.mempoolManager.ExistsAsync(trxid).ConfigureAwait(false);
             }
-            
+
             return isTxPresent;
         }
 
@@ -207,12 +207,16 @@ namespace Stratis.Bitcoin.Features.MemoryPool
             var setMisbehaving = new List<ulong>();
             while (workQueue.Any())
             {
-                // mapOrphanTransactionsByPrev.TryGet() does a .ToList() to take a new collection
-                // of orphans as this collection may be modified later by another thread
-                List<OrphanTx> itByPrev;
+                List<OrphanTx> itByPrev = null;
                 lock (this.lockObject)
                 {
-                    itByPrev = this.mapOrphanTransactionsByPrev.TryGet(workQueue.Dequeue());
+                    List<OrphanTx> prevOrphans = this.mapOrphanTransactionsByPrev.TryGet(workQueue.Dequeue());
+
+                    if (prevOrphans != null)
+                    {
+                        // Create a copy of the list so we can manage it outside of the lock.
+                        itByPrev = prevOrphans.ToList();
+                    }
                 }
 
                 if (itByPrev == null)
@@ -237,7 +241,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
 
                         behavior.RelayTransaction(orphanTx.GetHash());
 
-                        this.signals.SignalTransaction(orphanTx);
+                        this.signals.OnTransactionReceived.Notify(orphanTx);
 
                         for (int index = 0; index < orphanTx.Outputs.Count; index++)
                             workQueue.Enqueue(new OutPoint(orphanHash, index));
@@ -339,7 +343,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
             int nEvicted = this.LimitOrphanTxSize(nMaxOrphanTx);
             if (nEvicted > 0)
                 this.logger.LogInformation("mapOrphan overflow, removed {0} tx", nEvicted);
-            
+
             return ret;
         }
 
@@ -400,7 +404,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
                     ++nEvicted;
                 }
             }
-            
+
             return nEvicted;
         }
 
@@ -461,7 +465,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
                 this.logger.LogInformation("stored orphan tx {0} (mapsz {1} outsz {2})", hash, orphanSize, this.mapOrphanTransactionsByPrev.Count);
                 this.Validator.PerformanceCounter.SetMempoolOrphanSize(orphanSize);
             }
-            
+
             return true;
         }
 
@@ -497,7 +501,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
 
             int orphanSize = this.mapOrphanTransactions.Count;
             this.Validator.PerformanceCounter.SetMempoolOrphanSize(orphanSize);
-            
+
             return true;
         }
 

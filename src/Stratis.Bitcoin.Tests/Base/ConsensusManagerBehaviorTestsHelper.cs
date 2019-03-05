@@ -6,14 +6,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
@@ -131,6 +129,18 @@ namespace Stratis.Bitcoin.Tests.Base
                 return Task.CompletedTask;
             });
 
+            this.PeerMock.Setup(x => x.SendMessage(It.IsAny<Payload>())).Callback((Payload payload) =>
+            {
+                if (payload is GetHeadersPayload getHeadersPayload)
+                {
+                    this.GetHeadersPayloadSentTimes++;
+                    this.GetHeadersPayloadsSent.Add(getHeadersPayload);
+                }
+
+                if (payload is HeadersPayload headersPayload)
+                    this.HeadersPayloadsSent.Add(headersPayload);
+            });
+
             return cmBehavior;
         }
 
@@ -208,9 +218,19 @@ namespace Stratis.Bitcoin.Tests.Base
                 this.WasBanningCalled = true;
             }
 
+            public void ClearBannedPeers()
+            {
+                throw new NotImplementedException();
+            }
+
             public bool IsBanned(IPEndPoint endpoint)
             {
                 return this.WasBanningCalled;
+            }
+
+            public void UnBanPeer(IPEndPoint endpoint)
+            {
+                throw new NotImplementedException();
             }
         }
     }

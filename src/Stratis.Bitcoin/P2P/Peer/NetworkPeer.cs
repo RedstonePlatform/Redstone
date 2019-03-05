@@ -67,9 +67,10 @@ namespace Stratis.Bitcoin.P2P.Peer
         /// Checks a version payload from a peer against the requirements.
         /// </summary>
         /// <param name="version">Version payload to check.</param>
+        /// <param name="inbound">Set to <c>true</c> if this is an inbound connection and <c>false</c> otherwise.</param>
         /// <param name="reason">The reason the check failed.</param>
         /// <returns><c>true</c> if the version payload satisfies the protocol requirements, <c>false</c> otherwise.</returns>
-        public virtual bool Check(VersionPayload version, out string reason)
+        public virtual bool Check(VersionPayload version, bool inbound, out string reason)
         {
             reason = string.Empty;
             if (this.MinVersion != null)
@@ -81,7 +82,7 @@ namespace Stratis.Bitcoin.P2P.Peer
                 }
             }
 
-            if ((this.RequiredServices & version.Services) != this.RequiredServices)
+            if (!inbound && ((this.RequiredServices & version.Services) != this.RequiredServices))
             {
                 reason = "network service not supported";
                 return false;
@@ -125,7 +126,7 @@ namespace Stratis.Bitcoin.P2P.Peer
         public NetworkPeerState State { get; private set; }
 
         /// <summary>Table of valid transitions between peer states.</summary>
-        private static readonly Dictionary<NetworkPeerState, NetworkPeerState[]> stateTransitionTable = new Dictionary<NetworkPeerState, NetworkPeerState[]>()
+        private static readonly Dictionary<NetworkPeerState, NetworkPeerState[]> StateTransitionTable = new Dictionary<NetworkPeerState, NetworkPeerState[]>()
         {
             { NetworkPeerState.Created, new[] { NetworkPeerState.Connected, NetworkPeerState.Offline, NetworkPeerState.Failed} },
             { NetworkPeerState.Connected, new[] { NetworkPeerState.HandShaked, NetworkPeerState.Disconnecting, NetworkPeerState.Offline, NetworkPeerState.Failed} },
@@ -249,6 +250,9 @@ namespace Stratis.Bitcoin.P2P.Peer
         /// <summary>Callback that is invoked just before a message is to be sent to a peer, or <c>null</c> when nothing needs to be called.</summary>
         private readonly Action<IPEndPoint, Payload> onSendingMessage;
 
+        /// <summary>A queue for sending payload messages to peers.</summary>
+        private readonly AsyncQueue<Payload> asyncQueue;
+
         /// <summary>
         /// Initializes parts of the object that are common for both inbound and outbound peers.
         /// </summary>
@@ -295,6 +299,8 @@ namespace Stratis.Bitcoin.P2P.Peer
             this.StateChanged = new AsyncExecutionEvent<INetworkPeer, NetworkPeerState>();
             this.onDisconnected = onDisconnected;
             this.onSendingMessage = onSendingMessage;
+
+            this.asyncQueue = new AsyncQueue<Payload>(this.SendMessageHandledAsync);
         }
 
         /// <summary>
@@ -372,7 +378,7 @@ namespace Stratis.Bitcoin.P2P.Peer
         {
             NetworkPeerState previous = this.State;
 
-            if (stateTransitionTable[previous].Contains(newState))
+            if (StateTransitionTable[previous].Contains(newState))
             {
                 this.State = newState;
 
@@ -583,11 +589,18 @@ namespace Stratis.Bitcoin.P2P.Peer
                 {
                     await this.RespondToHandShakeAsync(cancellationSource.Token).ConfigureAwait(false);
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException ex)
                 {
-                    this.logger.LogTrace("Remote peer haven't responded within 10 seconds of the handshake completion, dropping connection.");
-
-                    this.Disconnect("Handshake timeout");
+                    if (ex.CancellationToken == cancellationSource.Token)
+                    {
+                        this.logger.LogTrace("Remote peer hasn't responded within 10 seconds of the handshake completion, dropping connection.");
+                        this.Disconnect("Handshake timeout");
+                    }
+                    else
+                    {
+                        this.logger.LogTrace("Handshake problem, dropping connection. Problem: '{0}'.", ex.Message);
+                        this.Disconnect($"Handshake problem, reason: '{ex.Message}'.");
+                    }
 
                     this.logger.LogTrace("(-)[HANDSHAKE_TIMEDOUT]");
                     throw;
@@ -624,6 +637,42 @@ namespace Stratis.Bitcoin.P2P.Peer
                 {
                     behavior.Attach(this);
                 }
+            }
+        }
+
+        /// <inheritdoc/>
+        public void SendMessage(Payload payload)
+        {
+            Guard.NotNull(payload, nameof(payload));
+
+            if (!this.IsConnected)
+            {
+                this.logger.LogTrace("(-)[NOT_CONNECTED]");
+                throw new OperationCanceledException("The peer has been disconnected");
+            }
+
+            this.asyncQueue.Enqueue(payload);
+        }
+
+        /// <summary>
+        /// This is used by the asyncQueue to send payloads messages to peers under a separate thread.
+        /// If a message is sent inside the state change even and the send fails this could cause a deadlock,
+        /// to avoid that if there is any danger of a deadlock it better to use the SendMessage method and go via the queue.
+        /// </summary>
+        private async Task SendMessageHandledAsync(Payload payload, CancellationToken cancellation = default(CancellationToken))
+        {
+            try
+            {
+                await this.SendMessageAsync(payload, cancellation);
+            }
+            catch (OperationCanceledException)
+            {
+                this.logger.LogTrace("Connection to '{0}' cancelled.", this.PeerEndPoint);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError("Exception occurred while connecting to peer '{0}': {1}", this.PeerEndPoint, ex is SocketException ? ex.Message : ex.ToString());
+                throw;
             }
         }
 
@@ -688,7 +737,7 @@ namespace Stratis.Bitcoin.P2P.Peer
                                 return;
                             }
 
-                            if (!requirements.Check(versionPayload, out string reason))
+                            if (!requirements.Check(versionPayload, this.Inbound, out string reason))
                             {
                                 this.logger.LogTrace("(-)[UNSUPPORTED_REQUIREMENTS]");
                                 this.Disconnect("The peer does not support the required services requirement, reason: " + reason);
@@ -829,6 +878,7 @@ namespace Stratis.Bitcoin.P2P.Peer
                 }
             }
 
+            this.asyncQueue.Dispose();
             this.Connection.Dispose();
 
             this.MessageReceived.Dispose();
