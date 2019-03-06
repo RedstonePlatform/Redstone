@@ -33,6 +33,7 @@
     <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.Wallet\Stratis.Bitcoin.Features.Wallet.csproj" />
     <ProjectReference Include="..\..\Core\Redstone.Core\Redstone.Core.csproj" />
     <ProjectReference Include="..\..\Features\Redstone.Features.Api\Redstone.Features.Api.csproj" />    
+    <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.Dns\Stratis.Bitcoin.Features.Dns.csproj" />
   </ItemGroup>
 
   <ItemGroup>
