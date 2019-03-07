@@ -39,11 +39,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.Runners
                 .UseTransactionNotification()
                 .UseWallet()
                 .UseWatchOnlyWallet()
+                .AddServiceNodeRegistration()
                 .AddPowPosMining()
                 .AddRPC()
                 .UseApi()
                 .UseTestChainedHeaderTree()
-                .AddServiceNodeRegistration()
                 .MockIBD();
 
             if (this.OverrideDateTimeProvider)

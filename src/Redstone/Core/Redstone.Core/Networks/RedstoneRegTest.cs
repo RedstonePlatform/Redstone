@@ -120,7 +120,7 @@ namespace Redstone.Core.Networks
 
             this.StandardScriptsRegistry = new RedstoneStandardScriptsRegistry();
 
-            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("4442244290302b76a11951ba648e40bcdc6cc3965a99c30018ade95a4bc6e6bd"));
+            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("9f1288387bb087920fd5d3b48c6f1928b25a8167b5d40fb2ded439f208e8ef7d"));
         }
     }
 }

@@ -9,6 +9,7 @@ using Redstone.Features.ServiceNode.Common;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Features.Notifications;
 using Stratis.Bitcoin.Features.Notifications.Interfaces;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
@@ -28,7 +29,7 @@ namespace Redstone.Features.ServiceNode
         private readonly ILogger logger;
         private readonly RegistrationStore registrationStore;
         private readonly ConcurrentChain chain;
-        private readonly Signals signals;
+        private readonly ISignals signals;
         private readonly IWatchOnlyWalletManager watchOnlyWalletManager;
         private readonly IBlockNotification blockNotification;
         private readonly IWalletSyncManager walletSyncManager;
@@ -44,7 +45,7 @@ namespace Redstone.Features.ServiceNode
             RegistrationManager registrationManager,
             RegistrationStore registrationStore,
             ConcurrentChain chain,
-            Signals signals,
+            ISignals signals,
             IWatchOnlyWalletManager watchOnlyWalletManager,
             IBlockNotification blockNotification,
             IWalletSyncManager walletSyncManager)
@@ -148,6 +149,8 @@ namespace Redstone.Features.ServiceNode
             {
                 features
                     .AddFeature<RegistrationFeature>()
+                    .DependOn<BlockNotificationFeature>()
+                    .DependOn<TransactionNotificationFeature>()
                     .DependOn<WalletFeature>()
                     .FeatureServices(services =>
                     {
