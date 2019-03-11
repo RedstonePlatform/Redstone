@@ -4,8 +4,8 @@ namespace Redstone.RedstoneFullNodeD
     using System.Linq;
     using System.Threading.Tasks;
     using NBitcoin;
-    using NBitcoin.Protocol;
     using NBitcoin.Networks;
+    using NBitcoin.Protocol;
     using Redstone.Core.Networks;
     using Redstone.Features.Api;
     using Stratis.Bitcoin.Builder;
@@ -13,16 +13,14 @@ namespace Redstone.RedstoneFullNodeD
     using Stratis.Bitcoin.Features.BlockStore;
     using Stratis.Bitcoin.Features.ColdStaking;
     using Stratis.Bitcoin.Features.Consensus;
+    using Stratis.Bitcoin.Features.Dns;
     using Stratis.Bitcoin.Features.MemoryPool;
     using Stratis.Bitcoin.Features.Miner;
     using Stratis.Bitcoin.Features.RPC;
     using Stratis.Bitcoin.Utilities;
     using Stratis.Bitcoin.Features.Apps;
     using Stratis.Bitcoin.Features.Wallet;
-    using Redstone.Features.BlockExplorer;
-    using Redstone.Features.ServiceNode;
-    using Stratis.Bitcoin.Features.Notifications;
-    using Stratis.Bitcoin.Features.WatchOnlyWallet;
+    using static System.String;
 
     public class Program
     {
@@ -41,25 +39,59 @@ namespace Redstone.RedstoneFullNodeD
                     MinProtocolVersion = ProtocolVersion.ALT_PROTOCOL_VERSION
                 };
 
-                var node = new FullNodeBuilder()
-                    .UseNodeSettings(nodeSettings)
-                    .UseBlockStore()
-                    .UsePosConsensus()
-                    .UseMempool()
-                    .UseWallet()
-                    //.UseColdStakingWallet()
-                    .AddPowPosMining()
-                    .UseApi()
+                var dnsSettings = new DnsSettings(nodeSettings);
 
-                    .UseWatchOnlyWallet()
-                    .UseBlockNotification()
-                    .UseTransactionNotification()
-                    .AddServiceNodeRegistration()
+                var isDns = !IsNullOrWhiteSpace(dnsSettings.DnsHostName) &&
+                    !IsNullOrWhiteSpace(dnsSettings.DnsNameServer) &&
+                    !IsNullOrWhiteSpace(dnsSettings.DnsMailBox);
 
-                    .UseApps()
-                    .UseBlockExplorer()
-                    .AddRPC()
-                    .Build();
+                var builder = new FullNodeBuilder()
+                    .UseNodeSettings(nodeSettings);
+
+                if (isDns)
+                {
+                    // Run as a full node with DNS or just a DNS service?
+                    if (dnsSettings.DnsFullNode)
+                    {
+                        builder = builder
+                            .UseBlockStore()
+                            .UsePosConsensus()
+                            .UseMempool()
+                            .UseWallet()
+                            .AddPowPosMining();
+                    }
+                    else
+                    {
+                        builder = builder.UsePosConsensus();
+                    }
+
+                    builder = builder
+                        .UseApi()
+                        .AddRPC()
+                        .UseDns();
+                }
+                else
+                {
+                    builder = builder
+                       .UseBlockStore()
+                       .UsePosConsensus()
+                       .UseMempool()
+                       .UseWallet()
+                       //.UseColdStakingWallet()
+                       .AddPowPosMining()
+                       .UseApi()
+
+                       .UseWatchOnlyWallet()
+                       .UseBlockNotification()
+                       .UseTransactionNotification()
+                       .AddServiceNodeRegistration()
+
+                       .UseApps()
+                       .UseBlockExplorer()
+                       .AddRPC();
+                }
+
+                var node = builder.Build();
 
                 if (node != null)
                     await node.RunAsync();

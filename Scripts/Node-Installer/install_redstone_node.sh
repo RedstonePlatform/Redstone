@@ -9,6 +9,8 @@ WHITE='\033[01;37m'
 BOLD='\033[1m'
 UNDERLINE='\033[4m'
 
+OS_VER="Ubuntu*"
+ARCH="linux-x64"
 
 function setMainVars() {
 ## set network dependent variables
@@ -18,6 +20,7 @@ COINCORE=/home/${NODE_USER}/.redstonenode/redstone/RedstoneMain
 COINPORT=19056
 COINRPCPORT=19057
 COINAPIPORT=37222
+DNSPORT=53
 }
 
 function setTestVars() {
@@ -28,14 +31,28 @@ COINCORE=/home/${NODE_USER}/.redstonenode/redstone/RedstoneTest
 COINPORT=19156
 COINRPCPORT=19157
 COINAPIPORT=38222
+DNSPORT=53
+}
+
+function setDNSVars() {
+## set DNS specific variables
+NODE_IP=$(curl --silent ipinfo.io/ip)
+if [ "${NETWORK}" = "" ] ; then
+   DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=seed.redstonecoin.com -dnsnameserver=dns1.seed.redstonecoin.com -dnsmailbox=admin@redstonecoin.com -dnsfullnode=1 -dnslistenport=${DNSPORT}"
+ else
+   DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=test.seed.redstonecoin.com -dnsnameserver=testdns1.test.seed.redstonecoin.com -dnsmailbox=admin@redstonecoin.com -dnsfullnode=1 -dnslistenport=${DNSPORT}"
+fi
+## Stop port 53 from being used by systemd-resovled
+echo 'DNSStubListener=no' | sudo tee -a /etc/systemd/resolved.conf &>> ${SCRIPT_LOGFILE}
+sudo service systemd-resolved restart
 }
 
 function setGeneralVars() {
 ## set general variables
-COINRUNCMD="sudo dotnet ./Redstone.RedstoneFullNodeD.dll ${NETWORK} -datadir=/home/${NODE_USER}/.redstonenode" ## additional commands can be used here e.g. -testnet or -stake=1
+DATE_STAMP="$(date +%y-%m-%d-%s)"
+SCRIPT_LOGFILE="/tmp/${NODE_USER}_${DATE_STAMP}_output.log"
+COINRUNCMD="sudo dotnet ./Redstone.RedstoneFullNodeD.dll ${NETWORK} -datadir=/home/${NODE_USER}/.redstonenode ${DNS}"  ## additional commands can be used here e.g. -testnet or -stake=1
 CONF=release
-OS_VER="Ubuntu*"
-ARCH="linux-x64"
 COINGITHUB=https://github.com/RedstonePlatform/Redstone.git
 COINDAEMON=redstoned
 COINCONFIG=redstone.conf
@@ -45,20 +62,18 @@ COINDLOC=/home/${NODE_USER}/RedstoneNode
 COINDSRC=/home/${NODE_USER}/Redstone/src/Redstone/Programs/Redstone.RedstoneFullNodeD
 COINSERVICELOC=/etc/systemd/system/
 COINSERVICENAME=${COINDAEMON}@${NODE_USER}
-DATE_STAMP="$(date +%y-%m-%d-%s)"
-SCRIPT_LOGFILE="/tmp/${NODE_USER}_${DATE_STAMP}_output.log"
 SWAPSIZE="1024" ## =1GB
-NODE_IP=$(curl --silent ipinfo.io/ip)
 }
 
 function check_root() {
 if [ "$(id -u)" != "0" ]; then
-    echo "Sorry, this script needs to be run as root. Do \"sudo su root\" and then re-run this script"
+    echo -e "${RED}* Sorry, this script needs to be run as root. Do \"sudo su root\" and then re-run this script${NONE}"
     exit 1
+    echo -e "${NONE}${GREEN}* All Good!${NONE}";
 fi
 }
 
-function create_mn_user() {
+function create_user() {
     echo
     echo "* Checking for user & add if required. Please wait..."
     # our new mnode unpriv user acc is added
@@ -133,7 +148,6 @@ installFail2Ban() {
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
 
-
 installFirewall() {
     echo
     echo -e "* Installing UFW. Please wait..."
@@ -141,6 +155,10 @@ installFirewall() {
     sudo ufw allow OpenSSH &>> ${SCRIPT_LOGFILE}
     sudo ufw allow $COINPORT/tcp &>> ${SCRIPT_LOGFILE}
     sudo ufw allow $COINRPCPORT/tcp &>> ${SCRIPT_LOGFILE}
+    if [ "${DNSPORT}" != "" ] ; then
+        sudo ufw allow ${DNSPORT}/tcp &>> ${SCRIPT_LOGFILE}
+        sudo ufw allow ${DNSPORT}/udp &>> ${SCRIPT_LOGFILE}
+    fi
     echo "y" | sudo ufw enable &>> ${SCRIPT_LOGFILE}
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
@@ -266,18 +284,25 @@ echo -e "${PURPLE}**************************************************************
 echo -e "${PURPLE}*    This script will install and configure your Redstone node.      *${NONE}"
 echo -e "${PURPLE}**********************************************************************${NONE}"
 echo -e "${BOLD}"
-read -p "Please run this script as the root user. Do you want to setup on Mainnet (m), Testnet (t) or upgrade (u) your Redstone node. (m/t/u)?" response
-echo
 
-echo -e "${NONE}"
+    check_root
+
+echo -e "${BOLD}"
+read -p " Do you want to setup on Mainnet (m), Testnet (t) or upgrade (u) your Redstone node. (m/t/u)?" response
 
 if [[ "$response" =~ ^([mM])+$ ]]; then
-    check_root
     setMainVars
+    read -p " Do you want to setup your Redstone node as a DNS Server (y/n)?" response
+    echo -e "${NONE}"
+    if [[ "$response" =~ ^([yY])+$ ]]; then
+        setDNSVars
+    fi
     setGeneralVars
+    echo -e "${BOLD} The log file can be monitored here: ${SCRIPT_LOGFILE}${NONE}"
+    echo -e "${BOLD}"
     checkOSVersion
-    create_mn_user
     updateAndUpgrade
+    create_user
     setupSwap
     installFail2Ban
     installFirewall
@@ -292,17 +317,22 @@ if [[ "$response" =~ ^([mM])+$ ]]; then
 
 echo
 echo -e "${GREEN} Installation complete. Check service with: journalctl -f -u ${COINSERVICENAME} ${NONE}"
-echo -e "${GREEN} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
-echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
+echo -e "${GREEN} thecrypt0hunter(2019)${NONE}"
 
  else
     if [[ "$response" =~ ^([tT])+$ ]]; then
-        check_root
         setTestVars
+        read -p " Do you want to setup your Redstone node as a DNS Server (y/n)?" response
+        echo -e "${NONE}"
+        if [[ "$response" =~ ^([yY])+$ ]]; then
+           setDNSVars
+        fi
         setGeneralVars
+        echo -e "${BOLD} The log file can be monitored here: ${SCRIPT_LOGFILE}${NONE}"
+        echo -e "${BOLD}"
         checkOSVersion
-        create_mn_user
         updateAndUpgrade
+        create_user
         setupSwap
         installFail2Ban
         installFirewall
@@ -317,20 +347,21 @@ echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
 	
 echo
 echo -e "${GREEN} Installation complete. Check service with: journalctl -f -u ${COINSERVICENAME} ${NONE}"
-echo -e "${GREEN} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
-echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
+echo -e "${GREEN} thecrypt0hunter(2019)${NONE}"
  else
     if [[ "$response" =~ ^([uU])+$ ]]; then
         check_root
+        ##TODO: Test for servicefile and only upgrade as required 
         #Stop Test Service
         setTestVars
         setGeneralVars
         stopWallet
+	    updateAndUpgrade
+        compileWallet
         #Stop Main Service
         setMainVars
         setGeneralVars
         stopWallet
-	    updateAndUpgrade
         compileWallet
         #Start Test Service
         setTestVars
@@ -340,8 +371,7 @@ echo -e "${GREEN} thecrypt0hunter(2018)${NONE}"
         setMainVars
         setGeneralVars
         startWallet
-    	echo -e "${GREEN} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
-        echo -e "${GREEN} thecrypt0hunter 2018${NONE}"
+        echo -e "${GREEN} thecrypt0hunter 2019${NONE}"
     else
       echo && echo -e "${RED} Installation cancelled! ${NONE}" && echo
     fi
