@@ -23,7 +23,7 @@ namespace Redstone.Features.BlockExplorer
     {
         private readonly ConcurrentChain chain;
 
-        private readonly Signals signals;
+        private readonly ISignals signals;
 
         private readonly BlockStoreSignaled blockStoreSignaled;
 
@@ -46,7 +46,7 @@ namespace Redstone.Features.BlockExplorer
         public BlockExplorerFeature(
             ConcurrentChain chain,
             IConnectionManager connectionManager,
-            Signals signals,
+            ISignals signals,
             BlockStoreSignaled blockStoreSignaled,
             ILoggerFactory loggerFactory,
             StoreSettings storeSettings,
