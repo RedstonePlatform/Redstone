@@ -169,7 +169,9 @@ namespace Redstone.Features.ServiceNode
         private Key GetPrivateKey(string walletName, string walletPassword, string address)
         {
             Wallet wallet = this.walletManager.LoadWallet(walletPassword, walletName);
-            HdAddress hdAddress = wallet.GetAllAddressesByCoinType(CoinType.Redstone).First(hda => hda.Address == address);
+            HdAddress hdAddress = wallet.GetAllAddressesByCoinType(CoinType.Redstone).FirstOrDefault(hda => hda.Address == address);
+            if (hdAddress == null)
+                throw new InvalidOperationException("Could not find service.ecdsakeyaddress in specified wallet");
             ISecret extendedPrivateKey = wallet.GetExtendedPrivateKeyForAddress(walletPassword, hdAddress);
             return extendedPrivateKey.PrivateKey;
         }
