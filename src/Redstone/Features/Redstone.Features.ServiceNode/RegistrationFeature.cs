@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,11 +9,9 @@ using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.Notifications;
-using Stratis.Bitcoin.Features.Notifications.Interfaces;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.WatchOnlyWallet;
-using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Signals;
 
 namespace Redstone.Features.ServiceNode
@@ -28,37 +25,26 @@ namespace Redstone.Features.ServiceNode
 
         private readonly ILogger logger;
         private readonly RegistrationStore registrationStore;
-        private readonly ConcurrentChain chain;
-        private readonly ISignals signals;
-        private readonly IWatchOnlyWalletManager watchOnlyWalletManager;
-        private readonly IBlockNotification blockNotification;
         private readonly IWalletSyncManager walletSyncManager;
 
         private readonly ILoggerFactory loggerFactory;
         private readonly IRegistrationManager registrationManager;
 
-        private readonly bool isBitcoin;
         private readonly Network network;
 
         public RegistrationFeature(ILoggerFactory loggerFactory,
             NodeSettings nodeSettings,
             RegistrationManager registrationManager,
             RegistrationStore registrationStore,
-            ConcurrentChain chain,
             ISignals signals,
             IWatchOnlyWalletManager watchOnlyWalletManager,
-            IBlockNotification blockNotification,
             IWalletSyncManager walletSyncManager)
         {
             this.loggerFactory = loggerFactory;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.registrationManager = registrationManager;
             this.registrationStore = registrationStore;
-            this.chain = chain;
-            this.signals = signals;
             this.network = nodeSettings.Network;
-            this.watchOnlyWalletManager = watchOnlyWalletManager;
-            this.blockNotification = blockNotification;
             this.walletSyncManager = walletSyncManager;
             this.registrationStore.SetStorePath(nodeSettings.DataDir);
         }
@@ -76,31 +62,9 @@ namespace Redstone.Features.ServiceNode
             else
                 VerifyRegistrationStore(registrationRecords);
 
-            this.signals.OnBlockConnected.Attach(this.OnBlockConnected);
-            this.signals.OnTransactionReceived.Attach(this.ProcessTransaction);        
-
             this.logger.LogTrace("(-)");
 
-            this.registrationManager.Initialize(this.loggerFactory, this.registrationStore, this.isBitcoin,
-                this.network, this.watchOnlyWalletManager);
-
             return Task.CompletedTask;
-        }
-
-        private void OnBlockConnected(ChainedHeaderBlock chBlock)
-        {
-            this.watchOnlyWalletManager.ProcessBlock(chBlock.Block);
-        }
-        
-        public void ProcessTransaction(Transaction transaction)
-        {
-            this.watchOnlyWalletManager.ProcessTransaction(transaction);
-        }
-
-        public void Dispose()
-        {
-            this.signals.OnBlockConnected.Detach(this.OnBlockConnected);
-            this.signals.OnTransactionReceived.Detach(this.ProcessTransaction);
         }
 
         private void RevertRegistrations()

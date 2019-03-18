@@ -2,7 +2,10 @@
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Redstone.Features.ServiceNode.Common;
+using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.WatchOnlyWallet;
+using Stratis.Bitcoin.Primitives;
+using Stratis.Bitcoin.Signals;
 
 namespace Redstone.Features.ServiceNode
 {
@@ -13,22 +16,38 @@ namespace Redstone.Features.ServiceNode
         public static readonly int MIN_PROTOCOL_VERSION = 1;
         public static readonly int WINDOW_PERIOD_BLOCK_COUNT = 30;
 
-        private ILoggerFactory loggerFactory;
         private RegistrationStore registrationStore;
         private Network network;
         private WatchOnlyWalletManager watchOnlyWalletManager;
-
+        private ISignals signals;
         private ILogger logger;
 
-        public void Initialize(ILoggerFactory loggerFactory, RegistrationStore registrationStore, bool isBitcoin, Network network, IWatchOnlyWalletManager watchOnlyWalletManager)
+        public RegistrationManager(
+            ILoggerFactory loggerFactory,
+            NodeSettings nodeSettings,
+            RegistrationStore registrationStore,
+            ISignals signals,
+            IWatchOnlyWalletManager watchOnlyWalletManager)
         {
-            this.loggerFactory = loggerFactory;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.registrationStore = registrationStore;
-            this.network = network;
+            this.network = nodeSettings.Network;
+            this.signals = signals;
             this.watchOnlyWalletManager = watchOnlyWalletManager as WatchOnlyWalletManager;
 
+            this.signals.OnBlockConnected.Attach(this.OnBlockConnected);
+
             this.logger.LogInformation("Initialized RegistrationFeature");
+        }
+
+        private void OnBlockConnected(ChainedHeaderBlock chBlock)
+        {
+            this.ProcessBlock(chBlock.ChainedHeader.Height, chBlock.Block);
+        }
+
+        public void Dispose()
+        {
+            this.signals.OnBlockConnected.Detach(this.OnBlockConnected);
         }
 
         public RegistrationStore GetRegistrationStore()
@@ -64,7 +83,7 @@ namespace Redstone.Features.ServiceNode
 
                         var merkleBlock = new MerkleBlock(block, new[] { tx.GetHash() });
                         var registrationRecord = new RegistrationRecord(DateTime.Now, Guid.NewGuid(), tx.GetHash().ToString(), tx.ToHex(), registrationToken, merkleBlock.PartialMerkleTree, height);
-                            
+
                         // Ignore protocol versions outside the accepted bounds
                         if ((registrationRecord.Record.ProtocolVersion < MIN_PROTOCOL_VERSION) ||
                             (registrationRecord.Record.ProtocolVersion > MAX_PROTOCOL_VERSION))
@@ -92,9 +111,9 @@ namespace Redstone.Features.ServiceNode
                 }
 
                 WatchOnlyWallet watchOnlyWallet = this.watchOnlyWalletManager.GetWatchOnlyWallet();
-                
+
                 // TODO: Need to have 'current height' field in watch-only wallet so that we don't start rebalancing collateral balances before the latest block has been processed & incorporated
-                
+
                 // Perform watch-only wallet housekeeping - iterate through known servers
                 foreach (RegistrationRecord record in this.registrationStore.GetAll())
                 {
@@ -146,10 +165,6 @@ namespace Redstone.Features.ServiceNode
             }
 
             this.logger.LogTrace("(-)");
-        }
-
-        public void Dispose()
-        {
         }
     }
 }
