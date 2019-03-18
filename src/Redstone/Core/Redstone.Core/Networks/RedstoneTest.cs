@@ -126,8 +126,6 @@ namespace Redstone.Core.Networks
 
             this.SeedNodes = new List<NetworkAddress>
             {
-               new NetworkAddress(IPAddress.Parse("80.211.88.201"), this.DefaultPort), // cryptohunter node #8
-               new NetworkAddress(IPAddress.Parse("80.211.88.233"), this.DefaultPort), // cryptohunter node #9
                new NetworkAddress(IPAddress.Parse("80.211.88.244"), this.DefaultPort), // cryptohunter node #10
                new NetworkAddress(IPAddress.Parse("80.211.84.170"), this.DefaultPort), // cryptohunter node #4
             };
