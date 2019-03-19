@@ -34,20 +34,23 @@ namespace Redstone.Features.ServiceNode
             this.network = nodeSettings.Network;
             this.signals = signals;
             this.watchOnlyWalletManager = watchOnlyWalletManager as WatchOnlyWalletManager;
-
-            this.signals.OnBlockConnected.Attach(this.OnBlockConnected);
-
             this.logger.LogInformation("Initialized RegistrationFeature");
         }
 
-        private void OnBlockConnected(ChainedHeaderBlock chBlock)
+        public void Initialize()
         {
-            this.ProcessBlock(chBlock.ChainedHeader.Height, chBlock.Block);
+            this.watchOnlyWalletManager.Initialize();
+            this.signals.OnBlockConnected.Attach(this.OnBlockConnected);
         }
 
         public void Dispose()
         {
             this.signals.OnBlockConnected.Detach(this.OnBlockConnected);
+        }
+
+        private void OnBlockConnected(ChainedHeaderBlock chBlock)
+        {
+            this.ProcessBlock(chBlock.ChainedHeader.Height, chBlock.Block); this.watchOnlyWalletManager.ProcessBlock(chBlock.Block);
         }
 
         public RegistrationStore GetRegistrationStore()

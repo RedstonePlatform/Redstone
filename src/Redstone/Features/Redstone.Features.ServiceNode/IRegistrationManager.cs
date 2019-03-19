@@ -5,6 +5,8 @@ namespace Redstone.Features.ServiceNode
 {
     public interface IRegistrationManager : IDisposable
     {
+        void Initialize();
+
         /// <summary>
         /// Processes a block received from the network.
         /// </summary>

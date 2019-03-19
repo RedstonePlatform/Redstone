@@ -26,8 +26,6 @@ namespace Redstone.Features.ServiceNode
         private readonly ILogger logger;
         private readonly RegistrationStore registrationStore;
         private readonly IWalletSyncManager walletSyncManager;
-
-        private readonly ILoggerFactory loggerFactory;
         private readonly IRegistrationManager registrationManager;
 
         private readonly Network network;
@@ -36,11 +34,8 @@ namespace Redstone.Features.ServiceNode
             NodeSettings nodeSettings,
             RegistrationManager registrationManager,
             RegistrationStore registrationStore,
-            ISignals signals,
-            IWatchOnlyWalletManager watchOnlyWalletManager,
             IWalletSyncManager walletSyncManager)
         {
-            this.loggerFactory = loggerFactory;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.registrationManager = registrationManager;
             this.registrationStore = registrationStore;
@@ -61,6 +56,8 @@ namespace Redstone.Features.ServiceNode
                 RevertRegistrations();
             else
                 VerifyRegistrationStore(registrationRecords);
+
+            this.registrationManager.Initialize();
 
             this.logger.LogTrace("(-)");
 
