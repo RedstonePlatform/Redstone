@@ -11,6 +11,9 @@ UNDERLINE='\033[4m'
 
 OS_VER="Ubuntu*"
 ARCH="linux-x64"
+DATE_STAMP="$(date +%y-%m-%d-%s)"
+SCRIPT_LOGFILE="/tmp/${NODE_USER}_${DATE_STAMP}_output.log"
+NODE_IP=$(curl --silent ipinfo.io/ip)
 
 function setMainVars() {
 ## set network dependent variables
@@ -36,11 +39,10 @@ DNSPORT=53
 
 function setDNSVars() {
 ## set DNS specific variables
-NODE_IP=$(curl --silent ipinfo.io/ip)
 if [ "${NETWORK}" = "" ] ; then
-   DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=seed.redstonecoin.com -dnsnameserver=dns1.seed.redstonecoin.com -dnsmailbox=admin@redstonecoin.com -dnsfullnode=1 -dnslistenport=${DNSPORT}"
+   DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=seed.redstonecoin.com -dnsnameserver=dns1.seed.redstonecoin.com -dnsmailbox=admin@redstoneplatform.com -dnsfullnode=1 -dnslistenport=${DNSPORT}"
  else
-   DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=test.seed.redstonecoin.com -dnsnameserver=testdns1.test.seed.redstonecoin.com -dnsmailbox=admin@redstonecoin.com -dnsfullnode=1 -dnslistenport=${DNSPORT}"
+   DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=seed.redstoneplatform.com -dnsnameserver=testdns1.seed.redstoneplatform.com -dnsmailbox=admin@redstoneplatform.com -dnsfullnode=1 -dnslistenport=${DNSPORT}"
 fi
 ## Stop port 53 from being used by systemd-resovled
 echo 'DNSStubListener=no' | sudo tee -a /etc/systemd/resolved.conf &>> ${SCRIPT_LOGFILE}
@@ -49,17 +51,16 @@ sudo service systemd-resolved restart
 
 function setGeneralVars() {
 ## set general variables
-DATE_STAMP="$(date +%y-%m-%d-%s)"
-SCRIPT_LOGFILE="/tmp/${NODE_USER}_${DATE_STAMP}_output.log"
+
 COINRUNCMD="sudo dotnet ./Redstone.RedstoneFullNodeD.dll ${NETWORK} -datadir=/home/${NODE_USER}/.redstonenode ${DNS}"  ## additional commands can be used here e.g. -testnet or -stake=1
 CONF=release
-COINGITHUB=https://github.com/RedstonePlatform/Redstone.git
+#COINGITHUB=https://github.com/RedstonePlatform/Redstone.git
+COINGITHUB=https://github.com/spartacrypt/RedstoneServiceNode.git
 COINDAEMON=redstoned
 COINCONFIG=redstone.conf
 COINSTARTUP=/home/${NODE_USER}/redstoned
-COINSRCLOC=/home/${NODE_USER}/Redstone ##TODO: this can be removed 
-COINDLOC=/home/${NODE_USER}/RedstoneNode   
-COINDSRC=/home/${NODE_USER}/Redstone/src/Redstone/Programs/Redstone.RedstoneFullNodeD
+COINDLOC=/home/${NODE_USER}/RedstoneNode
+COINDSRC=/home/${NODE_USER}/code/src/Redstone/Programs/Redstone.RedstoneFullNodeD
 COINSERVICELOC=/etc/systemd/system/
 COINSERVICENAME=${COINDAEMON}@${NODE_USER}
 SWAPSIZE="1024" ## =1GB
@@ -196,12 +197,12 @@ compileWallet() {
     echo
     echo -e "* Compiling wallet. Please wait, this might take a while to complete..."
     cd /home/${NODE_USER}/
-    git clone ${COINGITHUB} &>> ${SCRIPT_LOGFILE}
-    cd ${COINSRCLOC} 
+    git clone ${COINGITHUB} code &>> ${SCRIPT_LOGFILE}
+    cd /home/${NODE_USER}/code
     git submodule update --init --recursive &>> ${SCRIPT_LOGFILE}
-    cd ${COINDSRC} 
-    dotnet publish -c ${CONF} -r ${ARCH} -v m -o ${COINDLOC} &>> ${SCRIPT_LOGFILE}	   ### compile & publish code 
-    rm -rf ${COINSRCLOC} &>> ${SCRIPT_LOGFILE} 	   ### Remove source
+    cd ${COINDSRC}
+    dotnet publish -c ${CONF} -r ${ARCH} -v m -o ${COINDLOC} &>> ${SCRIPT_LOGFILE}	   ### compile & publish code
+    rm -rf /home/${NODE_USER}/code &>> ${SCRIPT_LOGFILE} 	   ### Remove source
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
 
