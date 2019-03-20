@@ -108,9 +108,9 @@ namespace Redstone.Core.Networks
                 posRewardReductionPercentage: 7.5m
             );
 
-            this.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS] = new byte[] { (63) };
+            this.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS] = new byte[] { (65) };
             this.Base58Prefixes[(int)Base58Type.SCRIPT_ADDRESS] = new byte[] { (196) };
-            this.Base58Prefixes[(int)Base58Type.SECRET_KEY] = new byte[] { (63 + 128) };
+            this.Base58Prefixes[(int)Base58Type.SECRET_KEY] = new byte[] { (65 + 128) };
 
             this.Checkpoints = new Dictionary<int, CheckpointInfo>
             {
@@ -126,10 +126,9 @@ namespace Redstone.Core.Networks
 
             this.SeedNodes = new List<NetworkAddress>
             {
-               new NetworkAddress(IPAddress.Parse("80.211.88.201"), this.DefaultPort), // cryptohunter node #8
-               new NetworkAddress(IPAddress.Parse("80.211.88.233"), this.DefaultPort), // cryptohunter node #9
-               new NetworkAddress(IPAddress.Parse("80.211.88.244"), this.DefaultPort), // cryptohunter node #10
                new NetworkAddress(IPAddress.Parse("80.211.84.170"), this.DefaultPort), // cryptohunter node #4
+               new NetworkAddress(IPAddress.Parse("31.14.138.23"), this.DefaultPort), // cryptohunter node #3
+               new NetworkAddress(IPAddress.Parse("35.178.169.232"), this.DefaultPort), // cryptohunter node #aws
             };
 
             this.StandardScriptsRegistry = new RedstoneStandardScriptsRegistry();

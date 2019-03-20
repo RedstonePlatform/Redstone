@@ -13,6 +13,7 @@ OS_VER="Ubuntu*"
 ARCH="linux-x64"
 DATE_STAMP="$(date +%y-%m-%d-%s)"
 SCRIPT_LOGFILE="/tmp/${NODE_USER}_${DATE_STAMP}_output.log"
+NODE_IP=$(curl --silent ipinfo.io/ip)
 
 function setMainVars() {
 ## set network dependent variables
@@ -38,7 +39,6 @@ DNSPORT=53
 
 function setDNSVars() {
 ## set DNS specific variables
-NODE_IP=$(curl --silent ipinfo.io/ip)
 if [ "${NETWORK}" = "" ] ; then
    DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=seed.redstonecoin.com -dnsnameserver=dns1.seed.redstonecoin.com -dnsmailbox=admin@redstoneplatform.com -dnsfullnode=1 -dnslistenport=${DNSPORT}"
  else
