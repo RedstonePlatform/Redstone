@@ -95,6 +95,7 @@ namespace Redstone.Core.Networks
                 powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
                 powTargetSpacing: TimeSpan.FromSeconds(10 * 60),
                 powAllowMinDifficultyBlocks: false,
+                posNoRetargeting: false,
                 powNoRetargeting: false,
                 powLimit: powLimit,
                 minimumChainWork: null,
@@ -126,10 +127,10 @@ namespace Redstone.Core.Networks
 
             this.SeedNodes = new List<NetworkAddress>
             {
-               new NetworkAddress(IPAddress.Parse("80.211.88.201"), this.DefaultPort), // cryptohunter node #8
-               new NetworkAddress(IPAddress.Parse("80.211.88.233"), this.DefaultPort), // cryptohunter node #9
-               new NetworkAddress(IPAddress.Parse("80.211.88.244"), this.DefaultPort), // cryptohunter node #10
-               new NetworkAddress(IPAddress.Parse("80.211.84.170"), this.DefaultPort), // cryptohunter node #4
+               new NetworkAddress(IPAddress.Parse("80.211.88.201"), 19156), // cryptohunter node #8
+               new NetworkAddress(IPAddress.Parse("80.211.88.233"), 19156), // cryptohunter node #9
+               new NetworkAddress(IPAddress.Parse("80.211.88.244"), 19156), // cryptohunter node #10
+               new NetworkAddress(IPAddress.Parse("80.211.84.170"), 19156), // cryptohunter node #4
             };
 
             this.StandardScriptsRegistry = new RedstoneStandardScriptsRegistry();

@@ -61,6 +61,10 @@ namespace NBitcoin
 
         public bool PowAllowMinDifficultyBlocks { get; }
 
+        /// <inheritdoc />
+        public bool PosNoRetargeting { get; }
+
+        /// <inheritdoc />
         public bool PowNoRetargeting { get; }
 
         public uint256 HashGenesisBlock { get; }
@@ -127,6 +131,7 @@ namespace NBitcoin
             TimeSpan powTargetTimespan,
             TimeSpan powTargetSpacing,
             bool powAllowMinDifficultyBlocks,
+            bool posNoRetargeting,
             bool powNoRetargeting,
             Target powLimit,
             uint256 minimumChainWork,
@@ -165,6 +170,7 @@ namespace NBitcoin
             this.PowTargetTimespan = powTargetTimespan;
             this.PowTargetSpacing = powTargetSpacing;
             this.PowAllowMinDifficultyBlocks = powAllowMinDifficultyBlocks;
+            this.PosNoRetargeting = posNoRetargeting;
             this.PowNoRetargeting = powNoRetargeting;
             this.HashGenesisBlock = hashGenesisBlock;
             this.MinimumChainWork = minimumChainWork;
