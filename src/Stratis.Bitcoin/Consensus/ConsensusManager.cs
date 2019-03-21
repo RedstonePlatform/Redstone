@@ -12,6 +12,7 @@ using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus.PerformanceCounters.ConsensusManager;
 using Stratis.Bitcoin.Consensus.ValidationResults;
 using Stratis.Bitcoin.Consensus.Validators;
+using Stratis.Bitcoin.EventBus.CoreEvents;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Primitives;
@@ -214,7 +215,7 @@ namespace Stratis.Bitcoin.Consensus
             // We should consider creating a consensus store class that will internally contain
             // coinview and it will abstract the methods `RewindAsync()` `GetBlockHashAsync()`
 
-            uint256 consensusTipHash = await this.ConsensusRules.GetBlockHashAsync().ConfigureAwait(false);
+            uint256 consensusTipHash = this.ConsensusRules.GetBlockHash();
 
             ChainedHeader pendingTip;
 
@@ -257,6 +258,12 @@ namespace Stratis.Bitcoin.Consensus
 
                 connectNewHeadersResult = this.chainedHeaderTree.ConnectNewHeaders(peerId, headers);
 
+                if (!this.peersByPeerId.ContainsKey(peerId))
+                {
+                    this.peersByPeerId.Add(peerId, peer);
+                    this.logger.LogTrace("New peer with ID {0} was added.", peerId);
+                }
+
                 if (connectNewHeadersResult == null)
                 {
                     this.logger.LogTrace("(-)[NO_HEADERS_CONNECTED]:null");
@@ -272,12 +279,6 @@ namespace Stratis.Bitcoin.Consensus
                 this.chainState.IsAtBestChainTip = this.IsConsensusConsideredToBeSyncedLocked();
 
                 this.blockPuller.NewPeerTipClaimed(peer, connectNewHeadersResult.Consumed);
-
-                if (!this.peersByPeerId.ContainsKey(peerId))
-                {
-                    this.peersByPeerId.Add(peerId, peer);
-                    this.logger.LogTrace("New peer with ID {0} was added.", peerId);
-                }
             }
 
             if (triggerDownload && (connectNewHeadersResult.DownloadTo != null))
@@ -684,13 +685,7 @@ namespace Stratis.Bitcoin.Consensus
 
             while (current != fork)
             {
-                await this.ConsensusRules.RewindAsync().ConfigureAwait(false);
-
-                lock (this.peerLock)
-                {
-                    this.SetConsensusTipInternalLocked(current.Previous);
-                }
-
+                // Access the block before rewinding.
                 Block block = current.Block;
 
                 if (block == null)
@@ -706,13 +701,20 @@ namespace Stratis.Bitcoin.Consensus
                     }
                 }
 
+                await this.ConsensusRules.RewindAsync().ConfigureAwait(false);
+
+                lock (this.peerLock)
+                {
+                    this.SetConsensusTipInternalLocked(current.Previous);
+                }
+
                 var disconnectedBlock = new ChainedHeaderBlock(block, current);
 
                 disconnectedBlocks.Add(disconnectedBlock);
 
                 using (this.performanceCounter.MeasureBlockDisconnectedSignal())
                 {
-                    this.signals.OnBlockDisconnected.Notify(disconnectedBlock);
+                    this.signals.Publish(new BlockDisconnected(disconnectedBlock));
                 }
 
                 current = current.Previous;
@@ -770,7 +772,7 @@ namespace Stratis.Bitcoin.Consensus
 
                 using (this.performanceCounter.MeasureBlockConnectedSignal())
                 {
-                    this.signals.OnBlockConnected.Notify(blockToConnect);
+                    this.signals.Publish(new BlockConnected(blockToConnect));
                 }
             }
 
