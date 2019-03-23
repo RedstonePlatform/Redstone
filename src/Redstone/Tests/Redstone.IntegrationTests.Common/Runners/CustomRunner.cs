@@ -19,7 +19,7 @@ namespace Redstone.IntegrationTests.Common.Runners
 
         public CustomNodeRunner(string dataDir, Action<IFullNodeBuilder> callback, Network network, 
             ProtocolVersion protocolVersion = ProtocolVersion.PROTOCOL_VERSION, NodeConfigParameters configParameters = null, string agent = "Custom")
-            : base(dataDir)
+            : base(dataDir, agent)
         {
             this.callback = callback;
             this.network = network;

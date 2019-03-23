@@ -9,6 +9,8 @@ using Redstone.Features.ServiceNode.Common;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.EventBus;
+using Stratis.Bitcoin.EventBus.CoreEvents;
 using Stratis.Bitcoin.Features.Notifications.Interfaces;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.WatchOnlyWallet;
@@ -37,6 +39,8 @@ namespace Redstone.Features.ServiceNode
 
         private readonly bool isBitcoin;
         private readonly Network network;
+        private SubscriptionToken blockConnectedSubscription;
+        private SubscriptionToken transactionReceivedSubscription;
 
         public RegistrationFeature(ILoggerFactory loggerFactory,
             NodeSettings nodeSettings,
@@ -74,8 +78,9 @@ namespace Redstone.Features.ServiceNode
             else
                 VerifyRegistrationStore(registrationRecords);
 
-            this.signals.OnBlockConnected.Attach(this.OnBlockConnected);
-            this.signals.OnTransactionReceived.Attach(this.ProcessTransaction);        
+            this.blockConnectedSubscription = this.signals.Subscribe<BlockConnected>(this.OnBlockConnected);
+            this.transactionReceivedSubscription = this.signals.Subscribe<TransactionReceived>(this.OnTransactionAvailable);
+
 
             this.logger.LogTrace("(-)");
 
@@ -85,20 +90,20 @@ namespace Redstone.Features.ServiceNode
             return Task.CompletedTask;
         }
 
-        private void OnBlockConnected(ChainedHeaderBlock chBlock)
+        private void OnBlockConnected(BlockConnected blockConnected)
         {
-            this.watchOnlyWalletManager.ProcessBlock(chBlock.Block);
+            this.watchOnlyWalletManager.ProcessBlock(blockConnected.ConnectedBlock.Block);
         }
         
-        public void ProcessTransaction(Transaction transaction)
+        public void OnTransactionAvailable(TransactionReceived transactionReceived)
         {
-            this.watchOnlyWalletManager.ProcessTransaction(transaction);
+            this.watchOnlyWalletManager.ProcessTransaction(transactionReceived.ReceivedTransaction);
         }
 
         public void Dispose()
         {
-            this.signals.OnBlockConnected.Detach(this.OnBlockConnected);
-            this.signals.OnTransactionReceived.Detach(this.ProcessTransaction);
+            this.signals.Unsubscribe(this.blockConnectedSubscription);
+            this.signals.Unsubscribe(this.transactionReceivedSubscription);
         }
 
         private void RevertRegistrations()

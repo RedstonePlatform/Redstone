@@ -86,7 +86,7 @@ namespace Redstone.Core.Networks
                 ruleChangeActivationThreshold: 1916, // 95% of 2016
                 minerConfirmationWindow: 2016, // nPowTargetTimespan / nPowTargetSpacing
                 maxReorgLength: 500,
-                defaultAssumeValid: new uint256("0x98fa6ef0bca5b431f15fd79dc6f879dc45b83ed4b1bbe933a383ef438321958e"), // 372652
+                defaultAssumeValid: null,
                 maxMoney: long.MaxValue,
                 coinbaseMaturity: 10,
                 premineHeight: 2,
@@ -95,6 +95,7 @@ namespace Redstone.Core.Networks
                 powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
                 powTargetSpacing: TimeSpan.FromSeconds(10 * 60),
                 powAllowMinDifficultyBlocks: false,
+                posNoRetargeting: false,
                 powNoRetargeting: false,
                 powLimit: powLimit,
                 minimumChainWork: null,
@@ -126,10 +127,9 @@ namespace Redstone.Core.Networks
 
             this.SeedNodes = new List<NetworkAddress>
             {
-               new NetworkAddress(IPAddress.Parse("80.211.88.201"), this.DefaultPort), // cryptohunter node #8
-               new NetworkAddress(IPAddress.Parse("80.211.88.233"), this.DefaultPort), // cryptohunter node #9
-               new NetworkAddress(IPAddress.Parse("80.211.88.244"), this.DefaultPort), // cryptohunter node #10
                new NetworkAddress(IPAddress.Parse("80.211.84.170"), this.DefaultPort), // cryptohunter node #4
+               new NetworkAddress(IPAddress.Parse("31.14.138.23"), this.DefaultPort), // cryptohunter node #3
+               new NetworkAddress(IPAddress.Parse("35.178.169.232"), this.DefaultPort), // cryptohunter node #aws
             };
 
             this.StandardScriptsRegistry = new RedstoneStandardScriptsRegistry();

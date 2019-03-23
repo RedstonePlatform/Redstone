@@ -143,7 +143,7 @@ namespace Redstone.IntegrationTests.Common
 
                 Wallet wallet = node.FullNode.WalletManager().GetWalletByName(walletName);
                 Key extendedPrivateKey = wallet.GetExtendedPrivateKeyForAddress(walletPassword, unusedAddress).PrivateKey;
-                node.SetDummyMinerSecret(new BitcoinSecret(extendedPrivateKey, node.FullNode.Network));
+                node.SetMinerSecret(new BitcoinSecret(extendedPrivateKey, node.FullNode.Network));
             }
 
             var script = new ReserveScript { ReserveFullNodeScript = node.MinerSecret.ScriptPubKey };
