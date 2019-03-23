@@ -103,8 +103,7 @@
             Assert.Equal(
                 new BigInteger(uint256.Parse("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff")
                     .ToBytes(false)), network.Consensus.ProofOfStakeLimitV2);
-            Assert.Equal(new uint256("0x55a8205ae4bbf18f4d238c43f43005bd66e0b1f679b39e2c5c62cf6903693a5e"),
-                network.Consensus.DefaultAssumeValid);
+            Assert.Null(network.Consensus.DefaultAssumeValid);
             Assert.Equal(50, network.Consensus.CoinbaseMaturity);
             Assert.Equal(Money.Coins(5400000), network.Consensus.PremineReward);
             Assert.Equal(2, network.Consensus.PremineHeight);
@@ -198,8 +197,7 @@
             Assert.Equal(
                 new BigInteger(uint256.Parse("0000ffff00000000000000000000000000000000000000000000000000000000")
                     .ToBytes(false)), network.Consensus.ProofOfStakeLimitV2);
-            Assert.Equal(new uint256("0x98fa6ef0bca5b431f15fd79dc6f879dc45b83ed4b1bbe933a383ef438321958e"),
-                network.Consensus.DefaultAssumeValid);
+            Assert.Null(network.Consensus.DefaultAssumeValid);
             Assert.Equal(10, network.Consensus.CoinbaseMaturity);
             Assert.Equal(Money.Coins(30000), network.Consensus.PremineReward);
             Assert.Equal(2, network.Consensus.PremineHeight);

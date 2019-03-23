@@ -16,7 +16,7 @@ namespace Redstone.IntegrationTests.Common.Runners
     public sealed class RedstonePosRunner : NodeRunner
     {
         public RedstonePosRunner(string dataDir, Network network)
-            : base(dataDir)
+            : base(dataDir, "Redstone")
         {
             this.Network = network;
         }
