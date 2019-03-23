@@ -15,7 +15,7 @@ namespace Redstone.IntegrationTests.Common.Runners
     public sealed class RedstonePowRunner : NodeRunner
     {
         public RedstonePowRunner(string dataDir, Network network)
-            : base(dataDir)
+            : base(dataDir, "Redstone")
         {
             this.Network = network;
         }

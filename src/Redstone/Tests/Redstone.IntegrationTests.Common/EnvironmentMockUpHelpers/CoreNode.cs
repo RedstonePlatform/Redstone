@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
@@ -14,15 +16,18 @@ using Redstone.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
+using Stratis.Bitcoin.Consensus;
+using Stratis.Bitcoin.EventBus;
+using Stratis.Bitcoin.EventBus.CoreEvents;
 using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.Miner;
-using Stratis.Bitcoin.Features.Miner.Interfaces;
 using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Bitcoin.Primitives;
+using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
 
@@ -30,14 +35,14 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
 {
     public class CoreNode
     {
-        private readonly ConnectionManagerSettings connectionManagerSettings;
         private readonly NetworkCredential creds;
         private readonly object lockObject = new object();
         private readonly ILoggerFactory loggerFactory;
-        private readonly NodeRunner runner;
+        internal readonly NodeRunner runner;
         private List<Transaction> transactions = new List<Transaction>();
 
         public int ApiPort => int.Parse(this.ConfigParameters["apiport"]);
+
         public BitcoinSecret MinerSecret { get; private set; }
         public HdAddress MinerHDAddress { get; internal set; }
         public int ProtocolPort => int.Parse(this.ConfigParameters["port"]);
@@ -50,11 +55,25 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         public string Config { get; }
 
-        public NodeConfigParameters ConfigParameters { get; } = new NodeConfigParameters();
+        public NodeConfigParameters ConfigParameters { get; set; }
 
         public bool CookieAuth { get; set; }
 
         public Mnemonic Mnemonic { get; set; }
+
+        private bool builderAlwaysFlushBlocks;
+        private bool builderEnablePeerDiscovery;
+        private bool builderNoValidation;
+        private bool builderOverrideDateTimeProvider;
+        private bool builderWithDummyWallet;
+        private bool builderWithWallet;
+        private string builderWalletName;
+        private string builderWalletPassword;
+        private string builderWalletPassphrase;
+        private string builderWalletMnemonic;
+
+        private SubscriptionToken blockConnectedSubscription;
+        private SubscriptionToken blockDisconnectedSubscription;
 
         public CoreNode(NodeRunner runner, NodeConfigParameters configParameters, string configfile, bool useCookieAuth = false)
         {
@@ -65,7 +84,11 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
             this.creds = new NetworkCredential(pass, pass);
             this.Config = Path.Combine(this.runner.DataFolder, configfile);
             this.CookieAuth = useCookieAuth;
-            this.ConfigParameters.Import(configParameters);
+
+            this.ConfigParameters = new NodeConfigParameters();
+            if (configParameters != null)
+                this.ConfigParameters.Import(configParameters);
+
             var randomFoundPorts = new int[3];
             IpHelper.FindPorts(randomFoundPorts);
             this.ConfigParameters.SetDefaultValueIfUndefined("port", randomFoundPorts[0].ToString());
@@ -91,26 +114,134 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
                 return "cookiefile=" + Path.Combine(this.runner.DataFolder, "regtest", ".cookie");
         }
 
-        public CoreNode NotInIBD()
+        public CoreNode NoValidation()
         {
-            ((InitialBlockDownloadStateMock)this.FullNode.NodeService<IInitialBlockDownloadState>()).SetIsInitialBlockDownload(false, DateTime.UtcNow.AddMinutes(5));
+            this.builderNoValidation = true;
+            return this;
+        }
+
+        /// <summary>
+        /// Executes a function when a block has connected.
+        /// </summary>
+        /// <param name="interceptor">A function that is called everytime a block connects.</param>
+        /// <returns>This node.</returns>
+        public CoreNode SetConnectInterceptor(Action<ChainedHeaderBlock> interceptor)
+        {
+            this.blockConnectedSubscription = this.FullNode.NodeService<ISignals>().Subscribe<BlockConnected>(ev => interceptor(ev.ConnectedBlock));
 
             return this;
         }
 
-        public Mnemonic WithWallet(string walletPassword = "password", string walletName = "mywallet", string walletPassphrase = "passphrase")
+        /// <summary>
+        /// Executes a function when a block has disconnected.
+        /// </summary>
+        /// <param name="interceptor">A function that is called when a block disconnects.</param>
+        /// <returns>This node.</returns>
+        public CoreNode SetDisconnectInterceptor(Action<ChainedHeaderBlock> interceptor)
         {
-            return this.FullNode.WalletManager().CreateWallet(walletPassword, walletName, walletPassphrase);
+            this.blockDisconnectedSubscription = this.FullNode.NodeService<ISignals>().Subscribe<BlockDisconnected>(ev => interceptor(ev.DisconnectedBlock));
+
+            return this;
+        }
+
+        /// <summary>
+        /// Enables <see cref="PeerDiscovery"/> and <see cref="PeerConnectorDiscovery"/> which is disabled by default.
+        /// </summary>
+        /// <returns>This node.</returns>
+        public CoreNode EnablePeerDiscovery()
+        {
+            this.builderEnablePeerDiscovery = true;
+            return this;
+        }
+
+        public CoreNode AlwaysFlushBlocks()
+        {
+            this.builderAlwaysFlushBlocks = true;
+            return this;
+        }
+
+        /// <summary>
+        /// Overrides the node's date time provider with one where the current date time starts 2018-01-01.
+        /// <para>
+        /// This is primarily used where we want to mine coins in the past used for staking.
+        /// </para>
+        /// </summary>
+        /// <returns>This node.</returns>
+        public CoreNode OverrideDateTimeProvider()
+        {
+            this.builderOverrideDateTimeProvider = true;
+            return this;
+        }
+
+        /// <summary>
+        /// Overrides a node service.
+        /// </summary>
+        /// <param name="serviceToOverride">A function that will override a given service in the node.</param>
+        /// <returns>This node.</returns>
+        public CoreNode OverrideService(Action<IServiceCollection> serviceToOverride)
+        {
+            this.runner.ServiceToOverride = serviceToOverride;
+            return this;
+        }
+
+        /// <summary>
+        /// This does not create a physical wallet but only sets the miner secret on the node.
+        /// </summary>
+        /// <returns>This node.</returns>
+        public CoreNode WithDummyWallet()
+        {
+            this.builderWithDummyWallet = true;
+            this.builderWithWallet = false;
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a wallet to this node with defaulted parameters.
+        /// </summary>
+        /// <param name="walletPassword">Wallet password defaulted to "password".</param>
+        /// <param name="walletName">Wallet name defaulted to "mywallet".</param>
+        /// <param name="walletPassphrase">Wallet passphrase defaulted to "passphrase".</param>
+        /// <param name="walletMnemonic">Optional wallet mnemonic.</param>
+        /// <returns>This node.</returns>
+        public CoreNode WithWallet(string walletPassword = "password", string walletName = "mywallet", string walletPassphrase = "passphrase", string walletMnemonic = null)
+        {
+            this.builderWithDummyWallet = false;
+            this.builderWithWallet = true;
+            this.builderWalletName = walletName;
+            this.builderWalletPassphrase = walletPassphrase;
+            this.builderWalletPassword = walletPassword;
+            this.builderWalletMnemonic = walletMnemonic;
+            return this;
+        }
+
+        public CoreNode WithReadyBlockchainData(string readyDataName)
+        {
+            // Extract the zipped blockchain data to the node's DataFolder.
+            ZipFile.ExtractToDirectory(Path.GetFullPath(readyDataName), this.DataFolder, true);
+
+            return this;
         }
 
         public RPCClient CreateRPCClient()
         {
-            return new RPCClient(this.GetRPCAuth(), new Uri("http://127.0.0.1:" + this.RpcPort + "/"), KnownNetworks.RegTest);
+            return new RPCClient(this.GetRPCAuth(), new Uri("http://127.0.0.1:" + this.RpcPort + "/"), this.FullNode?.Network ?? KnownNetworks.RegTest);
         }
 
         public INetworkPeer CreateNetworkPeerClient()
         {
-            var selfEndPointTracker = new SelfEndpointTracker(this.loggerFactory);
+            ConnectionManagerSettings connectionManagerSettings = null;
+
+            //if (this.runner is BitcoinCoreRunner)
+            //{
+            //    var nodeSettings = new NodeSettings(this.runner.Network, args: new string[] { "-conf=bitcoin.conf", "-datadir=" + this.runner.DataFolder });
+            //    connectionManagerSettings = new ConnectionManagerSettings(nodeSettings);
+            //}
+            //else
+            {
+                connectionManagerSettings = this.runner.FullNode.ConnectionManager.ConnectionSettings;
+            }
+
+            var selfEndPointTracker = new SelfEndpointTracker(this.loggerFactory, connectionManagerSettings);
 
             // Needs to be initialized beforehand.
             selfEndPointTracker.UpdateAndAssignMyExternalAddress(new IPEndPoint(IPAddress.Parse("0.0.0.0").MapToIPv6Ex(), this.ProtocolPort), false);
@@ -124,26 +255,32 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
                 new PayloadProvider().DiscoverPayloads(),
                 selfEndPointTracker,
                 ibdState.Object,
-                this.connectionManagerSettings);
+                connectionManagerSettings);
 
             return networkPeerFactory.CreateConnectedNetworkPeerAsync("127.0.0.1:" + this.ProtocolPort).GetAwaiter().GetResult();
         }
 
-        public void Start()
+        public CoreNode Start()
         {
             lock (this.lockObject)
             {
+                this.runner.AlwaysFlushBlocks = this.builderAlwaysFlushBlocks;
+                this.runner.EnablePeerDiscovery = this.builderEnablePeerDiscovery;
+                this.runner.OverrideDateTimeProvider = this.builderOverrideDateTimeProvider;
+
                 this.runner.BuildNode();
                 this.runner.Start();
                 this.State = CoreNodeState.Starting;
             }
 
-            //if (this.runner is BitcoinCoreRunner)
-            //    StartBitcoinCoreRunner();
+            //if ((this.runner is BitcoinCoreRunner) || (this.runner is StratisXRunner))
+            //    WaitForExternalNodeStartup();
             //else
                 StartStratisRunner();
 
             this.State = CoreNodeState.Running;
+
+            return this;
         }
 
         private void CreateConfigFile(NodeConfigParameters configParameters = null)
@@ -161,7 +298,18 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
                 configParameters.SetDefaultValueIfUndefined("rpcpassword", this.creds.Password);
             }
 
-            configParameters.SetDefaultValueIfUndefined("printtoconsole", "1");
+            // The debug log is disabled in stratisX when printtoconsole is enabled.
+            // While further integration tests are being developed it makes sense
+            // to always have the debug logs available, as there is minimal other
+            // insight into the stratisd process while it is running.
+            //if (this.runner is StratisXRunner)
+            //{
+            //    configParameters.SetDefaultValueIfUndefined("printtoconsole", "0");
+            //    configParameters.SetDefaultValueIfUndefined("debug", "1");
+            //}
+            //else
+                configParameters.SetDefaultValueIfUndefined("printtoconsole", "1");
+
             configParameters.SetDefaultValueIfUndefined("keypool", "10");
             configParameters.SetDefaultValueIfUndefined("agentprefix", "node" + this.ProtocolPort);
             configParameters.Import(this.ConfigParameters);
@@ -174,7 +322,11 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
             this.Start();
         }
 
-        private void StartBitcoinCoreRunner()
+        /// <summary>
+        /// Used with precompiled bitcoind and stratisd node
+        /// executables, not SBFN runners.
+        /// </summary>
+        private void WaitForExternalNodeStartup()
         {
             TimeSpan duration = TimeSpan.FromMinutes(5);
             var cancellationToken = new CancellationTokenSource(duration).Token;
@@ -191,7 +343,7 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
                     return false;
                 }
             }, cancellationToken: cancellationToken,
-                failureReason: $"Failed to invoke GetBlockHash on BitcoinCore instance after {duration}");
+                failureReason: $"Failed to invoke GetBlockHash on node instance after {duration}");
         }
 
         private void StartStratisRunner()
@@ -206,6 +358,34 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
             TestHelper.WaitLoop(() => this.runner.FullNode.State == FullNodeState.Started,
                 cancellationToken: new CancellationTokenSource(timeToNodeStart).Token,
                 failureReason: $"Failed to achieve state = started within {timeToNodeStart}");
+
+            if (this.builderWithDummyWallet)
+                this.SetMinerSecret(new BitcoinSecret(new Key(), this.FullNode.Network));
+
+            if (this.builderWithWallet)
+            {
+                this.Mnemonic = this.FullNode.WalletManager().CreateWallet(
+                    this.builderWalletPassword,
+                    this.builderWalletName,
+                    this.builderWalletPassphrase,
+                    string.IsNullOrEmpty(this.builderWalletMnemonic) ? null : new Mnemonic(this.builderWalletMnemonic));
+            }
+
+            if (this.builderNoValidation)
+                DisableValidation();
+        }
+
+        /// <summary>
+        /// Clears all consensus rules for this node.
+        /// </summary>
+        public void DisableValidation()
+        {
+            this.FullNode.Network.Consensus.FullValidationRules.Clear();
+            this.FullNode.Network.Consensus.HeaderValidationRules.Clear();
+            this.FullNode.Network.Consensus.IntegrityValidationRules.Clear();
+            this.FullNode.Network.Consensus.PartialValidationRules.Clear();
+
+            this.FullNode.NodeService<IConsensusRuleEngine>().Register();
         }
 
         public void Broadcast(Transaction transaction)
@@ -222,8 +402,8 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
         /// <summary>
         /// Emit a ping and wait the pong.
         /// </summary>
-        /// <param name="peer">Peer</param>
-        /// <param name="cancellation">Cancellation</param>
+        /// <param name="cancellation"></param>
+        /// <param name="peer"></param>
         /// <returns>Latency.</returns>
         public async Task<TimeSpan> PingPongAsync(INetworkPeer peer, CancellationToken cancellation = default(CancellationToken))
         {
@@ -273,7 +453,7 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         public DateTimeOffset? MockTime { get; set; }
 
-        public void SetDummyMinerSecret(BitcoinSecret secret)
+        public void SetMinerSecret(BitcoinSecret secret)
         {
             this.MinerSecret = secret;
         }
@@ -288,7 +468,7 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
 
             using (INetworkPeer peer = this.CreateNetworkPeerClient())
             {
-                peer.VersionHandshakeAsync().GetAwaiter().GetResult();
+                await peer.VersionHandshakeAsync().ConfigureAwait(false);
 
                 var chain = bestBlock == this.runner.Network.GenesisHash ? new ConcurrentChain(this.runner.Network) : this.GetChain(peer);
 
@@ -334,7 +514,7 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
         /// </summary>
         /// <param name="peer">Peer to get chain from.</param>
         /// <param name="hashStop">The highest block wanted.</param>
-        /// <param name="cancellationToken">The cancellation token</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The chain of headers.</returns>
         private ConcurrentChain GetChain(INetworkPeer peer, uint256 hashStop = null, CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -349,8 +529,8 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
         /// <param name="peer">Node to synchronize the chain for.</param>
         /// <param name="chain">The chain to synchronize.</param>
         /// <param name="hashStop">The location until which it synchronize.</param>
-        /// <param name="cancellationToken">The cancellation token</param>
-        /// <returns>The chained header</returns>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         private IEnumerable<ChainedHeader> SynchronizeChain(INetworkPeer peer, ChainBase chain, uint256 hashStop = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             ChainedHeader oldTip = chain.Tip;
@@ -506,6 +686,11 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
             BitcoinAddress address = rpc.GetNewAddress();
             dest = rpc.DumpPrivKey(address);
             return dest;
+        }
+
+        public ChainedHeader GetTip()
+        {
+            return this.FullNode.NodeService<IConsensusManager>().Tip;
         }
     }
 }

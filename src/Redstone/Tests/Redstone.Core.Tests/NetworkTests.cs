@@ -103,8 +103,7 @@
             Assert.Equal(
                 new BigInteger(uint256.Parse("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff")
                     .ToBytes(false)), network.Consensus.ProofOfStakeLimitV2);
-            Assert.Equal(new uint256("0x55a8205ae4bbf18f4d238c43f43005bd66e0b1f679b39e2c5c62cf6903693a5e"),
-                network.Consensus.DefaultAssumeValid);
+            Assert.Null(network.Consensus.DefaultAssumeValid);
             Assert.Equal(50, network.Consensus.CoinbaseMaturity);
             Assert.Equal(Money.Coins(5400000), network.Consensus.PremineReward);
             Assert.Equal(2, network.Consensus.PremineHeight);
@@ -130,7 +129,7 @@
             Network network = RedstoneNetworks.TestNet;
 
             Assert.Empty(network.Checkpoints);
-            Assert.Equal("seed.redstonecoin.com",network.DNSSeeds[0].Host);
+            Assert.Equal("seed.redstoneplatform.com",network.DNSSeeds[0].Host);
             Assert.True(network.SeedNodes.Count > 0);
             
             Assert.Equal("RedstoneTest", network.Name);
@@ -153,9 +152,9 @@
                 network.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS].ToString());
 
             Assert.Equal(12, network.Base58Prefixes.Length);
-            Assert.Equal(new byte[] { (63) }, network.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS]);
+            Assert.Equal(new byte[] { (65) }, network.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS]);
             Assert.Equal(new byte[] { (196) }, network.Base58Prefixes[(int)Base58Type.SCRIPT_ADDRESS]);
-            Assert.Equal(new byte[] { (63 + 128) }, network.Base58Prefixes[(int)Base58Type.SECRET_KEY]);
+            Assert.Equal(new byte[] { (65 + 128) }, network.Base58Prefixes[(int)Base58Type.SECRET_KEY]);
             Assert.Equal(new byte[] { 0x01, 0x42 }, network.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_NO_EC]);
             Assert.Equal(new byte[] { 0x01, 0x43 }, network.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_EC]);
             Assert.Equal(new byte[] { (0x04), (0x88), (0xB2), (0x1E) },
@@ -198,8 +197,7 @@
             Assert.Equal(
                 new BigInteger(uint256.Parse("0000ffff00000000000000000000000000000000000000000000000000000000")
                     .ToBytes(false)), network.Consensus.ProofOfStakeLimitV2);
-            Assert.Equal(new uint256("0x98fa6ef0bca5b431f15fd79dc6f879dc45b83ed4b1bbe933a383ef438321958e"),
-                network.Consensus.DefaultAssumeValid);
+            Assert.Null(network.Consensus.DefaultAssumeValid);
             Assert.Equal(10, network.Consensus.CoinbaseMaturity);
             Assert.Equal(Money.Coins(30000), network.Consensus.PremineReward);
             Assert.Equal(2, network.Consensus.PremineHeight);
