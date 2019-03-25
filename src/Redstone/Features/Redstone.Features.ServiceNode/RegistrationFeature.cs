@@ -8,6 +8,9 @@ using Redstone.Features.ServiceNode.Common;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.EventBus;
+using Stratis.Bitcoin.EventBus.CoreEvents;
+using Stratis.Bitcoin.Features.Notifications.Interfaces;
 using Stratis.Bitcoin.Features.Notifications;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
@@ -58,6 +61,7 @@ namespace Redstone.Features.ServiceNode
                 VerifyRegistrationStore(registrationRecords);
 
             this.registrationManager.Initialize();
+
 
             this.logger.LogTrace("(-)");
 

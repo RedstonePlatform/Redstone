@@ -3,8 +3,9 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Redstone.Features.ServiceNode.Common;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.EventBus;
+using Stratis.Bitcoin.EventBus.CoreEvents;
 using Stratis.Bitcoin.Features.WatchOnlyWallet;
-using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Signals;
 
 namespace Redstone.Features.ServiceNode
@@ -21,6 +22,7 @@ namespace Redstone.Features.ServiceNode
         private WatchOnlyWalletManager watchOnlyWalletManager;
         private ISignals signals;
         private ILogger logger;
+        private SubscriptionToken blockConnectedSubscription;
 
         public RegistrationManager(
             ILoggerFactory loggerFactory,
@@ -40,17 +42,18 @@ namespace Redstone.Features.ServiceNode
         public void Initialize()
         {
             this.watchOnlyWalletManager.Initialize();
-            this.signals.OnBlockConnected.Attach(this.OnBlockConnected);
+
+            this.blockConnectedSubscription = this.signals.Subscribe<BlockConnected>(this.OnBlockConnected);
         }
 
         public void Dispose()
         {
-            this.signals.OnBlockConnected.Detach(this.OnBlockConnected);
+            this.signals.Unsubscribe(this.blockConnectedSubscription);
         }
 
-        private void OnBlockConnected(ChainedHeaderBlock chBlock)
+        private void OnBlockConnected(BlockConnected blockConnected)
         {
-            this.ProcessBlock(chBlock.ChainedHeader.Height, chBlock.Block); this.watchOnlyWalletManager.ProcessBlock(chBlock.Block);
+            this.ProcessBlock(blockConnected.ConnectedBlock.ChainedHeader.Height, blockConnected.ConnectedBlock.Block); 
         }
 
         public RegistrationStore GetRegistrationStore()

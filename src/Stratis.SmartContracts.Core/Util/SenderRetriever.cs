@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
 using Stratis.Bitcoin.Features.Consensus.CoinViews;
@@ -42,7 +41,7 @@ namespace Stratis.SmartContracts.Core.Util
             // Check the utxoset for the p2pk of the unspent output for this transaction
             if (coinView != null)
             {
-                FetchCoinsResponse fetchCoinResult = coinView.FetchCoinsAsync(new uint256[] { prevOut.Hash }).Result;
+                FetchCoinsResponse fetchCoinResult = coinView.FetchCoins(new uint256[] { prevOut.Hash });
                 UnspentOutputs unspentOutputs = fetchCoinResult.UnspentOutputs.FirstOrDefault();
 
                 if (unspentOutputs == null)
