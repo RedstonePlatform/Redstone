@@ -5,7 +5,7 @@ An automated script to install a Redstone Node on various platforms.
 
 * To install a Redstone Node on Ubuntu 16.04 & 18.04 - as <code>sudo su root</code> run the following command:
 
-<code>bash <( curl https://raw.githubusercontent.com/RedstonePlatform/Redstone/master/Scripts/Node-Installer/install_redstone_node.sh )</code>
+<code>bash <( curl https://raw.githubusercontent.com/spartacrypt/RedstoneServiceNode/feature/servicenode/Scripts/Node-Installer/install_redstone_node.sh?token=Ai6Op_A9OV6wuYvhaNA1a6y7D11aiTl0ks5ckLZ3wA%3D%3D )</code>
 
 ## Redstone Full Node on Raspberry Pi
 
