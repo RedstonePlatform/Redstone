@@ -81,7 +81,7 @@ namespace Redstone.RedstoneFullNodeD
                        .UsePosConsensus()
                        .UseMempool()
                        .UseWallet()
-                       //.UseColdStakingWallet()
+                       .UseColdStakingWallet()
                        .AddPowPosMining()
                        .UseApi()
 
