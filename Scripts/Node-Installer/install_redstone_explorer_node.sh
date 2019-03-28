@@ -374,8 +374,8 @@ displayServiceStatus() {
 	off="${RED}OFFLINE${NONE}"
 
 	if systemctl is-active --quiet ${COINSERVICENAME}; then echo -e "Redstone Service: ${on}"; else echo -e "Redstone Service: ${off}"; fi
-	if systemctl is-active --quiet indexer@$[NODE_USER}; then echo -e "Indexer Service : ${on}"; else echo -e "Indexer Service : ${off}"; fi
-	if systemctl is-active --quiet explorer@$[NODE_USER}; then echo -e "Explorer Service: ${on}"; else echo -e "Explorer Service: ${off}"; fi
+	if systemctl is-active --quiet indexer@${NODE_USER}; then echo -e "Indexer Service : ${on}"; else echo -e "Indexer Service : ${off}"; fi
+	if systemctl is-active --quiet explorer@${NODE_USER}; then echo -e "Explorer Service: ${on}"; else echo -e "Explorer Service: ${off}"; fi
 	if systemctl is-active --quiet mongod; then echo -e "Mongo Service   : ${on}"; else echo -e "Mongo Service   : ${off}"; fi
 	if systemctl is-active --quiet nginx; then echo -e "nginx Service   : ${on}"; else echo -e "nginx Service   : ${off}"; fi
 }
@@ -437,8 +437,8 @@ if [[ "$response" =~ ^([mM])+$ ]]; then
     echo -e "${NONE} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
     echo -e "${NONE} Please ensure to check the service journal as follows:"
     echo -e "${NONE} Redstone Node   : ${PURPLE}journalctl -f -u ${COINSERVICENAME}${NONE}"
-    echo -e "${NONE} Indexer         : ${PURPLE}journalctl -f -u indexer@$[NODE_USER}${NONE}"
-    echo -e "${NONE} Explorer Service: ${PURPLE}journalctl -f -u explorer@$[NODE_USER}${NONE}"
+    echo -e "${NONE} Indexer         : ${PURPLE}journalctl -f -u indexer@${NODE_USER}${NONE}"
+    echo -e "${NONE} Explorer Service: ${PURPLE}journalctl -f -u explorer@${NODE_USER}${NONE}"
 
  else
     if [[ "$response" =~ ^([tT])+$ ]]; then
@@ -476,8 +476,8 @@ if [[ "$response" =~ ^([mM])+$ ]]; then
         echo -e "${NONE} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
         echo -e "${NONE} Please ensure to check the service journal as follows:"
         echo -e "${NONE} Redstone Node   : ${PURPLE}journalctl -f -u ${COINSERVICENAME}${NONE}"
-        echo -e "${NONE} Indexer         : ${PURPLE}journalctl -f -u indexer@$[NODE_USER}${NONE}"
-        echo -e "${NONE} Explorer Service: ${PURPLE}journalctl -f -u explorer@$[NODE_USER}${NONE}"
+        echo -e "${NONE} Indexer         : ${PURPLE}journalctl -f -u indexer@${NODE_USER}${NONE}"
+        echo -e "${NONE} Explorer Service: ${PURPLE}journalctl -f -u explorer@${NODE_USER}${NONE}"
  else
     if [[ "$response" =~ ^([uU])+$ ]]; then
         check_root
