@@ -129,7 +129,7 @@ namespace Redstone.Core.Networks
             {
                new NetworkAddress(IPAddress.Parse("80.211.84.170"), this.DefaultPort), // cryptohunter node #4
                new NetworkAddress(IPAddress.Parse("31.14.138.23"), this.DefaultPort), // cryptohunter node #3
-               new NetworkAddress(IPAddress.Parse("35.178.169.232"), this.DefaultPort), // cryptohunter node #aws
+               new NetworkAddress(IPAddress.Parse("35.237.27.181"), this.DefaultPort), // cryptohunter node google#1
             };
 
             this.StandardScriptsRegistry = new RedstoneStandardScriptsRegistry();

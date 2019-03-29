@@ -10,7 +10,7 @@ BOLD='\033[1m'
 UNDERLINE='\033[4m'
 
 #### Update for each Coin release
-declare -r COINBIN=https://github.com/RedstonePlatform/Redstone/releases/download/3.0.0.1/Redstone-linux-arm-421bd2e.tar
+declare -r COINBIN=https://github.com/RedstonePlatform/Redstone/releases/download/3.0.4.0/Redstone-linux-arm-3.0.4..tar
 #### Update for each Dot Net release
 declare -r DOTNETBIN=https://download.visualstudio.microsoft.com/download/pr/1de01e2e-aa87-4535-af42-8a8a9b4df215/a2fc245f1c26130a2ec22bbf5d0cb3e6/dotnet-sdk-2.2.103-linux-arm.tar.gz
 declare -r NODE_USER=redstone
