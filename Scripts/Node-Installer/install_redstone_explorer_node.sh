@@ -323,10 +323,10 @@ installNako() {
 	
 	sudo ufw allow ${SYNCAPIPORT}/tcp &>> ${SCRIPT_LOGFILE}
 	
-	sudo echo -e "\n[Unit]\nDescription=Redstone BlockExplorer Indexer\nAfter=network-online.target\n\n[Service]\nUser=redstone\nGroup=redstone\nWorkingDirectory=/home/redstone/\nExecStart=/home/redstone/indexer.sh\nRestart=always\nTimeoutSec=10\nRestartSec=35\n\n[Install]\nWantedBy=multi-user.target" > ${COINSERVICELOC}indexer@redstone.service
+	sudo echo -e "\n[Unit]\nDescription=Redstone BlockExplorer Indexer\nAfter=network-online.target\n\n[Service]\nUser=redstone\nGroup=redstone\nWorkingDirectory=/home/redstone/\nExecStart=/home/redstone/indexer.sh\nRestart=always\nTimeoutSec=10\nRestartSec=35\n\n[Install]\nWantedBy=multi-user.target" > ${COINSERVICELOC}indexer@${NODE_USER}.service
 	sudo systemctl --system daemon-reload &>> ${SCRIPT_LOGFILE}
-	sudo systemctl enable indexer@redstone &>> ${SCRIPT_LOGFILE}
-	sudo systemctl start indexer@redstone &>> ${SCRIPT_LOGFILE}
+	sudo systemctl enable indexer@${NODE_USER} &>> ${SCRIPT_LOGFILE}
+	sudo systemctl start indexer@${NODE_USER} &>> ${SCRIPT_LOGFILE}
 	echo -e "${NONE}${GREEN}* Done${NONE}";
 }
 
@@ -358,11 +358,11 @@ installExplorer() {
 	
 	cd /home/${NODE_USER}
 
-	sudo echo -e "[Unit]\nDescription=Redstone Block Explorer\nAfter=network-online.target\n\n[Service]\nUser=redstone\nGroup=redstone\nWorkingDirectory=/var/www/explorer\nExecStart=/usr/bin/dotnet /var/www/explorer/Stratis.Guru.dll 'TXRD'\nRestart=always\n# Restart service after 10 seconds if the dotnet service crashes:\nRestartSec=30\nTimeoutSec=10\nKillSignal=SIGINT\nSyslogIdentifier=redstone-explorer\nEnvironment=ASPNETCORE_ENVIRONMENT=Production\nEnvironment=DOTNET_PRINT_TELEMETRY_MESSAGE=false\n\n[Install]\nWantedBy=multi-user.target\n" > /etc/systemd/system/explorer@redstone.service
+	sudo echo -e "[Unit]\nDescription=Redstone Block Explorer\nAfter=network-online.target\n\n[Service]\nUser=redstone\nGroup=redstone\nWorkingDirectory=/var/www/explorer\nExecStart=/usr/bin/dotnet /var/www/explorer/Stratis.Guru.dll 'TXRD'\nRestart=always\n# Restart service after 10 seconds if the dotnet service crashes:\nRestartSec=30\nTimeoutSec=10\nKillSignal=SIGINT\nSyslogIdentifier=redstone-explorer\nEnvironment=ASPNETCORE_ENVIRONMENT=Production\nEnvironment=DOTNET_PRINT_TELEMETRY_MESSAGE=false\n\n[Install]\nWantedBy=multi-user.target\n" > /etc/systemd/system/explorer@${NODE_USER}.service
 
 	sudo systemctl --system daemon-reload &>> ${SCRIPT_LOGFILE}
-	sudo systemctl enable explorer@redstone &>> ${SCRIPT_LOGFILE}
-	sudo systemctl start explorer@redstone &>> ${SCRIPT_LOGFILE}
+	sudo systemctl enable explorer@${NODE_USER} &>> ${SCRIPT_LOGFILE}
+	sudo systemctl start explorer@${NODE_USER} &>> ${SCRIPT_LOGFILE}
 	sleep 2
 	echo -e "${NONE}${GREEN}* Done${NONE}";	
 }
