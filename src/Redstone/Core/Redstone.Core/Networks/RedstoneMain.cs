@@ -120,8 +120,9 @@ namespace Redstone.Core.Networks
                 proofOfStakeReward: Money.Coins(15),
                 posRewardReduction: true,
                 posRewardReductionBlockInterval: 525600,
-                posRewardReductionPercentage: 7.5m
-
+                posRewardReductionPercentage: 7.5m,
+                serviceNodeCollateralThreshold: 1500,
+                serviceNodeCollateralBlockPeriod: 30
             );
 
             this.Base58Prefixes = new byte[12][];

@@ -50,6 +50,18 @@ namespace NBitcoin
         decimal PosRewardReductionPercentage { get; }
 
         /// <summary>
+        /// The minimum amount in XRD required to remain in the service node service address in order for the service node to
+        /// remain valid
+        /// </summary>
+        int ServiceNodeCollateralThreshold { get; }
+
+        /// <summary>
+        /// The block period during which the collateral must be paid to the service node server address in order for the service
+        /// node to remain valid
+        /// </summary>
+        int ServiceNodeCollateralBlockPeriod { get; }
+
+        /// <summary>
         /// Maximal length of reorganization that the node is willing to accept, or 0 to disable long reorganization protection.
         /// </summary>
         uint MaxReorgLength { get; }

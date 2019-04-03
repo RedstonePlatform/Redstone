@@ -59,7 +59,7 @@ namespace Redstone.Core.Networks
                 maxStandardVersion: 2,
                 maxStandardTxWeight: 100_000,
                 maxBlockSigopsCost: 20_000,
-                maxStandardTxSigopsCost: 20_000 / 5 
+                maxStandardTxSigopsCost: 20_000 / 5
             );
 
             var buriedDeployments = new BuriedDeploymentsArray
@@ -106,7 +106,9 @@ namespace Redstone.Core.Networks
                 proofOfStakeReward: Money.Coins(15),
                 posRewardReduction: true,
                 posRewardReductionBlockInterval: 2880,
-                posRewardReductionPercentage: 7.5m
+                posRewardReductionPercentage: 7.5m,
+                serviceNodeCollateralThreshold: 100,
+                serviceNodeCollateralBlockPeriod: 5
             );
 
             this.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS] = new byte[] { (65) };
