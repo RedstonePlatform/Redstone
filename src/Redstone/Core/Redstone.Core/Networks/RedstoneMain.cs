@@ -40,11 +40,12 @@ namespace Redstone.Core.Networks
             uint magic = BitConverter.ToUInt32(messageStart, 0); // 0xd7aed0b9 = ×®Ð¹
             
             this.Name = "RedstoneMain";
+            this.NetworkType = NetworkType.Mainnet;
             this.Magic = magic;
-            this.DefaultPort = 19056;
             this.DefaultMaxOutboundConnections = 16;
             this.DefaultMaxInboundConnections = 109;
-            this.RPCPort = 19057;
+            this.DefaultAPIPort = 19056;
+            this.DefaultRPCPort = 19057;
             this.MaxTipAge = RedstoneDefaultMaxTipAgeInSeconds;
             this.MinTxFee = 10000;
             this.FallbackFee = 10000;

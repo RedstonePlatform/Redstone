@@ -28,9 +28,12 @@ namespace Redstone.Core.Networks
             uint magic = BitConverter.ToUInt32(messageStart, 0); // 0x11233171 TODO: d7aed0b2 = ×®Ð²
 
             this.Name = "RedstoneTest";
+            this.NetworkType = NetworkType.Testnet;
             this.Magic = magic;
-            this.DefaultPort = 19156;
-            this.RPCPort = 19157;
+            this.DefaultMaxOutboundConnections = 16;
+            this.DefaultMaxInboundConnections = 109;
+            this.DefaultAPIPort = 19156;
+            this.DefaultRPCPort = 19157;
             this.CoinTicker = "TXRD";
             this.MaxTipAge = RedstoneDefaultMaxTipAgeInSeconds * 12 * 365;
 

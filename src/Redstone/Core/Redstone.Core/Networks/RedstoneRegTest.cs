@@ -22,9 +22,10 @@ namespace Redstone.Core.Networks
             uint magic = BitConverter.ToUInt32(messageStart, 0); // 0xd7aed0b3 = ×®Ð³
 
             this.Name = "RedstoneRegTest";
+            this.NetworkType = NetworkType.Testnet;
             this.Magic = magic;
-            this.DefaultPort = 19256;
-            this.RPCPort = 19257;
+            this.DefaultAPIPort = 19256;
+            this.DefaultRPCPort = 19257;
             this.MinTxFee = 0;
             this.FallbackFee = 0;
             this.MinRelayTxFee = 0;
