@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Stratis.Bitcoin;
+using Stratis.Bitcoin.Features.Api;
 using Stratis.Bitcoin.Utilities;
 
 namespace Redstone.Features.Api
@@ -52,6 +53,13 @@ namespace Redstone.Features.Api
                     // also copies over singleton instances already defined
                     foreach (ServiceDescriptor service in services)
                     {
+                        // open types can't be singletons
+                        if (service.ServiceType.IsGenericType || service.Lifetime == ServiceLifetime.Scoped)
+                        {
+                            collection.Add(service);
+                            continue;
+                        }
+
                         object obj = fullNode.Services.ServiceProvider.GetService(service.ServiceType);
                         if (obj != null && service.Lifetime == ServiceLifetime.Singleton && service.ImplementationInstance == null)
                         {

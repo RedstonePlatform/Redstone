@@ -12,7 +12,8 @@ UNDERLINE='\033[4m'
 runtime="osx-x64"
 warp_runtime="macos-x64"
 configuration="release"
-git_commit=$(git log --format=%h --abbrev=7 -n 1)
+#git_commit=$(git log --format=%h --abbrev=7 -n 1)
+git_commit="v3.0.4.0"
 publish_directory="/tmp/Redstone/Release/Publish"
 release_directory="/tmp/Redstone/Release"
 download_directory="/tmp"
@@ -59,8 +60,8 @@ ls $publish_directory
 echo "Packaging the daemon..."
 chmod +x "${download_directory}/${warp}"
 
-"${download_directory}/${warp}" --arch ${warp_runtime} --input_dir ${publish_directory} --exec Redstone.RedstoneFullNodeD --output ${release_directory}/Redstone-${runtime}-${git_commit}
-chmod +x "${release_directory}/Redstone-${runtime}-${git_commit}"
+"${download_directory}/${warp}" --arch ${warp_runtime} --input_dir ${publish_directory} --exec Redstone.RedstoneFullNodeD --output ${release_directory}/Redstone-${warp_runtime}-${git_commit}
+chmod +x "${release_directory}/Redstone-${warp_runtime}-${git_commit}"
 rm -rf ${publish_directory}
 echo "Done."
 }

@@ -40,11 +40,12 @@ namespace Redstone.Core.Networks
             uint magic = BitConverter.ToUInt32(messageStart, 0); // 0xd7aed0b9 = ×®Ð¹
             
             this.Name = "RedstoneMain";
+            this.NetworkType = NetworkType.Mainnet;
             this.Magic = magic;
-            this.DefaultPort = 19056;
             this.DefaultMaxOutboundConnections = 16;
             this.DefaultMaxInboundConnections = 109;
-            this.RPCPort = 19057;
+            this.DefaultAPIPort = 19056;
+            this.DefaultRPCPort = 19057;
             this.MaxTipAge = RedstoneDefaultMaxTipAgeInSeconds;
             this.MinTxFee = 10000;
             this.FallbackFee = 10000;
@@ -156,7 +157,7 @@ namespace Redstone.Core.Networks
             {
                new NetworkAddress(IPAddress.Parse("80.211.84.170"), this.DefaultPort), // cryptohunter node #4
                new NetworkAddress(IPAddress.Parse("31.14.138.23"), this.DefaultPort), // cryptohunter node #3
-               new NetworkAddress(IPAddress.Parse("35.178.169.232"), this.DefaultPort), // cryptohunter node #aws
+               new NetworkAddress(IPAddress.Parse("35.204.238.255"), this.DefaultPort), // cryptohunter node google#1
              };
 
             this.StandardScriptsRegistry = new RedstoneStandardScriptsRegistry();
