@@ -16,9 +16,7 @@ namespace Redstone.Features.ServiceNode
 
         public RPCClient GetClient(string rpcUser, string rpcPassword, string rpcUrl)
         {
-            NetworkCredential credentials = new NetworkCredential(rpcUser, rpcPassword);
-            RPCClient rpc = new RPCClient(credentials, new Uri(rpcUrl), this.rpcNetwork);
-
+            RPCClient rpc = new RPCClient(rpcUser + ":" + rpcPassword, new Uri(rpcUrl), this.rpcNetwork);
             return rpc;
         }
     }

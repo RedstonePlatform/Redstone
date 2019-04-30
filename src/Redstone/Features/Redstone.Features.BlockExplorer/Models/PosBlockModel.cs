@@ -1,15 +1,15 @@
-﻿namespace Redstone.Features.BlockExplorer.Models
-{
-    using System;
-    using System.Linq;
-    using NBitcoin;
-    using Newtonsoft.Json;
-    using Stratis.Bitcoin.Controllers.Models;
-    using Stratis.Bitcoin.Utilities.JsonConverters;
+﻿using System;
+using System.Linq;
+using NBitcoin;
+using Newtonsoft.Json;
+using Stratis.Bitcoin.Controllers.Models;
+using Stratis.Bitcoin.Utilities.JsonConverters;
 
+namespace Redstone.Features.BlockExplorer.Models
+{
     public class PosBlockModel
     {
-        public PosBlockModel(Block block, ChainBase chain)
+        public PosBlockModel(Block block, ChainIndexer chain)
         {
             this.Hash = block.GetHash().ToString();
             this.Size = block.ToBytes().Length;
@@ -21,7 +21,7 @@
             this.MerkleRoot = block.Header.HashMerkleRoot.ToString();
             this.Difficulty = block.Header.Bits.Difficulty;
             this.Transactions = block.Transactions.Select(trx => new TransactionVerboseModel(trx, chain.Network)).ToArray();
-            this.Height = chain.GetBlock(block.GetHash()).Height;
+            this.Height = chain.GetHeader(block.GetHash()).Height;
         }
 
         /// <summary>

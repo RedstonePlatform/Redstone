@@ -163,7 +163,7 @@ namespace Redstone.Feature.ServiceNode.Tests
             var trxs = new List<Transaction>();
             foreach (int index in Enumerable.Range(1, transactionCount))
             {
-                Block block = this.node.FullNode.BlockStore().GetBlockAsync(this.node.FullNode.Chain.GetBlock(index).HashBlock).Result;
+                Block block = this.node.FullNode.BlockStore().GetBlock(this.node.FullNode.ChainIndexer.GetHeader(index).HashBlock);
                 Transaction prevTrx = block.Transactions.First();
                 var dest = new BitcoinSecret(new Key(), this.node.FullNode.Network);
 
@@ -226,7 +226,7 @@ namespace Redstone.Feature.ServiceNode.Tests
         {
             dest = (dest == null) ? new BitcoinSecret(new Key(), this.node.FullNode.Network) : dest;
 
-            Block block = this.node.FullNode.BlockStore().GetBlockAsync(this.node.FullNode.Chain.GetBlock(blockIndex).HashBlock).Result;
+            Block block = this.node.FullNode.BlockStore().GetBlock(this.node.FullNode.ChainIndexer.GetHeader(blockIndex).HashBlock);
             Transaction prevTrx = block.Transactions.First();
             Transaction transaction = this.node.FullNode.Network.CreateTransaction();
             transaction.AddInput(new TxIn(new OutPoint(prevTrx.GetHash(), 0), PayToPubkeyHashTemplate.Instance.GenerateScriptPubKey(this.node.MinerSecret.PubKey)));
@@ -241,7 +241,7 @@ namespace Redstone.Feature.ServiceNode.Tests
             IWalletManager wm = this.node.FullNode.NodeService<IWalletManager>();
 
             Wallet wallet = wm.LoadWallet(Password, WalletName);
-            HdAddress hdAddress = wallet.GetAllAddressesByCoinType(CoinType.Redstone).Last();
+            HdAddress hdAddress = wallet.GetAllAddresses().Last();
             ISecret extendedPrivateKey = wallet.GetExtendedPrivateKeyForAddress(Password, hdAddress);
             return extendedPrivateKey.PrivateKey.GetBitcoinSecret(this.network);
         }

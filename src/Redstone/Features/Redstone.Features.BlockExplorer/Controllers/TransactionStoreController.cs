@@ -1,24 +1,28 @@
-﻿namespace Redstone.Features.BlockExplorer.Controllers
-{
-    using System;
-    using System.Collections.Generic;
-    using System.Net;
-    using System.Threading.Tasks;
-    using Redstone.Features.BlockExplorer.Models;
-    using Microsoft.AspNetCore.Mvc;
-    using Microsoft.Extensions.Logging;
-    using NBitcoin;
-    using Stratis.Bitcoin.Base;
-    using Stratis.Bitcoin.Connection;
-    using Stratis.Bitcoin.Controllers.Models;
-    using Stratis.Bitcoin.Features.BlockStore;
-    using Stratis.Bitcoin.Features.BlockStore.Models;
-    using Stratis.Bitcoin.Features.Wallet.Interfaces;
-    using Stratis.Bitcoin.Interfaces;
-    using Stratis.Bitcoin.Utilities;
-    using Stratis.Bitcoin.Utilities.JsonErrors;
-    using Stratis.Bitcoin.Utilities.ModelStateErrors;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading.Tasks;
+using Redstone.Features.BlockExplorer.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using NBitcoin;
+using Stratis.Bitcoin.Base;
+using Stratis.Bitcoin.Connection;
+using Stratis.Bitcoin.Controllers.Models;
+using Stratis.Bitcoin.Features.BlockStore;
+using Stratis.Bitcoin.Features.BlockStore.Models;
+using Stratis.Bitcoin.Features.Wallet.Broadcasting;
+using Stratis.Bitcoin.Features.Wallet.Interfaces;
+using Stratis.Bitcoin.Features.Wallet.Models;
+using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.Utilities;
+using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Bitcoin.Utilities.ModelStateErrors;
 
+namespace Redstone.Features.BlockExplorer.Controllers
+{
     /// <summary>
     /// Controller providing operations on a blockstore.
     /// </summary>
@@ -44,7 +48,7 @@
 
         private readonly IBlockRepository blockRepository;
 
-        private readonly ConcurrentChain chain;
+        private readonly ChainIndexer chain;
 
         private readonly IBroadcasterManager broadcasterManager;
 
@@ -55,7 +59,7 @@
             IWalletManager walletManager,
             ILoggerFactory loggerFactory,
             IBlockStore blockStoreCache,
-            ConcurrentChain chain,
+			ChainIndexer chain,
             IBroadcasterManager broadcasterManager,
             IBlockRepository blockRepository,
             IConnectionManager connectionManager,
@@ -101,7 +105,7 @@
 
                 while (chainHeader != null && transactions.Count < pageSize)
                 {
-                    Block block = await this.blockStoreCache.GetBlockAsync(chainHeader.HashBlock).ConfigureAwait(false);
+                    Block block = this.blockStoreCache.GetBlock(chainHeader.HashBlock);
 
                     var blockModel = new PosBlockModel(block, this.chain);
 
@@ -146,7 +150,7 @@
 
             try
             {
-                Transaction trx = await this.blockRepository.GetTransactionByIdAsync(new uint256(id));
+                Transaction trx = this.blockRepository.GetTransactionById(new uint256(id));
                 var model = new TransactionVerboseModel(trx, this.network);
                 return Json(model);
             }

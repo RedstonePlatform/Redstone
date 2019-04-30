@@ -21,7 +21,7 @@ namespace Redstone.Features.BlockExplorer
 {
     public class BlockExplorerFeature : FullNodeFeature
     {
-        private readonly ConcurrentChain chain;
+        private readonly ChainIndexer chainIndexer;
 
         private readonly ISignals signals;
 
@@ -44,7 +44,7 @@ namespace Redstone.Features.BlockExplorer
         private readonly IConsensusManager consensusManager;
 
         public BlockExplorerFeature(
-            ConcurrentChain chain,
+            ChainIndexer chainIndexer,
             IConnectionManager connectionManager,
             ISignals signals,
             BlockStoreSignaled blockStoreSignaled,
@@ -55,7 +55,7 @@ namespace Redstone.Features.BlockExplorer
             INodeStats nodeStats,
             IConsensusManager consensusManager)
         {
-            this.chain = chain;
+            this.chainIndexer = chainIndexer;
             this.blockStoreQueue = blockStoreQueue;
             this.signals = signals;
             this.blockStoreSignaled = blockStoreSignaled;
