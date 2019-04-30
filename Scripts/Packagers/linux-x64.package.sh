@@ -12,7 +12,8 @@ UNDERLINE='\033[4m'
 runtime="linux-x64"
 warp_runtime="linux-x64"
 configuration="release"
-git_commit=$(git log --format=%h --abbrev=7 -n 1)
+#git_commit=$(git log --format=%h --abbrev=7 -n 1)
+git_commit="v3.0.4.0"
 publish_directory="/tmp/Redstone/Release/Publish"
 release_directory="/tmp/Redstone/Release"
 download_directory="/tmp"
@@ -49,7 +50,7 @@ fi
 
 function compileWallet {
 echo "Building the full node..."
-#mkdir -p $publish_directory
+mkdir -p $publish_directory
 dotnet --info
 dotnet publish $project_path -c $configuration -v m -r $runtime  --self-contained --no-dependencies -o $publish_directory
 
@@ -87,7 +88,7 @@ echo -e "${NONE}"
 if [[ "$response" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
 
     check_root
-    #DownloadWarp
+    DownloadWarp
     compileWallet
     DisplayParameters
 	

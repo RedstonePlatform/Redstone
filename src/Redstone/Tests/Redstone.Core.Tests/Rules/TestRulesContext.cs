@@ -1,28 +1,30 @@
-﻿namespace Redstone.Core.Tests.Rules
-{
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Runtime.CompilerServices;
-    using System.Threading.Tasks;
-    using Microsoft.Extensions.Logging;
-    using NBitcoin;
-    using NBitcoin.Rules;
-    using Stratis.Bitcoin.Base;
-    using Stratis.Bitcoin.Base.Deployments;
-    using Stratis.Bitcoin.Configuration;
-    using Stratis.Bitcoin.Configuration.Logging;
-    using Stratis.Bitcoin.Configuration.Settings;
-    using Stratis.Bitcoin.Consensus;
-    using Stratis.Bitcoin.Consensus.Rules;
-    using Stratis.Bitcoin.Features.Consensus;
-    using Stratis.Bitcoin.Features.Consensus.CoinViews;
-    using Stratis.Bitcoin.Features.Consensus.Interfaces;
-    using Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders;
-    using Stratis.Bitcoin.Features.Consensus.Rules;
-    using Stratis.Bitcoin.Utilities;
-    using Xunit.Sdk;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using NBitcoin;
+using NBitcoin.Rules;
+using Stratis.Bitcoin.AsyncWork;
+using Stratis.Bitcoin.Base;
+using Stratis.Bitcoin.Base.Deployments;
+using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Configuration.Logging;
+using Stratis.Bitcoin.Configuration.Settings;
+using Stratis.Bitcoin.Consensus;
+using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Bitcoin.Features.Consensus;
+using Stratis.Bitcoin.Features.Consensus.CoinViews;
+using Stratis.Bitcoin.Features.Consensus.Interfaces;
+using Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders;
+using Stratis.Bitcoin.Features.Consensus.Rules;
+using Stratis.Bitcoin.Signals;
+using Stratis.Bitcoin.Utilities;
+using Xunit.Sdk;
 
+namespace Redstone.Core.Tests.Rules
+{
     /// <summary>
     /// Concrete instance of the test chain.
     /// </summary>
@@ -36,13 +38,16 @@
 
         public NodeSettings NodeSettings { get; set; }
 
-        public ConcurrentChain Chain { get; set; }
+        public ChainIndexer ChainIndexer { get; set; }
 
         public Network Network { get; set; }
 
         public ICheckpoints Checkpoints { get; set; }
 
         public IChainState ChainState { get; set; }
+
+        public ISignals Signals { get; set; }
+        public IAsyncProvider AsyncProvider { get; internal set; }
 
         public T CreateRule<T>() where T : ConsensusRuleBase, new()
         {
@@ -85,9 +90,9 @@
 
         private RuleRegistrationHelper ruleRegistrationHelper;
 
-        public TestConsensusRules(Network network, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, ConcurrentChain chain, NodeDeployments nodeDeployments,
+        public TestConsensusRules(Network network, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, ChainIndexer chainIndexer, NodeDeployments nodeDeployments,
             ConsensusSettings consensusSettings, ICheckpoints checkpoints, IChainState chainState, IInvalidBlockHashStore invalidBlockHashStore, INodeStats nodeStats)
-            : base(network, loggerFactory, dateTimeProvider, chain, nodeDeployments, consensusSettings, checkpoints, chainState, invalidBlockHashStore, nodeStats)
+            : base(network, loggerFactory, dateTimeProvider, chainIndexer, nodeDeployments, consensusSettings, checkpoints, chainState, invalidBlockHashStore, nodeStats)
         {
             this.ruleRegistrationHelper = new RuleRegistrationHelper();
         }
@@ -102,12 +107,12 @@
             return this.RuleContext ?? new PowRuleContext();
         }
 
-        public override Task<RewindState> RewindAsync()
+        public override uint256 GetBlockHash()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
-        public override uint256 GetBlockHash()
+        public override Task<RewindState> RewindAsync()
         {
             throw new NotImplementedException();
         }
@@ -120,10 +125,10 @@
     {
         private RuleRegistrationHelper ruleRegistrationHelper;
 
-        public TestPosConsensusRules(Network network, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, ConcurrentChain chain,
+        public TestPosConsensusRules(Network network, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, ChainIndexer chainIndexer,
             NodeDeployments nodeDeployments, ConsensusSettings consensusSettings, ICheckpoints checkpoints, ICoinView uxtoSet, IStakeChain stakeChain,
-            IStakeValidator stakeValidator, IChainState chainState, IInvalidBlockHashStore invalidBlockHashStore, INodeStats nodeStats, IRewindDataIndexCache rewindDataIndexCache)
-            : base(network, loggerFactory, dateTimeProvider, chain, nodeDeployments, consensusSettings, checkpoints, uxtoSet, stakeChain, stakeValidator, chainState, invalidBlockHashStore, nodeStats, rewindDataIndexCache)
+            IStakeValidator stakeValidator, IChainState chainState, IInvalidBlockHashStore invalidBlockHashStore, INodeStats nodeStats, IRewindDataIndexCache rewindDataIndexCache, IAsyncProvider asyncProvider)
+            : base(network, loggerFactory, dateTimeProvider, chainIndexer, nodeDeployments, consensusSettings, checkpoints, uxtoSet, stakeChain, stakeValidator, chainState, invalidBlockHashStore, nodeStats, rewindDataIndexCache, asyncProvider)
         {
             this.ruleRegistrationHelper = new RuleRegistrationHelper();
         }
@@ -159,30 +164,32 @@
 
             var consensusSettings = new ConsensusSettings(testRulesContext.NodeSettings);
             testRulesContext.Checkpoints = new Checkpoints();
-            testRulesContext.Chain = new ConcurrentChain(network);
+            testRulesContext.ChainIndexer = new ChainIndexer(network);
             testRulesContext.ChainState = new ChainState();
+            testRulesContext.Signals = new Signals(testRulesContext.LoggerFactory, null);
+            testRulesContext.AsyncProvider = new AsyncProvider(testRulesContext.LoggerFactory, testRulesContext.Signals, new NodeLifetime());
 
-            var deployments = new NodeDeployments(testRulesContext.Network, testRulesContext.Chain);
+            var deployments = new NodeDeployments(testRulesContext.Network, testRulesContext.ChainIndexer);
             testRulesContext.ConsensusRuleEngine = new PowConsensusRuleEngine(testRulesContext.Network, testRulesContext.LoggerFactory, testRulesContext.DateTimeProvider,
-                testRulesContext.Chain, deployments, consensusSettings, testRulesContext.Checkpoints, new InMemoryCoinView(new uint256()), testRulesContext.ChainState,
-                new InvalidBlockHashStore(DateTimeProvider.Default), new NodeStats(DateTimeProvider.Default)).Register();
+                testRulesContext.ChainIndexer, deployments, consensusSettings, testRulesContext.Checkpoints, new InMemoryCoinView(new uint256()), testRulesContext.ChainState,
+                new InvalidBlockHashStore(DateTimeProvider.Default), new NodeStats(DateTimeProvider.Default), testRulesContext.AsyncProvider).Register();
 
             return testRulesContext;
         }
 
-        public static Block MineBlock(Network network, ConcurrentChain chain)
+        public static Block MineBlock(Network network, ChainIndexer chainIndexer)
         {
             var block = network.Consensus.ConsensusFactory.CreateBlock();
             var coinbase = new Transaction();
-            coinbase.AddInput(TxIn.CreateCoinbase(chain.Height + 1));
+            coinbase.AddInput(TxIn.CreateCoinbase(chainIndexer.Height + 1));
             coinbase.AddOutput(new TxOut(Money.Zero, new Key()));
             block.AddTransaction(coinbase);
 
             block.Header.Version = (int)ThresholdConditionCache.VersionbitsTopBits;
 
-            block.Header.HashPrevBlock = chain.Tip.HashBlock;
-            block.Header.UpdateTime(DateTimeProvider.Default.GetTimeOffset(), network, chain.Tip);
-            block.Header.Bits = block.Header.GetWorkRequired(network, chain.Tip);
+            block.Header.HashPrevBlock = chainIndexer.Tip.HashBlock;
+            block.Header.UpdateTime(DateTimeProvider.Default.GetTimeOffset(), network, chainIndexer.Tip);
+            block.Header.Bits = block.Header.GetWorkRequired(network, chainIndexer.Tip);
             block.Header.Nonce = 0;
 
             int maxTries = int.MaxValue;

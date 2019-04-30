@@ -11,6 +11,9 @@ UNDERLINE='\033[4m'
 
 OS_VER="Ubuntu*"
 ARCH="linux-x64"
+DATE_STAMP="$(date +%y-%m-%d-%s)"
+SCRIPT_LOGFILE="/tmp/${NODE_USER}_${DATE_STAMP}_output.log"
+NODE_IP=$(curl --silent ipinfo.io/ip)
 
 function setMainVars() {
 ## set network dependent variables
@@ -20,6 +23,7 @@ function setMainVars() {
     COINPORT=19056
     COINRPCPORT=19057
     COINAPIPORT=37222
+	DNSPORT=53
 }
 
 function setTestVars() {
@@ -30,30 +34,36 @@ function setTestVars() {
     COINPORT=19156
     COINRPCPORT=19157
     COINAPIPORT=38222
+	DNSPORT=53
 }
 
 function setDNSVars() {
-    ## set DNS specific variables
-    NODE_IP=$(curl --silent ipinfo.io/ip)
-    DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=seed.redstonecoin.com -dnsnameserver=testdns1.seed.redstonecoin.com -dnsmailbox=admin@redstonecoin.com"
+## set DNS specific variables
+if [ "${NETWORK}" = "" ] ; then
+   DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=seed.redstonecoin.com -dnsnameserver=dns1.seed.redstonecoin.com -dnsmailbox=admin@redstoneplatform.com -dnsfullnode=1 -dnslistenport=${DNSPORT}"
+ else
+   DNS="-iprangefiltering=0 -externalip=${NODE_IP} -dnshostname=seed.redstoneplatform.com -dnsnameserver=testdns1.seed.redstoneplatform.com -dnsmailbox=admin@redstoneplatform.com -dnsfullnode=1 -dnslistenport=${DNSPORT}"
+fi
+## Stop port 53 from being used by systemd-resovled
+echo 'DNSStubListener=no' | sudo tee -a /etc/systemd/resolved.conf &>> ${SCRIPT_LOGFILE}
+sudo service systemd-resolved restart
 }
 
 function setGeneralVars() {
-    ## set general variables
-    DATE_STAMP="$(date +%y-%m-%d-%s)"
-    SCRIPT_LOGFILE="/tmp/${NODE_USER}_${DATE_STAMP}_output.log"
-    COINRUNCMD="sudo dotnet ./Redstone.RedstoneFullNodeD.dll ${NETWORK} -datadir=/home/${NODE_USER}/.redstonenode ${DNS}"  ## additional commands can be used here e.g. -testnet or -stake=1
-    CONF=release
-    COINGITHUB=https://github.com/RedstonePlatform/Redstone.git
-    COINDAEMON=redstoned
-    COINCONFIG=redstone.conf
-    COINSTARTUP=/home/${NODE_USER}/redstoned
-    COINSRCLOC=/home/${NODE_USER}/Redstone ##TODO: this can be removed 
-    COINDLOC=/home/${NODE_USER}/RedstoneNode   
-    COINDSRC=/home/${NODE_USER}/Redstone/src/Redstone/Programs/Redstone.RedstoneFullNodeD
-    COINSERVICELOC=/etc/systemd/system/
-    COINSERVICENAME=${COINDAEMON}@${NODE_USER}
-    SWAPSIZE="1024" ## =1GB
+	## set general variables
+	
+	COINRUNCMD="sudo dotnet ./Redstone.RedstoneFullNodeD.dll ${NETWORK} -datadir=/home/${NODE_USER}/.redstonenode ${DNS}"  ## additional commands can be used here e.g. -testnet or -stake=1
+	CONF=release
+	#COINGITHUB=https://github.com/RedstonePlatform/Redstone.git
+	COINGITHUB=https://github.com/spartacrypt/RedstoneServiceNode.git
+	COINDAEMON=redstoned
+	COINCONFIG=redstone.conf
+	COINSTARTUP=/home/${NODE_USER}/redstoned
+	COINDLOC=/home/${NODE_USER}/RedstoneNode
+	COINDSRC=/home/${NODE_USER}/code/src/Redstone/Programs/Redstone.RedstoneFullNodeD
+	COINSERVICELOC=/etc/systemd/system/
+	COINSERVICENAME=${COINDAEMON}@${NODE_USER}
+	SWAPSIZE="1024" ## =1GB
 }
 
 function setExplorerIndexerVars() {
@@ -154,7 +164,6 @@ installFail2Ban() {
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
 
-
 installFirewall() {
     echo
     echo -e "* Installing UFW. Please wait..."
@@ -162,6 +171,10 @@ installFirewall() {
     sudo ufw allow OpenSSH &>> ${SCRIPT_LOGFILE}
     sudo ufw allow $COINPORT/tcp &>> ${SCRIPT_LOGFILE}
     sudo ufw allow $COINRPCPORT/tcp &>> ${SCRIPT_LOGFILE}
+    if [ "${DNSPORT}" != "" ] ; then
+        sudo ufw allow ${DNSPORT}/tcp &>> ${SCRIPT_LOGFILE}
+        sudo ufw allow ${DNSPORT}/udp &>> ${SCRIPT_LOGFILE}
+    fi
     echo "y" | sudo ufw enable &>> ${SCRIPT_LOGFILE}
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
@@ -199,12 +212,12 @@ compileWallet() {
     echo
     echo -e "* Compiling wallet. Please wait, this might take a while to complete..."
     cd /home/${NODE_USER}/
-    git clone ${COINGITHUB} &>> ${SCRIPT_LOGFILE}
-    cd ${COINSRCLOC} 
+    git clone ${COINGITHUB} code &>> ${SCRIPT_LOGFILE}
+    cd /home/${NODE_USER}/code
     git submodule update --init --recursive &>> ${SCRIPT_LOGFILE}
-    cd ${COINDSRC} 
-    dotnet publish -c ${CONF} -r ${ARCH} -v m -o ${COINDLOC} &>> ${SCRIPT_LOGFILE}	   ### compile & publish code 
-    rm -rf ${COINSRCLOC} &>> ${SCRIPT_LOGFILE} 	   ### Remove source
+    cd ${COINDSRC}
+    dotnet publish -c ${CONF} -r ${ARCH} -v m -o ${COINDLOC} &>> ${SCRIPT_LOGFILE}	   ### compile & publish code
+    rm -rf /home/${NODE_USER}/code &>> ${SCRIPT_LOGFILE} 	   ### Remove source
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
 
@@ -226,9 +239,10 @@ configureWallet() {
     echo
     echo -e "* Configuring wallet. Please wait..."
     cd /home/${NODE_USER}/
-    mnip=$(curl --silent ipinfo.io/ip)
+    rpcuser=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
+    rpcpass=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
     sudo mkdir -p $COINCORE
-    echo -e "externalip=${mnip}\ntxindex=1\nserver=1\nrpcuser=${RPCUSER}\nrpcpassword=${RPCPASS}\nrpcbind=${RPCBIND}\nrpcport=${COINRPCPORT}\nrpcallowip=${RPCBIND}" > $COINCONFIG
+    echo -e "externalip=${NODE_IP}\ntxindex=1\nlisten=1\ndaemon=1\nmaxconnections=64\nserver=1\nrpcuser=${RPCUSER}\nrpcpassword=${RPCPASS}\nrpcbind=${RPCBIND}\nrpcport=${COINRPCPORT}\nrpcallowip=${RPCBIND}" > $COINCONFIG
     sudo mv $COINCONFIG $COINCORE
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
@@ -269,10 +283,10 @@ installMongodDB() {
 	if [[ -r /etc/os-release ]]; then
 	. /etc/os-release
 		if [[ "${VERSION_ID}" = "16.04" ]]; then
-			echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list
+			echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list &>> ${SCRIPT_LOGFILE}
 		fi
 		if [[ "${VERSION_ID}" = "18.04" ]]; then
-			echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list
+			echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list &>> ${SCRIPT_LOGFILE}
 		fi
 	fi
 	sudo apt-get update &>> ${SCRIPT_LOGFILE}
@@ -309,10 +323,10 @@ installNako() {
 	
 	sudo ufw allow ${SYNCAPIPORT}/tcp &>> ${SCRIPT_LOGFILE}
 	
-	sudo echo -e "\n[Unit]\nDescription=Redstone BlockExplorer Indexer\nAfter=network-online.target\n\n[Service]\nUser=redstone\nGroup=redstone\nWorkingDirectory=/home/redstone/\nExecStart=/home/redstone/indexer.sh\nRestart=always\nTimeoutSec=10\nRestartSec=35\n\n[Install]\nWantedBy=multi-user.target" > ${COINSERVICELOC}indexer@redstone.service
+	sudo echo -e "\n[Unit]\nDescription=Redstone BlockExplorer Indexer\nAfter=network-online.target\n\n[Service]\nUser=redstone\nGroup=redstone\nWorkingDirectory=/home/redstone/\nExecStart=/home/redstone/indexer.sh\nRestart=always\nTimeoutSec=10\nRestartSec=35\n\n[Install]\nWantedBy=multi-user.target" > ${COINSERVICELOC}indexer@${NODE_USER}.service
 	sudo systemctl --system daemon-reload &>> ${SCRIPT_LOGFILE}
-	sudo systemctl enable indexer@redstone &>> ${SCRIPT_LOGFILE}
-	sudo systemctl start indexer@redstone &>> ${SCRIPT_LOGFILE}
+	sudo systemctl enable indexer@${NODE_USER} &>> ${SCRIPT_LOGFILE}
+	sudo systemctl start indexer@${NODE_USER} &>> ${SCRIPT_LOGFILE}
 	echo -e "${NONE}${GREEN}* Done${NONE}";
 }
 
@@ -344,11 +358,11 @@ installExplorer() {
 	
 	cd /home/${NODE_USER}
 
-	sudo echo -e "[Unit]\nDescription=Redstone Block Explorer\nAfter=network-online.target\n\n[Service]\nUser=redstone\nGroup=redstone\nWorkingDirectory=/var/www/explorer\nExecStart=/usr/bin/dotnet /var/www/explorer/Stratis.Guru.dll 'TXRD'\nRestart=always\n# Restart service after 10 seconds if the dotnet service crashes:\nRestartSec=30\nTimeoutSec=10\nKillSignal=SIGINT\nSyslogIdentifier=redstone-explorer\nEnvironment=ASPNETCORE_ENVIRONMENT=Production\nEnvironment=DOTNET_PRINT_TELEMETRY_MESSAGE=false\n\n[Install]\nWantedBy=multi-user.target\n" > /etc/systemd/system/explorer@redstone.service
+	sudo echo -e "[Unit]\nDescription=Redstone Block Explorer\nAfter=network-online.target\n\n[Service]\nUser=redstone\nGroup=redstone\nWorkingDirectory=/var/www/explorer\nExecStart=/usr/bin/dotnet /var/www/explorer/Stratis.Guru.dll 'TXRD'\nRestart=always\n# Restart service after 10 seconds if the dotnet service crashes:\nRestartSec=30\nTimeoutSec=10\nKillSignal=SIGINT\nSyslogIdentifier=redstone-explorer\nEnvironment=ASPNETCORE_ENVIRONMENT=Production\nEnvironment=DOTNET_PRINT_TELEMETRY_MESSAGE=false\n\n[Install]\nWantedBy=multi-user.target\n" > /etc/systemd/system/explorer@${NODE_USER}.service
 
 	sudo systemctl --system daemon-reload &>> ${SCRIPT_LOGFILE}
-	sudo systemctl enable explorer@redstone &>> ${SCRIPT_LOGFILE}
-	sudo systemctl start explorer@redstone &>> ${SCRIPT_LOGFILE}
+	sudo systemctl enable explorer@${NODE_USER} &>> ${SCRIPT_LOGFILE}
+	sudo systemctl start explorer@${NODE_USER} &>> ${SCRIPT_LOGFILE}
 	sleep 2
 	echo -e "${NONE}${GREEN}* Done${NONE}";	
 }
@@ -359,9 +373,9 @@ displayServiceStatus() {
 	on="${GREEN}ACTIVE${NONE}"
 	off="${RED}OFFLINE${NONE}"
 
-	if systemctl is-active --quiet redstoned@redstone; then echo -e "Redstone Service: ${on}"; else echo -e "Redstone Service: ${off}"; fi
-	if systemctl is-active --quiet indexer@redstone; then echo -e "Indexer Service : ${on}"; else echo -e "Indexer Service : ${off}"; fi
-	if systemctl is-active --quiet explorer@redstone; then echo -e "Explorer Service: ${on}"; else echo -e "Explorer Service: ${off}"; fi
+	if systemctl is-active --quiet ${COINSERVICENAME}; then echo -e "Redstone Service: ${on}"; else echo -e "Redstone Service: ${off}"; fi
+	if systemctl is-active --quiet indexer@${NODE_USER}; then echo -e "Indexer Service : ${on}"; else echo -e "Indexer Service : ${off}"; fi
+	if systemctl is-active --quiet explorer@${NODE_USER}; then echo -e "Explorer Service: ${on}"; else echo -e "Explorer Service: ${off}"; fi
 	if systemctl is-active --quiet mongod; then echo -e "Mongo Service   : ${on}"; else echo -e "Mongo Service   : ${off}"; fi
 	if systemctl is-active --quiet nginx; then echo -e "nginx Service   : ${on}"; else echo -e "nginx Service   : ${off}"; fi
 }
@@ -378,21 +392,23 @@ echo -e "${RED}██║  ██║███████╗██████╔
 echo -e "${RED}╚═╝  ╚═╝╚══════╝╚═════╝ ╚══════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═══╝╚══════╝${NONE}"  
 echo -e ${RED}
 echo -e "${PURPLE}**********************************************************************${NONE}"
-echo -e "${PURPLE}*    ${NONE}This script will install and configure your Redstone node,      *${NONE}"
-echo -e "${PURPLE}*    ${NONE}including Mongo, Nako Indexer & Block Explorer                  *${NONE}"
-echo -e "${PURPLE}*    ${NONE}on Mainnet or Testnet.  Upgrade updates the node only!          *${NONE}"
+echo -e "${PURPLE}*    ${NONE}This script will install and configure your Redstone node,      ${PURPLE}*"
+echo -e "${PURPLE}*    ${NONE}including Mongo, Nako Indexer & Block Explorer                  ${PURPLE}*"
+echo -e "${PURPLE}*    ${NONE}on Mainnet or Testnet.  Upgrade updates the node only!          ${PURPLE}*"
 echo -e "${PURPLE}**********************************************************************${NONE}"
 echo -e "${BOLD}"
 
 check_root
 
 read -p " Do you want to setup on Mainnet (m), Testnet (t) or upgrade (u) your Redstone node. (m/t/u)?" response
-echo
-
-echo -e "${NONE}"
 
 if [[ "$response" =~ ^([mM])+$ ]]; then
     setMainVars
+    read -p " Do you want to setup your Redstone node as a DNS Server (y/n)?" response
+    echo -e "${NONE}"
+    if [[ "$response" =~ ^([yY])+$ ]]; then
+        setDNSVars
+    fi
     setGeneralVars
 	setExplorerIndexerVars
     echo -e "${BOLD} The log file can be monitored here: ${SCRIPT_LOGFILE}${NONE}"
@@ -406,7 +422,7 @@ if [[ "$response" =~ ^([mM])+$ ]]; then
     installDependencies
     compileWallet
     installWallet
-    configureWallet 
+    configureWallet
     installUnattendedUpgrades
     startWallet
     installMongodDB
@@ -421,12 +437,17 @@ if [[ "$response" =~ ^([mM])+$ ]]; then
     echo -e "${NONE} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
     echo -e "${NONE} Please ensure to check the service journal as follows:"
     echo -e "${NONE} Redstone Node   : ${PURPLE}journalctl -f -u ${COINSERVICENAME}${NONE}"
-    echo -e "${NONE} Indexer         : ${PURPLE}journalctl -f -u indexer@redstone${NONE}"
-    echo -e "${NONE} Explorer Service: ${PURPLE}journalctl -f -u explorer@redstone${NONE}"
+    echo -e "${NONE} Indexer         : ${PURPLE}journalctl -f -u indexer@${NODE_USER}${NONE}"
+    echo -e "${NONE} Explorer Service: ${PURPLE}journalctl -f -u explorer@${NODE_USER}${NONE}"
 
  else
     if [[ "$response" =~ ^([tT])+$ ]]; then
         setTestVars
+        read -p " Do you want to setup your Redstone node as a DNS Server (y/n)?" response
+        echo -e "${NONE}"
+        if [[ "$response" =~ ^([yY])+$ ]]; then
+           setDNSVars
+        fi
         setGeneralVars
 		setExplorerIndexerVars
         echo -e "${BOLD} The log file can be monitored here: ${SCRIPT_LOGFILE}${NONE}"
@@ -455,20 +476,22 @@ if [[ "$response" =~ ^([mM])+$ ]]; then
         echo -e "${NONE} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
         echo -e "${NONE} Please ensure to check the service journal as follows:"
         echo -e "${NONE} Redstone Node   : ${PURPLE}journalctl -f -u ${COINSERVICENAME}${NONE}"
-        echo -e "${NONE} Indexer         : ${PURPLE}journalctl -f -u indexer@redstone${NONE}"
-        echo -e "${NONE} Explorer Service: ${PURPLE}journalctl -f -u explorer@redstone${NONE}"
+        echo -e "${NONE} Indexer         : ${PURPLE}journalctl -f -u indexer@${NODE_USER}${NONE}"
+        echo -e "${NONE} Explorer Service: ${PURPLE}journalctl -f -u explorer@${NODE_USER}${NONE}"
  else
     if [[ "$response" =~ ^([uU])+$ ]]; then
         check_root
+        ##TODO: Test for servicefile and only upgrade as required 
         #Stop Test Service
         setTestVars
         setGeneralVars
         stopWallet
+	    updateAndUpgrade
+        compileWallet
         #Stop Main Service
         setMainVars
         setGeneralVars
         stopWallet
-	    updateAndUpgrade
         compileWallet
         #Start Test Service
         setTestVars

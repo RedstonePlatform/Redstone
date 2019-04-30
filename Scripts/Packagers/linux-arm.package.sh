@@ -11,7 +11,8 @@ UNDERLINE='\033[4m'
 
 runtime="linux-arm"
 configuration="release"
-git_commit=$(git log --format=%h --abbrev=7 -n 1)
+#git_commit=$(git log --format=%h --abbrev=7 -n 1)
+git_commit="v3.0.4.0"
 publish_directory="/tmp/Redstone/Release/Publish"
 release_directory="/tmp/Redstone/Release"
 project_path="../../src/Redstone/Programs/Redstone.RedstoneFullNodeD/Redstone.RedstoneFullNodeD.csproj"
