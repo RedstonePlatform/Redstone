@@ -44,8 +44,9 @@ namespace Redstone.Core.Networks
             this.Magic = magic;
             this.DefaultMaxOutboundConnections = 16;
             this.DefaultMaxInboundConnections = 109;
-            this.DefaultAPIPort = 19056;
+            this.DefaultPort = 19056;
             this.DefaultRPCPort = 19057;
+            this.DefaultAPIPort = 37222;
             this.MaxTipAge = RedstoneDefaultMaxTipAgeInSeconds;
             this.MinTxFee = 10000;
             this.FallbackFee = 10000;
