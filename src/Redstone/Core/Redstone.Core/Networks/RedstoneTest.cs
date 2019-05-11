@@ -32,8 +32,9 @@ namespace Redstone.Core.Networks
             this.Magic = magic;
             this.DefaultMaxOutboundConnections = 16;
             this.DefaultMaxInboundConnections = 109;
-            this.DefaultAPIPort = 19156;
+            this.DefaultPort = 19156;
             this.DefaultRPCPort = 19157;
+            this.DefaultAPIPort = 38222;
             this.CoinTicker = "TXRD";
             this.MaxTipAge = RedstoneDefaultMaxTipAgeInSeconds * 12 * 365;
 

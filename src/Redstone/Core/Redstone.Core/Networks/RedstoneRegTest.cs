@@ -30,8 +30,9 @@ namespace Redstone.Core.Networks
             this.Name = "RedstoneRegTest";
             this.NetworkType = NetworkType.Testnet;
             this.Magic = magic;
-            this.DefaultAPIPort = 19256;
+            this.DefaultPort = 19256;
             this.DefaultRPCPort = 19257;
+            this.DefaultAPIPort = 39222;
             this.MinTxFee = 0;
             this.FallbackFee = 0;
             this.MinRelayTxFee = 0;
