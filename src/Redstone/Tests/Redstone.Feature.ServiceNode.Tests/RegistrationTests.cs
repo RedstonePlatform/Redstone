@@ -8,6 +8,7 @@ using Redstone.Core.Networks;
 using Redstone.Features.ServiceNode;
 using Redstone.Features.ServiceNode.Common;
 using Redstone.Features.ServiceNode.Models;
+using Stratis.Bitcoin.Features.BlockStore.AddressIndexing;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.WatchOnlyWallet;
@@ -28,19 +29,20 @@ namespace Redstone.Feature.ServiceNode.Tests
         private readonly Network network = RedstoneNetworks.RegTest;
         private CoreNode node;
         private CoreNode watchingNode;
-        private RegistrationManager rm;
+        private IWalletTransactionHandler walletTransactionHandler;
+        private ServiceNodeManager rm;
         private RegistrationStore rs;
-        private WatchOnlyWalletManager wowm;
-        private RegistrationManager watchingRm;
+        private IAddressIndexer ai;
+        private ServiceNodeManager watchingRm;
         private RegistrationStore watchingRs;
-        private WatchOnlyWalletManager watchingWowm;
+        private IAddressIndexer watchinAi;
         private BitcoinSecret serverSecret;
         private readonly Money collateral;
         private readonly int maturity;
 
         public RegistrationTests(ITestOutputHelper output)
         {
-            this.collateral = new Money(100, MoneyUnit.BTC);
+            this.collateral = new Money(this.network.Consensus.ServiceNodeCollateralThreshold, MoneyUnit.BTC);
             this.maturity = (int)this.network.Consensus.CoinbaseMaturity;
             this.output = output;
         }
@@ -86,27 +88,23 @@ namespace Redstone.Feature.ServiceNode.Tests
 
                 // Pay Collateral
                 CreateTransactionAndBroadcast(this.collateral, this.serverSecret);
-                ConnectAndSync();
-                AssertStoreAndBalance(1, this.collateral);
-                CreateTransactionAndBroadcast(this.collateral, this.serverSecret);
-                ConnectAndSync();
-                AssertStoreAndBalance(1, this.collateral);
-                CreateTransactionAndBroadcast(this.collateral, this.serverSecret);
-                ConnectAndSync();
-                AssertStoreAndBalance(1, this.collateral);
-                CreateTransactionAndBroadcast(this.collateral, this.serverSecret);
-                ConnectAndSync();
+                MineConnectAndSync();
                 AssertStoreAndBalance(1, this.collateral);
 
                 MineConnectAndSync();
+                AssertStoreAndBalance(1, this.collateral);
 
                 // Transactions up to collateral block period
                 for (int i = 0; i < this.network.Consensus.ServiceNodeCollateralBlockPeriod; i++)
                 {
-                    CreateTransactionAndBroadcast("6");
+                    CreateTransactionAndBroadcast(new Money(6 + i, MoneyUnit.BTC));
                     MineConnectAndSync();
                     AssertStoreAndBalance(1, this.collateral);
                 }
+
+                CreateTransactionAndBroadcast(new Money(4, MoneyUnit.BTC));
+                MineConnectAndSync();
+                AssertStoreAndBalance(1, this.collateral);
             }
         }
 
@@ -117,15 +115,26 @@ namespace Redstone.Feature.ServiceNode.Tests
                                 .Start();
             this.watchingNode = builder.CreateRedstonePosNode(this.network).Start();
 
-            this.rm = this.node.FullNode.NodeService<RegistrationManager>();
-            this.rs = this.rm.GetRegistrationStore();
-            this.wowm = this.node.FullNode.NodeService<IWatchOnlyWalletManager>() as WatchOnlyWalletManager;
+            this.walletTransactionHandler = this.node.FullNode.NodeService<IWalletTransactionHandler>();
 
-            this.watchingRm = this.watchingNode.FullNode.NodeService<RegistrationManager>();
+            this.rm = this.node.FullNode.NodeService<ServiceNodeManager>();
+            this.rs = this.rm.GetRegistrationStore();
+            this.ai = this.node.FullNode.NodeService<IAddressIndexer>();
+
+            this.watchingRm = this.watchingNode.FullNode.NodeService<ServiceNodeManager>();
             this.watchingRs = this.watchingRm.GetRegistrationStore();
-            this.watchingWowm = this.watchingNode.FullNode.NodeService<IWatchOnlyWalletManager>() as WatchOnlyWalletManager;
+            this.watchinAi = this.watchingNode.FullNode.NodeService<IAddressIndexer>();
 
             this.serverSecret = this.GetWalletPrivateKeyForServer();
+        }
+        private BitcoinSecret GetWalletPrivateKeyForServer()
+        {
+            IWalletManager wm = this.node.FullNode.NodeService<IWalletManager>();
+
+            Wallet wallet = wm.LoadWallet(Password, WalletName);
+            HdAddress hdAddress = wallet.GetAllAddresses().Last();
+            ISecret extendedPrivateKey = wallet.GetExtendedPrivateKeyForAddress(Password, hdAddress);
+            return extendedPrivateKey.PrivateKey.GetBitcoinSecret(this.network);
         }
 
         private void MineConnectAndSync(int mineBlockCount = 1)
@@ -141,10 +150,10 @@ namespace Redstone.Feature.ServiceNode.Tests
 
         private void AssertStoreAndBalance(int requiredStoreCount, Money requiredBalance)
         {
-            Money balance = this.wowm.GetRelativeBalance(this.serverSecret.GetAddress().ToString());
+            Money balance = this.ai.GetAddressBalance(this.serverSecret.GetAddress().ToString());
             List<RegistrationRecord> records = this.rs.GetAll();
 
-            Money watchingBalance = this.watchingWowm.GetRelativeBalance(this.serverSecret.GetAddress().ToString());
+            Money watchingBalance = this.watchinAi.GetAddressBalance(this.serverSecret.GetAddress().ToString());
             List<RegistrationRecord> watchingRecords = this.watchingRs.GetAll();
 
             this.output.WriteLine($"Required {requiredBalance?.ToUnit(MoneyUnit.BTC)} Balance: {balance?.ToUnit(MoneyUnit.BTC)}");
@@ -163,29 +172,32 @@ namespace Redstone.Feature.ServiceNode.Tests
             var trxs = new List<Transaction>();
             foreach (int index in Enumerable.Range(1, transactionCount))
             {
-                Block block = this.node.FullNode.BlockStore().GetBlock(this.node.FullNode.ChainIndexer.GetHeader(index).HashBlock);
-                Transaction prevTrx = block.Transactions.First();
-                var dest = new BitcoinSecret(new Key(), this.node.FullNode.Network);
-
-                Transaction tx = this.node.FullNode.Network.CreateTransaction();
-                tx.AddInput(new TxIn(new OutPoint(prevTrx.GetHash(), 0), PayToPubkeyHashTemplate.Instance.GenerateScriptPubKey(this.node.MinerSecret.PubKey)));
-                tx.AddOutput(new TxOut("5", dest.PubKey.Hash));
-                tx.AddOutput(new TxOut("3", new Key().PubKey.Hash)); // 1 btc fee
-                tx.Sign(this.node.FullNode.Network, this.node.MinerSecret, false);
+                Transaction tx = CreateTransaction(new Money(5, MoneyUnit.BTC));
                 trxs.Add(tx);
             }
             var options = new ParallelOptions { MaxDegreeOfParallelism = transactionCount };
             Parallel.ForEach(trxs, options, transaction =>
             {
-                this.node.Broadcast(transaction);
+                BroadcastTransaction(transaction);
             });
+        }
+
+        private void CreateTransactionAndBroadcast(Money amount, BitcoinSecret dest = null)
+        {
+            Transaction transaction = CreateTransaction(amount, dest);
+            BroadcastTransaction(transaction);
+        }
+
+        private void BuildTransactionAndBroadcast(Money amount, BitcoinSecret dest = null)
+        {
+            Transaction transaction = BuildTransaction(amount, dest);
+            BroadcastTransaction(transaction);
         }
 
         private void CreateRegistrationTransactionAndBroadcast()
         {
             Transaction transaction = CreateRegistrationTransaction();
-            IBroadcasterManager broadcasterManager = this.node.FullNode.NodeService<IBroadcasterManager>();
-            broadcasterManager.BroadcastTransactionAsync(transaction).GetAwaiter().GetResult();
+            BroadcastTransaction(transaction);
         }
 
         private Transaction CreateRegistrationTransaction()
@@ -215,35 +227,58 @@ namespace Redstone.Feature.ServiceNode.Tests
 
             return transaction;
         }
-
-        private void CreateTransactionAndBroadcast(Money amount, BitcoinSecret dest = null)
-        {
-            const int txSrcBlockIndex = 2;
-            CreateTransactionAndBroadcast(txSrcBlockIndex, amount.ToString(), dest);
-        }
-
-        private void CreateTransactionAndBroadcast(int blockIndex, string amount, BitcoinSecret dest = null)
+        private Transaction CreateTransaction(Money amount, BitcoinSecret dest = null)
         {
             dest = (dest == null) ? new BitcoinSecret(new Key(), this.node.FullNode.Network) : dest;
-
-            Block block = this.node.FullNode.BlockStore().GetBlock(this.node.FullNode.ChainIndexer.GetHeader(blockIndex).HashBlock);
+            
+            //Block block = this.node.FullNode.BlockStore().GetBlock(this.node.FullNode.ChainIndexer.GetHeader(blockIndex).HashBlock);
+            Block block = this.node.FullNode.ChainIndexer.Tip.Block;
             Transaction prevTrx = block.Transactions.First();
             Transaction transaction = this.node.FullNode.Network.CreateTransaction();
             transaction.AddInput(new TxIn(new OutPoint(prevTrx.GetHash(), 0), PayToPubkeyHashTemplate.Instance.GenerateScriptPubKey(this.node.MinerSecret.PubKey)));
             transaction.AddOutput(new TxOut(amount, dest.PubKey.Hash));
-            transaction.AddOutput(new TxOut("1", new Key().PubKey.Hash));
+            transaction.AddOutput(new TxOut(new Money(1, MoneyUnit.BTC), new Key().PubKey.Hash));
             transaction.Sign(this.node.FullNode.Network, this.node.MinerSecret, false);
-            this.node.Broadcast(transaction);
+            return transaction;
         }
-
-        private BitcoinSecret GetWalletPrivateKeyForServer()
+        private void BroadcastTransaction(Transaction transaction)
         {
-            IWalletManager wm = this.node.FullNode.NodeService<IWalletManager>();
+            IBroadcasterManager broadcasterManager = this.node.FullNode.NodeService<IBroadcasterManager>();
+            broadcasterManager.BroadcastTransactionAsync(transaction).GetAwaiter().GetResult();
+        }
+        private Transaction BuildTransaction(Money amount, BitcoinSecret dest)
+        {
+            dest = (dest == null) ? new BitcoinSecret(new Key(), this.node.FullNode.Network) : dest;
 
-            Wallet wallet = wm.LoadWallet(Password, WalletName);
-            HdAddress hdAddress = wallet.GetAllAddresses().Last();
-            ISecret extendedPrivateKey = wallet.GetExtendedPrivateKeyForAddress(Password, hdAddress);
-            return extendedPrivateKey.PrivateKey.GetBitcoinSecret(this.network);
+            var recipient = new Recipient
+            {
+                Amount = amount,
+                ScriptPubKey = dest.ScriptPubKey
+            };
+
+            var accountReference = new WalletAccountReference()
+            {
+                AccountName = Account,
+                WalletName = WalletName
+            };
+
+            var context = new TransactionBuildContext(this.node.FullNode.Network)
+            {
+                AccountReference = accountReference,
+                Recipients = new[] { recipient }.ToList(),
+                Shuffle = false,
+                Sign = true,
+                FeeType = FeeType.High,
+                //OverrideFeeRate = new FeeRate(new Money(1, MoneyUnit.BTC)),
+                WalletPassword = Password,
+            };
+            context.TransactionBuilder.CoinSelector = new DefaultCoinSelector
+            {
+                GroupByScriptPubKey = false
+            };
+            Transaction transaction = this.walletTransactionHandler.BuildTransaction(context);
+
+            return transaction;
         }
     }
 }

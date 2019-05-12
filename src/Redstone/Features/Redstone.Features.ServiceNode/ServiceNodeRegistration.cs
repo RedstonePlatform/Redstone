@@ -75,7 +75,7 @@ namespace Redstone.Features.ServiceNode
             RegistrationToken registrationToken;
             try
             {
-                registrationToken = mostRecent.Record;
+                registrationToken = mostRecent.Token;
             }
             catch (NullReferenceException e)
             {

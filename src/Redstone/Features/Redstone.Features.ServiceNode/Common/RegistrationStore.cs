@@ -65,7 +65,7 @@ namespace Redstone.Features.ServiceNode.Common
         /// <returns></returns>
         public bool AddWithReplace(RegistrationRecord regRecord)
         {
-            foreach (RegistrationRecord record in GetByServerId(regRecord.Record.ServerId))
+            foreach (RegistrationRecord record in GetByServerId(regRecord.Token.ServerId))
             {
                 Delete(record.RecordGuid);
             }
@@ -106,7 +106,7 @@ namespace Redstone.Features.ServiceNode.Common
 
             foreach (RegistrationRecord record in registrations)
             {
-                if (record.Record.ServerId == serverId)
+                if (record.Token.ServerId == serverId)
                 {
                     filtered.Add(record);
                 }

@@ -77,7 +77,7 @@ namespace Redstone.Feature.ServiceNode.Tests
 
             Assert.Single(retrievedRecords);
 
-            var retrievedRecord = retrievedRecords[0].Record;
+            var retrievedRecord = retrievedRecords[0].Token;
 
             Assert.Equal(255, retrievedRecord.ProtocolVersion);
             Assert.Equal("1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2", retrievedRecord.ServerId);
@@ -138,7 +138,7 @@ namespace Redstone.Feature.ServiceNode.Tests
 
             Assert.Single(retrievedRecords);
 
-            var retrievedRecord = retrievedRecords[0].Record;
+            var retrievedRecord = retrievedRecords[0].Token;
 
             Assert.Equal(255, retrievedRecord.ProtocolVersion);
             Assert.Equal("1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2", retrievedRecord.ServerId);

@@ -10,7 +10,7 @@ namespace Redstone.Features.ServiceNode.Common
         public Guid RecordGuid { get; set; }
         public string RecordTxId { get; set; }
         public string RecordTxHex { get; set; }
-        public RegistrationToken Record { get; set; }
+        public RegistrationToken Token { get; set; }
         public int BlockReceived { get; set; }
 
         //[JsonProperty("recordTxProof", NullValueHandling = NullValueHandling.Ignore)]
@@ -23,7 +23,7 @@ namespace Redstone.Features.ServiceNode.Common
             this.RecordGuid = recordGuid;
             this.RecordTxId = recordTxId;
             this.RecordTxHex = recordTxHex;
-            this.Record = record;
+            this.Token = record;
             this.RecordTxProof = recordTxProof;
             this.BlockReceived = blockReceived;
         }

@@ -71,7 +71,7 @@ namespace Redstone.Features.ServiceNode
                 List<RegistrationRecord> registrationRecords = this.registrationStore.GetAll();
                 IEnumerable<RegistrationModel> models = registrationRecords.Select(m => new RegistrationModel
                 {
-                    ServerId = m.Record.ServerId,
+                    ServerId = m.Token.ServerId,
                     BlockReceived = m.BlockReceived,
                     RecordTimestamp = m.RecordTimestamp,
                     RecordTxHex = m.RecordTxHex,
