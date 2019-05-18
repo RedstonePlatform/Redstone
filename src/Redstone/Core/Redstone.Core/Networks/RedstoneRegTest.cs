@@ -1,18 +1,14 @@
-﻿using NBitcoin.Protocol;
+﻿using System;
+using System.Collections.Generic;
+using NBitcoin.Protocol;
 using Redstone.Core.Networks.Deployments;
 using Redstone.Core.Policies;
+using NBitcoin;
+using NBitcoin.BouncyCastle.Math;
 using Stratis.Bitcoin.Features.Wallet;
 
 namespace Redstone.Core.Networks
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using NBitcoin;
-    using NBitcoin.BouncyCastle.Math;
-    using Stratis.Bitcoin.Features.Wallet;
-    using Redstone.Core.Networks.Deployments;
-
     public class RedstoneRegTest : RedstoneMain
     {
         public RedstoneRegTest()

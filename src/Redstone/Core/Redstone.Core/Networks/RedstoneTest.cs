@@ -1,19 +1,16 @@
-﻿using Redstone.Core.Policies;
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
+using NBitcoin;
+using NBitcoin.BouncyCastle.Math;
+using NBitcoin.Protocol;
+using Stratis.Bitcoin.Features.Wallet;
+using Redstone.Core.Networks.Deployments;
+using Redstone.Core.Policies;
 
 namespace Redstone.Core.Networks
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Net;
-    using NBitcoin;
-    using NBitcoin.BouncyCastle.Math;
-    using NBitcoin.Protocol;
-    using Stratis.Bitcoin.Features.Wallet;
-    using Redstone.Core.Networks.Deployments;
-    using NBitcoin.DataEncoders;
-
-    public class RedstoneTest : RedstoneMain
+    public class RedstoneTest : RedstoneBaseNetwork
     {
         public RedstoneTest()
         {
@@ -36,6 +33,12 @@ namespace Redstone.Core.Networks
             this.DefaultRPCPort = 19157;
             this.DefaultAPIPort = 38222;
             this.CoinTicker = "TXRD";
+            this.MinTxFee = 10000;
+            this.FallbackFee = 10000;
+            this.MinRelayTxFee = 10000;
+            this.RootFolderName = RedstoneRootFolderName;
+            this.DefaultConfigFilename = RedstoneDefaultConfigFilename;
+            this.MaxTimeOffsetSeconds = RedstoneMaxTimeOffsetSeconds;
             this.MaxTipAge = RedstoneDefaultMaxTipAgeInSeconds * 12 * 365;
 
             var powLimit = new Target(new uint256("0000ffff00000000000000000000000000000000000000000000000000000000"));
@@ -45,7 +48,7 @@ namespace Redstone.Core.Networks
             // Create the genesis block.
             this.GenesisTime = 1530256857;
             this.GenesisNonce = 1349369;
-            this.GenesisBits = this.Consensus.PowLimit;
+            this.GenesisBits = 0x00000fffff;
             this.GenesisVersion = 1;
             this.GenesisReward = Money.Zero;
 
@@ -115,6 +118,7 @@ namespace Redstone.Core.Networks
                 serviceNodeCollateralBlockPeriod: 5
             );
 
+            this.Base58Prefixes = new byte[12][];
             this.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS] = new byte[] { (65) };
             this.Base58Prefixes[(int)Base58Type.SCRIPT_ADDRESS] = new byte[] { (196) };
             this.Base58Prefixes[(int)Base58Type.SECRET_KEY] = new byte[] { (65 + 128) };

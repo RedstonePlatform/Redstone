@@ -1,32 +1,18 @@
-﻿using Redstone.Core.Policies;
+﻿using System;
+using System.Net;
+using System.Collections.Generic;
+using NBitcoin;
+using NBitcoin.BouncyCastle.Math;
+using NBitcoin.Protocol;
+using Stratis.Bitcoin.Features.Wallet;
+using Redstone.Core.Networks.Deployments;
+using Redstone.Core.Policies;
+using NBitcoin.DataEncoders;
 
 namespace Redstone.Core.Networks
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Net;
-    using NBitcoin;
-    using NBitcoin.BouncyCastle.Math;
-    using NBitcoin.Protocol;
-    using Stratis.Bitcoin.Features.Wallet;
-    using Redstone.Core.Networks.Deployments;
-    using NBitcoin.DataEncoders;
-
-    public class RedstoneMain : Network
-    {
-        /// <summary> Redstone maximal value for the calculated time offset. If the value is over this limit, the time syncing feature will be switched off. </summary>
-        public const int RedstoneMaxTimeOffsetSeconds = 25 * 60;
-
-        /// <summary> Redstone default value for the maximum tip age in seconds to consider the node in initial block download (2 hours). </summary>
-        public const int RedstoneDefaultMaxTipAgeInSeconds = 2 * 60 * 60;
-
-        /// <summary> The name of the root folder containing the different Redstone blockchains (RedstoneMain, RedstoneTest, RedstoneRegTest). </summary>
-        public const string RedstoneRootFolderName = "redstone";
-
-        /// <summary> The default name used for the Redstone configuration file. </summary>
-        public const string RedstoneDefaultConfigFilename = "redstone.conf";
-
+    public class RedstoneMain : RedstoneBaseNetwork
+    {        
         public RedstoneMain()
         {
             // The message start string is designed to be unlikely to occur in normal data.
@@ -163,38 +149,8 @@ namespace Redstone.Core.Networks
             };
 
             this.StandardScriptsRegistry = new RedstoneStandardScriptsRegistry();
-
             Assert(this.Consensus.HashGenesisBlock == uint256.Parse("8e21759b1aefe10358fef84da1ac428af6ba17990b7eee71c47de9582fa31806"));
             Assert(this.Genesis.Header.HashMerkleRoot == uint256.Parse("c89473b52c9a1afbc3784b0306fd06e86d016c13d68b56343c78a9377491a2f7"));
-        }
-
-        protected static Block CreateRedstoneGenesisBlock(ConsensusFactory consensusFactory, uint nTime, uint nNonce, uint nBits, int nVersion, Money genesisReward)
-        {
-            string pszTimestamp = "http://www.escapistmagazine.com/news/view/109385-Computer-Built-in-Minecraft-Has-RAM-Performs-Division";
-            Transaction txNew = consensusFactory.CreateTransaction();
-            txNew.Version = 1;
-            txNew.Time = nTime;
-            txNew.AddInput(new TxIn()
-            {
-                ScriptSig = new Script(Op.GetPushOp(0), new Op()
-                {
-                    Code = (OpcodeType)0x1,
-                    PushData = new[] { (byte)42 }
-                }, Op.GetPushOp(Encoders.ASCII.DecodeData(pszTimestamp)))
-            });
-            txNew.AddOutput(new TxOut()
-            {
-                Value = genesisReward,
-            });
-            Block genesis = consensusFactory.CreateBlock();
-            genesis.Header.BlockTime = Utils.UnixTimeToDateTime(nTime);
-            genesis.Header.Bits = nBits;
-            genesis.Header.Nonce = nNonce;
-            genesis.Header.Version = nVersion;
-            genesis.Transactions.Add(txNew);
-            genesis.Header.HashPrevBlock = uint256.Zero;
-            genesis.UpdateMerkleRoot();
-            return genesis;
         }
     }
 }

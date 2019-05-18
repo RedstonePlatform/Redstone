@@ -72,9 +72,9 @@ namespace Redstone.Features.ServiceNode
             this.logger.LogTrace("()");
 
             // For RegTest, it is not clear that re-issuing a sync command will be beneficial. Generally you want to sync from genesis in that case.
-            var syncHeight = this.network == RedstoneNetworks.Main
+            var syncHeight = this.network.Name == "RedstoneMain"
                 ? SyncHeightMain
-                : this.network == RedstoneNetworks.TestNet
+                : this.network.Name == "RedstoneTest"
                     ? SyncHeightTest
                     : SyncHeightRegTest;
 
