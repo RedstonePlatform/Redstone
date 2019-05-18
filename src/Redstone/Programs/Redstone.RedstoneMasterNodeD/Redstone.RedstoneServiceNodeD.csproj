@@ -23,13 +23,16 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\NBitcoin\NBitcoin.csproj" />
     <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.BlockStore\Stratis.Bitcoin.Features.BlockStore.csproj" />
+    <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.ColdStaking\Stratis.Bitcoin.Features.ColdStaking.csproj" />
     <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.Consensus\Stratis.Bitcoin.Features.Consensus.csproj" />
+    <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.Dns\Stratis.Bitcoin.Features.Dns.csproj" />
     <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.MemoryPool\Stratis.Bitcoin.Features.MemoryPool.csproj" />
     <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.Miner\Stratis.Bitcoin.Features.Miner.csproj" />
     <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.RPC\Stratis.Bitcoin.Features.RPC.csproj" />
     <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.Wallet\Stratis.Bitcoin.Features.Wallet.csproj" />
     <ProjectReference Include="..\..\Core\Redstone.Core\Redstone.Core.csproj" />
     <ProjectReference Include="..\..\Features\Redstone.Features.Api\Redstone.Features.Api.csproj" />
+    <ProjectReference Include="..\..\Features\Redstone.Features.BlockExplorer\Redstone.Features.BlockExplorer.csproj" />
     <ProjectReference Include="..\..\Features\Redstone.Features.ServiceNode\Redstone.Features.ServiceNode.csproj" />    
   </ItemGroup>
 
