@@ -5,7 +5,7 @@
     },
     "Redstone.RedstoneServiceNodeD Test": {
       "commandName": "Project",
-      "commandLineArgs": "-testnet"
+      "commandLineArgs": "-testnet -txindex=true"
     }
   }
 }

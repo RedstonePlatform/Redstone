@@ -50,7 +50,7 @@ namespace Redstone.Features.ServiceNode
 
         public void Initialize()
         {
-            this.blockConnectedSubscription = this.signals.Subscribe<BlockConnected>(async b => await OnBlockConnectedAsync(b).ConfigureAwait(false));
+            this.blockConnectedSubscription = this.signals.Subscribe<BlockConnected>(this.OnBlockConnected);
         }
 
         public void Dispose()
@@ -58,9 +58,9 @@ namespace Redstone.Features.ServiceNode
             this.signals.Unsubscribe(this.blockConnectedSubscription);
         }
 
-        private async Task OnBlockConnectedAsync(BlockConnected blockConnected)
+        private void OnBlockConnected(BlockConnected blockConnected)
         {
-            await ProcessBlockAsync(blockConnected.ConnectedBlock.ChainedHeader.Height, blockConnected.ConnectedBlock.Block).ConfigureAwait(false);
+            this.ProcessBlock(blockConnected.ConnectedBlock.ChainedHeader.Height, blockConnected.ConnectedBlock.Block);
         }
 
         public RegistrationStore GetRegistrationStore()
@@ -68,15 +68,15 @@ namespace Redstone.Features.ServiceNode
             return this.registrationStore;
         }
 
-        private async Task ProcessBlockAsync(int height, Block block)
+        private void ProcessBlock(int height, Block block)
         {
             this.logger.LogTrace("()");
 
             // Check for any server registration transactions
             if (block.Transactions != null)
             {
-                CheckForServiceNodeRegistrations(height, block);
-                await CheckCollateralAsync(height).ConfigureAwait(false);
+                this.CheckForServiceNodeRegistrations(height, block);
+                this.CheckCollateral(height);
             }
 
             this.logger.LogTrace("(-)");
@@ -126,35 +126,29 @@ namespace Redstone.Features.ServiceNode
             }
         }
 
-        private async Task CheckCollateralAsync(int height)
+        private void CheckCollateral(int height)
         {
-            foreach (RegistrationRecord registractionRecord in this.registrationStore.GetAll())
+            foreach (RegistrationRecord registrationRecord in this.registrationStore.GetAll())
             {
                 try
                 {
-                    Script scriptToCheck = BitcoinAddress.Create(registractionRecord.Token.ServerId, this.network).ScriptPubKey;
+                    Money serverCollateralBalance =
+                        //await this.blockStoreClient.GetAddressBalanceAsync(registrationRecord.Token.ServerId, 1);
+                        this.addressIndexer.GetAddressBalance(registrationRecord.Token.ServerId, 1) ?? new Money(0);
 
-
-                    Money serverCollateralBalance = 
-                        //await this.blockStoreClient.GetAddressBalanceAsync(registractionRecord.Token.ServerId, 1);
-                        this.addressIndexer.GetAddressBalance(registractionRecord.Token.ServerId, 1);
-
-                    this.logger.LogDebug("Collateral balance for server " + registractionRecord.Token.ServerId + " is " +
+                    this.logger.LogDebug("Collateral balance for server " + registrationRecord.Token.ServerId + " is " +
                                          serverCollateralBalance.ToString() + ", original registration height " +
-                                         registractionRecord.BlockReceived + ", current height " + height);
+                                         registrationRecord.BlockReceived + ", current height " + height);
 
-                    if ((serverCollateralBalance.ToUnit(MoneyUnit.BTC) < this.network.Consensus.ServiceNodeCollateralThreshold) &&
-                        ((height - registractionRecord.BlockReceived) > this.network.Consensus.ServiceNodeCollateralBlockPeriod))
+                    if (serverCollateralBalance.ToUnit(MoneyUnit.BTC) < this.network.Consensus.ServiceNodeCollateralThreshold &&
+                        height - registrationRecord.BlockReceived > this.network.Consensus.ServiceNodeCollateralBlockPeriod)
                     {
                         // Remove server registrations as funding has not been performed within block count,
                         // or funds have been removed from the collateral address subsequent to the
                         // registration being performed
-                        this.logger.LogDebug("Insufficient collateral within window period for server: " + registractionRecord.Token.ServerId);
-                        this.logger.LogDebug("Deleting registration records for server: " + registractionRecord.Token.ServerId);
-                        this.registrationStore.DeleteAllForServer(registractionRecord.Token.ServerId);
-
-                        // TODO: Remove unneeded transactions from the watch-only wallet?
-                        // TODO: Need to make the TumbleBitFeature change its server address if this is the address it was using
+                        this.logger.LogDebug("Insufficient collateral within window period for server: " + registrationRecord.Token.ServerId);
+                        this.logger.LogDebug("Deleting registration records for server: " + registrationRecord.Token.ServerId);
+                        this.registrationStore.DeleteAllForServer(registrationRecord.Token.ServerId);
                     }
                 }
                 catch (Exception e)
