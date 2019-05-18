@@ -22,7 +22,7 @@ namespace Redstone.IntegrationTests.Common.EnvironmentMockUpHelpers
         static GenerateCoinsFastDateTimeProvider()
         {
             adjustedTimeOffset = TimeSpan.Zero;
-            startFrom = new DateTime(2018, 1, 1);
+            startFrom = new DateTime(2019, 1, 1);
         }
 
         public GenerateCoinsFastDateTimeProvider(ISignals signals)

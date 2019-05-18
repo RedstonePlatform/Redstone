@@ -32,6 +32,12 @@ namespace NBitcoin
         public decimal PosRewardReductionPercentage { get; }
 
         /// <inheritdoc />
+        public int ServiceNodeCollateralThreshold { get; }
+
+        /// <inheritdoc />
+        public int ServiceNodeCollateralBlockPeriod { get; }
+
+        /// <inheritdoc />
         public uint MaxReorgLength { get; private set; }
 
         /// <inheritdoc />
@@ -142,7 +148,9 @@ namespace NBitcoin
             Money proofOfStakeReward,
             bool posRewardReduction = false,
             int posRewardReductionBlockInterval = 0,
-            decimal posRewardReductionPercentage = 0m)
+            decimal posRewardReductionPercentage = 0m,
+            int serviceNodeCollateralBlockPeriod = 0,
+            int serviceNodeCollateralThreshold = 0)
         {
             this.IntegrityValidationRules = new List<IIntegrityValidationConsensusRule>();
             this.HeaderValidationRules = new List<IHeaderValidationConsensusRule>();
@@ -156,6 +164,8 @@ namespace NBitcoin
             this.PosRewardReduction = posRewardReduction;
             this.PosRewardReductionBlockInterval = posRewardReductionBlockInterval;
             this.PosRewardReductionPercentage = posRewardReductionPercentage;
+            this.ServiceNodeCollateralThreshold = serviceNodeCollateralThreshold;
+            this.ServiceNodeCollateralBlockPeriod = serviceNodeCollateralBlockPeriod;
             this.MaxReorgLength = maxReorgLength;
             this.MaxMoney = maxMoney;
             this.Options = consensusOptions;

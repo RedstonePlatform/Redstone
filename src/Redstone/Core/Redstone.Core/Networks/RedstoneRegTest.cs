@@ -1,4 +1,5 @@
-﻿using Redstone.Core.Networks.Deployments;
+﻿using NBitcoin.Protocol;
+using Redstone.Core.Networks.Deployments;
 using Redstone.Core.Policies;
 using Stratis.Bitcoin.Features.Wallet;
 
@@ -6,14 +7,19 @@ namespace Redstone.Core.Networks
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using NBitcoin;
     using NBitcoin.BouncyCastle.Math;
-    using NBitcoin.Protocol;
+    using Stratis.Bitcoin.Features.Wallet;
+    using Redstone.Core.Networks.Deployments;
 
     public class RedstoneRegTest : RedstoneMain
     {
         public RedstoneRegTest()
         {
+            // The message start string is designed to be unlikely to occur in normal data.
+            // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
+            // a large 4-byte int at any alignment.
             var messageStart = new byte[4];
             messageStart[0] = 0xb3;
             messageStart[1] = 0xd0;
@@ -37,15 +43,15 @@ namespace Redstone.Core.Networks
             var consensusFactory = new PosConsensusFactory();
 
             // Create the genesis block.
-            this.GenesisTime = 1470467000;
-            this.GenesisNonce = 1831645;
-            this.GenesisBits = 0x1e0fffff;
+            this.GenesisTime = 1530256857;
+            this.GenesisNonce = 1349369;
+            this.GenesisBits = this.Consensus.PowLimit;
             this.GenesisVersion = 1;
             this.GenesisReward = Money.Zero;
 
             Block genesisBlock = CreateRedstoneGenesisBlock(consensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion, this.GenesisReward);
 
-            genesisBlock.Header.Time = 1531811966;
+            genesisBlock.Header.Time = 1532811966;
             genesisBlock.Header.Nonce = 1349369;
             genesisBlock.Header.Bits = powLimit;
 
@@ -104,7 +110,9 @@ namespace Redstone.Core.Networks
                 proofOfStakeReward: Money.Coins(15),
                 posRewardReduction: true,
                 posRewardReductionBlockInterval: 2880,
-                posRewardReductionPercentage: 7.5m
+                posRewardReductionPercentage: 7.5m,
+                serviceNodeCollateralThreshold: 100,
+                serviceNodeCollateralBlockPeriod: 5
             );
 
             this.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS] = new byte[] { (63) };
@@ -117,7 +125,7 @@ namespace Redstone.Core.Networks
 
             this.StandardScriptsRegistry = new RedstoneStandardScriptsRegistry();
 
-            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("4442244290302b76a11951ba648e40bcdc6cc3965a99c30018ade95a4bc6e6bd"));
+            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("9f1288387bb087920fd5d3b48c6f1928b25a8167b5d40fb2ded439f208e8ef7d"));
         }
     }
 }

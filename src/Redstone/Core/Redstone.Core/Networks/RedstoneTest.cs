@@ -63,7 +63,7 @@ namespace Redstone.Core.Networks
                 maxStandardVersion: 2,
                 maxStandardTxWeight: 100_000,
                 maxBlockSigopsCost: 20_000,
-                maxStandardTxSigopsCost: 20_000 / 5 
+                maxStandardTxSigopsCost: 20_000 / 5
             );
 
             var buriedDeployments = new BuriedDeploymentsArray
@@ -110,7 +110,9 @@ namespace Redstone.Core.Networks
                 proofOfStakeReward: Money.Coins(15),
                 posRewardReduction: true,
                 posRewardReductionBlockInterval: 2880,
-                posRewardReductionPercentage: 7.5m
+                posRewardReductionPercentage: 7.5m,
+                serviceNodeCollateralThreshold: 100,
+                serviceNodeCollateralBlockPeriod: 5
             );
 
             this.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS] = new byte[] { (65) };
@@ -126,14 +128,14 @@ namespace Redstone.Core.Networks
 
             this.DNSSeeds = new List<DNSSeedData>()
             {
-                new DNSSeedData("seed.redstoneplatform.com", "seed.redstoneplatform.com")
+                //new DNSSeedData("seed.redstoneplatform.com", "seed.redstoneplatform.com")
             };
 
             this.SeedNodes = new List<NetworkAddress>
             {
-               new NetworkAddress(IPAddress.Parse("80.211.84.170"), this.DefaultPort), // cryptohunter node #4
-               new NetworkAddress(IPAddress.Parse("31.14.138.23"), this.DefaultPort), // cryptohunter node #3
-               new NetworkAddress(IPAddress.Parse("35.204.238.255"), this.DefaultPort), // cryptohunter node google#1
+               //new NetworkAddress(IPAddress.Parse("80.211.84.170"), this.DefaultPort), // cryptohunter node #4
+               //new NetworkAddress(IPAddress.Parse("31.14.138.23"), this.DefaultPort), // cryptohunter node #3
+               //new NetworkAddress(IPAddress.Parse("35.204.238.255"), this.DefaultPort), // cryptohunter node #googlecloud
             };
 
             this.StandardScriptsRegistry = new RedstoneStandardScriptsRegistry();

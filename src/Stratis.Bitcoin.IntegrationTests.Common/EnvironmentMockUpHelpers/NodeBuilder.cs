@@ -159,6 +159,18 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             return CreateNode(new StratisBitcoinPosRunner(this.GetNextDataFolderName(), network, agent), "stratis.conf", configParameters: configParameters);
         }
 
+        /// <summary>
+        /// Creates a Stratis Proof-of-Stake node.
+        /// <para>
+        /// <see cref="P2P.PeerDiscovery"/> and <see cref="P2P.PeerConnectorDiscovery"/> are disabled by default.
+        /// </para>
+        /// </summary>
+        /// <returns>The constructed PoS node.</returns>
+        public CoreNode CreateRedstonePosNode(Network network, string agent = "Redstone")
+        {
+            return CreateNode(new RedstonePosRunner(this.GetNextDataFolderName(), network, agent), "redstone.conf");
+        }
+
         public CoreNode CloneStratisNode(CoreNode cloneNode, string agent = "StratisBitcoin")
         {
             var node = new CoreNode(new StratisBitcoinPowRunner(cloneNode.FullNode.Settings.DataFolder.RootPath, cloneNode.FullNode.Network, agent), this.ConfigParameters, "bitcoin.conf");

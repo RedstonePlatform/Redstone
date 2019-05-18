@@ -122,8 +122,9 @@ namespace Redstone.Core.Networks
                 proofOfStakeReward: Money.Coins(15),
                 posRewardReduction: true,
                 posRewardReductionBlockInterval: 525600,
-                posRewardReductionPercentage: 7.5m
-
+                posRewardReductionPercentage: 7.5m,
+                serviceNodeCollateralThreshold: 1500,
+                serviceNodeCollateralBlockPeriod: 30
             );
 
             this.Base58Prefixes = new byte[12][];
@@ -158,8 +159,8 @@ namespace Redstone.Core.Networks
             {
                new NetworkAddress(IPAddress.Parse("80.211.84.170"), this.DefaultPort), // cryptohunter node #4
                new NetworkAddress(IPAddress.Parse("31.14.138.23"), this.DefaultPort), // cryptohunter node #3
-               new NetworkAddress(IPAddress.Parse("35.204.238.255"), this.DefaultPort), // cryptohunter node google#1
-             };
+               new NetworkAddress(IPAddress.Parse("35.204.238.255"), this.DefaultPort), // cryptohunter node #googlecloud
+            };
 
             this.StandardScriptsRegistry = new RedstoneStandardScriptsRegistry();
 

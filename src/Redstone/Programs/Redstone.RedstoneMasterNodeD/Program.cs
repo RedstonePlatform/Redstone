@@ -1,24 +1,30 @@
-namespace Redstone.RedstoneMasterNodeD
-{
-    using System;
-    using System.Linq;
-    using System.Threading.Tasks;
-    using NBitcoin;
-    using NBitcoin.Networks;
-    using NBitcoin.Protocol;
-    using Redstone.Core.Networks;
-    using Redstone.Features.Api;
-    using Redstone.Features.MasterNode;
-    using Stratis.Bitcoin.Builder;
-    using Stratis.Bitcoin.Configuration;
-    using Stratis.Bitcoin.Features.BlockStore;
-    using Stratis.Bitcoin.Features.Consensus;
-    using Stratis.Bitcoin.Features.MemoryPool;
-    using Stratis.Bitcoin.Features.Miner;
-    using Stratis.Bitcoin.Features.RPC;
-    using Stratis.Bitcoin.Features.Wallet;
-    using Stratis.Bitcoin.Utilities;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using NBitcoin;
+using NBitcoin.Networks;
+using NBitcoin.Protocol;
+using Redstone.Core.Networks;
+using Redstone.Features.Api;
+using Redstone.Features.BlockExplorer;
+using Redstone.Features.ServiceNode;
+using Stratis.Bitcoin.Builder;
+using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Features.Apps;
+using Stratis.Bitcoin.Features.BlockStore;
+using Stratis.Bitcoin.Features.ColdStaking;
+using Stratis.Bitcoin.Features.Consensus;
+using Stratis.Bitcoin.Features.Dns;
+using Stratis.Bitcoin.Features.MemoryPool;
+using Stratis.Bitcoin.Features.Miner;
+using Stratis.Bitcoin.Features.Notifications;
+using Stratis.Bitcoin.Features.RPC;
+using Stratis.Bitcoin.Features.Wallet;
+using Stratis.Bitcoin.Features.WatchOnlyWallet;
+using Stratis.Bitcoin.Utilities;
 
+namespace Redstone.RedstoneServiceNodeD
+{
     public class Program
     {
         public static async Task Main(string[] args)
@@ -36,26 +42,66 @@ namespace Redstone.RedstoneMasterNodeD
                     MinProtocolVersion = ProtocolVersion.ALT_PROTOCOL_VERSION
                 };
 
-                var node = new FullNodeBuilder()
-                    .UseNodeSettings(nodeSettings)
-                    .UseBlockStore()
-                    .UsePosConsensus()
-                    .AddPowPosMining()
-                    .UseMempool()
-                    .UseWallet()
-                    .UseApi()
-                    .UseMasterNode()
-                    .AddRPC()
-                    .Build();
+                var dnsSettings = new DnsSettings(nodeSettings);
+
+                var isDns = !String.IsNullOrWhiteSpace(dnsSettings.DnsHostName) &&
+                    !String.IsNullOrWhiteSpace(dnsSettings.DnsNameServer) &&
+                    !String.IsNullOrWhiteSpace(dnsSettings.DnsMailBox);
+
+                var builder = new FullNodeBuilder()
+                    .UseNodeSettings(nodeSettings);
+
+                if (isDns)
+                {
+                    // Run as a full node with DNS or just a DNS service?
+                    if (dnsSettings.DnsFullNode)
+                    {
+                        builder = builder
+                            .UseBlockStore()
+                            .UsePosConsensus()
+                            .UseMempool()
+                            .UseWallet()
+                            .AddPowPosMining();
+                    }
+                    else
+                    {
+                        builder = builder.UsePosConsensus();
+                    }
+
+                    builder = builder
+                        .UseApi()
+                        .AddRPC()
+                        .UseDns();
+                }
+                else
+                {
+                    builder = builder
+                       .UseBlockStore()
+                       .UsePosConsensus()
+                       .UseMempool()
+                       .UseWallet()
+                       .UseColdStakingWallet()
+                       .AddPowPosMining()
+                       .UseApi()
+
+                       .UseWatchOnlyWallet()
+                       .UseBlockNotification()
+                       .UseTransactionNotification()
+                       .AddServiceNodeRegistration()
+
+                       .UseApps()
+                       .UseBlockExplorer()
+                       .AddRPC();
+                }
+
+                var node = builder.Build();
 
                 if (node != null)
-                {
                     await node.RunAsync();
-                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("There was a problem initializing the node. Details: '{0}'", ex.Message);
+                Console.WriteLine("There was a problem initializing the node. Details: '{0}'", ex.ToString());
             }
         }
     }

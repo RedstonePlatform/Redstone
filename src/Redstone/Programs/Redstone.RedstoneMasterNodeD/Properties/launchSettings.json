@@ -1,19 +1,11 @@
 {
   "profiles": {
-    "Redstone.RedstoneFullNodeD": {
+    "Redstone.RedstoneServiceNodeD": {
       "commandName": "Project"
     },
-    "Redstone.RedstoneFullNodeD Test": {
+    "Redstone.RedstoneServiceNodeD Test": {
       "commandName": "Project",
-      "commandLineArgs": "-testnet"
-    },
-    "Redstone.RedstoneFullNodeD Test with RPC": {
-      "commandName": "Project",
-      "commandLineArgs": "-testnet -server -rpcpassword=password -rpcuser=user"
-    },
-    "Redstone.RedstoneFullNodeD Test Keepalive 60s": {
-      "commandName": "Project",
-      "commandLineArgs": "-testnet -keepalive=60"
+      "commandLineArgs": "-testnet -txindex=true"
     }
   }
 }
