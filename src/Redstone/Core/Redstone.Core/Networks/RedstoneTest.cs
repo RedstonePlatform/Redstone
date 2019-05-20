@@ -7,6 +7,7 @@ using NBitcoin.Protocol;
 using Stratis.Bitcoin.Features.Wallet;
 using Redstone.Core.Networks.Deployments;
 using Redstone.Core.Policies;
+using NBitcoin.DataEncoders;
 
 namespace Redstone.Core.Networks
 {
@@ -32,14 +33,14 @@ namespace Redstone.Core.Networks
             this.DefaultPort = 19156;
             this.DefaultRPCPort = 19157;
             this.DefaultAPIPort = 38222;
-            this.CoinTicker = "TXRD";
+            this.MaxTipAge = RedstoneDefaultMaxTipAgeInSeconds * 12 * 365;
             this.MinTxFee = 10000;
             this.FallbackFee = 10000;
             this.MinRelayTxFee = 10000;
             this.RootFolderName = RedstoneRootFolderName;
             this.DefaultConfigFilename = RedstoneDefaultConfigFilename;
             this.MaxTimeOffsetSeconds = RedstoneMaxTimeOffsetSeconds;
-            this.MaxTipAge = RedstoneDefaultMaxTipAgeInSeconds * 12 * 365;
+            this.CoinTicker = "TXRD";
 
             var powLimit = new Target(new uint256("0000ffff00000000000000000000000000000000000000000000000000000000"));
 
@@ -48,7 +49,7 @@ namespace Redstone.Core.Networks
             // Create the genesis block.
             this.GenesisTime = 1530256857;
             this.GenesisNonce = 1349369;
-            this.GenesisBits = 0x00000fffff;
+            this.GenesisBits = powLimit;
             this.GenesisVersion = 1;
             this.GenesisReward = Money.Zero;
 
@@ -117,11 +118,20 @@ namespace Redstone.Core.Networks
                 serviceNodeCollateralThreshold: 100,
                 serviceNodeCollateralBlockPeriod: 5
             );
-
+            
             this.Base58Prefixes = new byte[12][];
             this.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS] = new byte[] { (65) };
             this.Base58Prefixes[(int)Base58Type.SCRIPT_ADDRESS] = new byte[] { (196) };
             this.Base58Prefixes[(int)Base58Type.SECRET_KEY] = new byte[] { (65 + 128) };
+            this.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_NO_EC] = new byte[] { 0x01, 0x42 };
+            this.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_EC] = new byte[] { 0x01, 0x43 };
+            this.Base58Prefixes[(int)Base58Type.EXT_PUBLIC_KEY] = new byte[] { (0x04), (0x88), (0xB2), (0x1E) };
+            this.Base58Prefixes[(int)Base58Type.EXT_SECRET_KEY] = new byte[] { (0x04), (0x88), (0xAD), (0xE4) };
+            this.Base58Prefixes[(int)Base58Type.PASSPHRASE_CODE] = new byte[] { 0x2C, 0xE9, 0xB3, 0xE1, 0xFF, 0x39, 0xE2 };
+            this.Base58Prefixes[(int)Base58Type.CONFIRMATION_CODE] = new byte[] { 0x64, 0x3B, 0xF6, 0xA8, 0x9A };
+            this.Base58Prefixes[(int)Base58Type.STEALTH_ADDRESS] = new byte[] { 0x2a };
+            this.Base58Prefixes[(int)Base58Type.ASSET_ID] = new byte[] { 23 };
+            this.Base58Prefixes[(int)Base58Type.COLORED_ADDRESS] = new byte[] { 0x13 };
 
             this.Checkpoints = new Dictionary<int, CheckpointInfo>
             {
@@ -129,6 +139,11 @@ namespace Redstone.Core.Networks
                 // { 2, new CheckpointInfo(new uint256("0xff24fef45f00088ef09b713d24adc07494bedf69d93645600b76debbd38cbedf"), new uint256("0x7d61c139a471821caa6b7635a4636e90afcfe5e195040aecbc1ad7d24924db1e")) }, // Premine
                 // { 261, new CheckpointInfo(new uint256("0xfde037496468d67c1e0b76656ccfc90d2a4b8b489c7b05599de7ae58d85c10f2"), new uint256("0x7d61c139a471821caa6b7635a4636e90afcfe5e195040aecbc1ad7d24924db1e")) },
             };
+
+            var encoder = new Bech32Encoder("bc");
+            this.Bech32Encoders = new Bech32Encoder[2];
+            this.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS] = encoder;
+            this.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS] = encoder;
 
             this.DNSSeeds = new List<DNSSeedData>()
             {
