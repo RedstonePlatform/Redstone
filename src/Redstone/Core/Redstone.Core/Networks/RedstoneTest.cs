@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net;
 using NBitcoin;
 using NBitcoin.BouncyCastle.Math;
 using NBitcoin.Protocol;
 using Stratis.Bitcoin.Features.Wallet;
 using Redstone.Core.Networks.Deployments;
-using Redstone.Core.Policies;
-using NBitcoin.DataEncoders;
 
 namespace Redstone.Core.Networks
 {
@@ -15,6 +12,8 @@ namespace Redstone.Core.Networks
     {
         public RedstoneTest()
         {
+            SetDefaults();
+
             // The message start string is designed to be unlikely to occur in normal data.
             // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
             // a large 4-byte int at any alignment.
@@ -28,18 +27,10 @@ namespace Redstone.Core.Networks
             this.Name = "RedstoneTest";
             this.NetworkType = NetworkType.Testnet;
             this.Magic = magic;
-            this.DefaultMaxOutboundConnections = 16;
-            this.DefaultMaxInboundConnections = 109;
             this.DefaultPort = 19156;
             this.DefaultRPCPort = 19157;
             this.DefaultAPIPort = 38222;
             this.MaxTipAge = RedstoneDefaultMaxTipAgeInSeconds * 12 * 365;
-            this.MinTxFee = 10000;
-            this.FallbackFee = 10000;
-            this.MinRelayTxFee = 10000;
-            this.RootFolderName = RedstoneRootFolderName;
-            this.DefaultConfigFilename = RedstoneDefaultConfigFilename;
-            this.MaxTimeOffsetSeconds = RedstoneMaxTimeOffsetSeconds;
             this.CoinTicker = "TXRD";
 
             var powLimit = new Target(new uint256("0000ffff00000000000000000000000000000000000000000000000000000000"));
@@ -50,16 +41,13 @@ namespace Redstone.Core.Networks
             this.GenesisTime = 1530256857;
             this.GenesisNonce = 1349369;
             this.GenesisBits = powLimit;
-            this.GenesisVersion = 1;
-            this.GenesisReward = Money.Zero;
 
-            Block genesisBlock = CreateRedstoneGenesisBlock(consensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion, this.GenesisReward);
+            CreateRedstoneGenesisBlock(consensusFactory);
 
-            genesisBlock.Header.Time = 1544474470;
-            genesisBlock.Header.Nonce = 2433759;
-            genesisBlock.Header.Bits = powLimit;
-
-            this.Genesis = genesisBlock;
+            // TODO: remove when resetting chain
+            this.Genesis.Header.Time = 1544474470;
+            this.Genesis.Header.Nonce = 2433759;
+            this.Genesis.Header.Bits = powLimit;
 
             // Taken from StratisX.
             var consensusOptions = new PosConsensusOptions(
@@ -83,7 +71,7 @@ namespace Redstone.Core.Networks
                 consensusFactory: consensusFactory,
                 consensusOptions: consensusOptions,
                 coinType: (int)CoinType.Redstone,
-                hashGenesisBlock: genesisBlock.GetHash(),
+                hashGenesisBlock: this.Genesis.GetHash(),
                 subsidyHalvingInterval: 210000,
                 majorityEnforceBlockUpgrade: 750,
                 majorityRejectBlockOutdated: 950,
@@ -118,32 +106,15 @@ namespace Redstone.Core.Networks
                 serviceNodeCollateralThreshold: 100,
                 serviceNodeCollateralBlockPeriod: 5
             );
-            
-            this.Base58Prefixes = new byte[12][];
-            this.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS] = new byte[] { (65) };
-            this.Base58Prefixes[(int)Base58Type.SCRIPT_ADDRESS] = new byte[] { (196) };
-            this.Base58Prefixes[(int)Base58Type.SECRET_KEY] = new byte[] { (65 + 128) };
-            this.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_NO_EC] = new byte[] { 0x01, 0x42 };
-            this.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_EC] = new byte[] { 0x01, 0x43 };
-            this.Base58Prefixes[(int)Base58Type.EXT_PUBLIC_KEY] = new byte[] { (0x04), (0x88), (0xB2), (0x1E) };
-            this.Base58Prefixes[(int)Base58Type.EXT_SECRET_KEY] = new byte[] { (0x04), (0x88), (0xAD), (0xE4) };
-            this.Base58Prefixes[(int)Base58Type.PASSPHRASE_CODE] = new byte[] { 0x2C, 0xE9, 0xB3, 0xE1, 0xFF, 0x39, 0xE2 };
-            this.Base58Prefixes[(int)Base58Type.CONFIRMATION_CODE] = new byte[] { 0x64, 0x3B, 0xF6, 0xA8, 0x9A };
-            this.Base58Prefixes[(int)Base58Type.STEALTH_ADDRESS] = new byte[] { 0x2a };
-            this.Base58Prefixes[(int)Base58Type.ASSET_ID] = new byte[] { 23 };
-            this.Base58Prefixes[(int)Base58Type.COLORED_ADDRESS] = new byte[] { 0x13 };
 
+            this.SetBase58Prefixes(new byte[] { (65) }, new byte[] { (196) }, new byte[] { (65 + 128) });
+            
             this.Checkpoints = new Dictionary<int, CheckpointInfo>
             {
                 // { 0, new CheckpointInfo(new uint256("0x5166f378d33b357de3a84575e8ac27f86d62c93766bfc275076fdc7926e6ccb3"), new uint256("0x0000000000000000000000000000000000000000000000000000000000000000")) },
                 // { 2, new CheckpointInfo(new uint256("0xff24fef45f00088ef09b713d24adc07494bedf69d93645600b76debbd38cbedf"), new uint256("0x7d61c139a471821caa6b7635a4636e90afcfe5e195040aecbc1ad7d24924db1e")) }, // Premine
                 // { 261, new CheckpointInfo(new uint256("0xfde037496468d67c1e0b76656ccfc90d2a4b8b489c7b05599de7ae58d85c10f2"), new uint256("0x7d61c139a471821caa6b7635a4636e90afcfe5e195040aecbc1ad7d24924db1e")) },
             };
-
-            var encoder = new Bech32Encoder("bc");
-            this.Bech32Encoders = new Bech32Encoder[2];
-            this.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS] = encoder;
-            this.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS] = encoder;
 
             this.DNSSeeds = new List<DNSSeedData>()
             {
@@ -156,8 +127,6 @@ namespace Redstone.Core.Networks
                //new NetworkAddress(IPAddress.Parse("31.14.138.23"), this.DefaultPort), // cryptohunter node #3
                //new NetworkAddress(IPAddress.Parse("35.204.238.255"), this.DefaultPort), // cryptohunter node #googlecloud
             };
-
-            this.StandardScriptsRegistry = new RedstoneStandardScriptsRegistry();
 
             Assert(this.Consensus.HashGenesisBlock == uint256.Parse("5b3bce1db145b398f502782d4fbef62cbb46205a41bb4aa37cda3619729e3037"));
         }

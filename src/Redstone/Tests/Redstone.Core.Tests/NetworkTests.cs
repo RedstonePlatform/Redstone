@@ -130,8 +130,10 @@
             Network network = RedstoneNetworks.TestNet;
 
             Assert.Empty(network.Checkpoints);
-            Assert.Equal("seed.redstoneplatform.com", network.DNSSeeds[0].Host);
-            Assert.True(network.SeedNodes.Count > 0);
+            Assert.True(network.DNSSeeds.Count == 0);
+            //Assert.Equal("seed.redstoneplatform.com", network.DNSSeeds[0].Host);
+
+            Assert.True(network.SeedNodes.Count == 0);
 
             Assert.Equal("RedstoneTest", network.Name);
             Assert.Equal(RedstoneMain.RedstoneRootFolderName, network.RootFolderName);
@@ -308,9 +310,9 @@
             Assert.Equal(long.MaxValue, network.Consensus.MaxMoney);
 
             Block genesis = network.GetGenesis();
-            Assert.Equal(uint256.Parse("0x9f1288387bb087920fd5d3b48c6f1928b25a8167b5d40fb2ded439f208e8ef7d"),
+            Assert.Equal(uint256.Parse("0x73adc2f9728610254f81586493df43fd9f0b97b933c6dd1795c53cf52e5d4739"),
                 genesis.GetHash());
-            Assert.Equal(uint256.Parse("0xad15198e3c12a1c342f346ca3a6e2faea6bfec7491e6143d636b8741a22ce2b9"),
+            Assert.Equal(uint256.Parse("98e05f87db00cc2aa055a927525d3d40b60313405774ae39d2aa0b3617ba5c7e"),
                 genesis.Header.HashMerkleRoot);
         }
     }

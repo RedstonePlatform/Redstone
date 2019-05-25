@@ -2,17 +2,18 @@
 using System.Collections.Generic;
 using NBitcoin.Protocol;
 using Redstone.Core.Networks.Deployments;
-using Redstone.Core.Policies;
 using NBitcoin;
 using NBitcoin.BouncyCastle.Math;
 using Stratis.Bitcoin.Features.Wallet;
 
 namespace Redstone.Core.Networks
 {
-    public class RedstoneRegTest : RedstoneMain
+    public class RedstoneRegTest : RedstoneBaseNetwork
     {
         public RedstoneRegTest()
         {
+            this.SetDefaults();
+
             // The message start string is designed to be unlikely to occur in normal data.
             // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
             // a large 4-byte int at any alignment.
@@ -39,19 +40,11 @@ namespace Redstone.Core.Networks
             var consensusFactory = new PosConsensusFactory();
 
             // Create the genesis block.
-            this.GenesisTime = 1530256857;
+            this.GenesisTime = 1532811966;
             this.GenesisNonce = 1349369;
-            this.GenesisBits = this.Consensus.PowLimit;
-            this.GenesisVersion = 1;
-            this.GenesisReward = Money.Zero;
+            this.GenesisBits = powLimit;
 
-            Block genesisBlock = CreateRedstoneGenesisBlock(consensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion, this.GenesisReward);
-
-            genesisBlock.Header.Time = 1532811966;
-            genesisBlock.Header.Nonce = 1349369;
-            genesisBlock.Header.Bits = powLimit;
-
-            this.Genesis = genesisBlock;
+            CreateRedstoneGenesisBlock(consensusFactory);
 
             // Taken from StratisX.
             var consensusOptions = new PosConsensusOptions(
@@ -75,7 +68,7 @@ namespace Redstone.Core.Networks
                 consensusFactory: consensusFactory,
                 consensusOptions: consensusOptions,
                 coinType: (int)CoinType.Redstone, // unique coin type TODO how do we get this added
-                hashGenesisBlock: genesisBlock.GetHash(),
+                hashGenesisBlock: this.Genesis.GetHash(),
                 subsidyHalvingInterval: 210000,
                 majorityEnforceBlockUpgrade: 750,
                 majorityRejectBlockOutdated: 950,
@@ -111,17 +104,13 @@ namespace Redstone.Core.Networks
                 serviceNodeCollateralBlockPeriod: 5
             );
 
-            this.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS] = new byte[] { (63) };
-            this.Base58Prefixes[(int)Base58Type.SCRIPT_ADDRESS] = new byte[] { (196) };
-            this.Base58Prefixes[(int)Base58Type.SECRET_KEY] = new byte[] { (63 + 128) };
+            this.SetBase58Prefixes(new byte[] { (63) }, new byte[] { (196) }, new byte[] { (63 + 128) });
 
             this.Checkpoints = new Dictionary<int, CheckpointInfo>();
             this.DNSSeeds = new List<DNSSeedData>();
             this.SeedNodes = new List<NetworkAddress>();
 
-            this.StandardScriptsRegistry = new RedstoneStandardScriptsRegistry();
-
-            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("9f1288387bb087920fd5d3b48c6f1928b25a8167b5d40fb2ded439f208e8ef7d"));
+            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("73adc2f9728610254f81586493df43fd9f0b97b933c6dd1795c53cf52e5d4739"));
         }
     }
 }
