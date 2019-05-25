@@ -119,7 +119,8 @@ namespace Redstone.Features.ServiceNode
                 var registration = new ServiceNodeRegistration(this.network,
                     this.nodeSettings,
                     this.broadcasterManager,
-                    this.walletTransactionHandler);
+                    this.walletTransactionHandler,
+                    this.walletManager);
 
                 var config = new ServiceNodeRegistrationConfig
                 {

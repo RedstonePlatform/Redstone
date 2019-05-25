@@ -13,13 +13,14 @@ namespace Redstone.Features.ServiceNode
     public static class TransactionUtils
     {
         public static Transaction BuildTransaction(
-            Network network, 
-            IWalletTransactionHandler walletTransactionHandler, 
-            IServiceNodeRegistrationConfig registrationConfig, 
-            RegistrationToken registrationToken, 
-            string walletName, 
-            string accountName, 
-            string password, 
+            Network network,
+            IWalletTransactionHandler walletTransactionHandler,
+            IWalletManager walletManager,
+            IServiceNodeRegistrationConfig registrationConfig,
+            RegistrationToken registrationToken,
+            string walletName,
+            string accountName,
+            string password,
             RsaKey serviceRsaKey)
         {
             var accountReference = new WalletAccountReference()
@@ -27,6 +28,9 @@ namespace Redstone.Features.ServiceNode
                 AccountName = accountName,
                 WalletName = walletName
             };
+            
+            Wallet wallet = walletManager.LoadWallet(password, walletName);
+            HdAddress hdAddress = wallet.GetAllAddresses().FirstOrDefault(hda => hda.Address == registrationConfig.EcdsaPrivateKey.GetAddress().ToString());
 
             var context = new TransactionBuildContext(network)
             {
@@ -36,6 +40,7 @@ namespace Redstone.Features.ServiceNode
                 Sign = true,
                 OverrideFeeRate = new FeeRate(registrationConfig.TxFeeValue),
                 WalletPassword = password,
+                ChangeAddress = hdAddress
             };
             context.TransactionBuilder.CoinSelector = new DefaultCoinSelector
             {

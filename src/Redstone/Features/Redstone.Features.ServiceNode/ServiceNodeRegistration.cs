@@ -22,6 +22,8 @@ namespace Redstone.Features.ServiceNode
 
         private readonly IWalletTransactionHandler walletTransactionHandler;
 
+        private readonly IWalletManager walletManager;
+
         private readonly IBroadcasterManager broadcasterManager;
 
         private readonly string regStorePath;
@@ -29,11 +31,13 @@ namespace Redstone.Features.ServiceNode
         public ServiceNodeRegistration(Network network, 
             NodeSettings nodeSettings,
             IBroadcasterManager broadcasterManager, 
-            IWalletTransactionHandler walletTransactionHandler)
+            IWalletTransactionHandler walletTransactionHandler,
+            IWalletManager walletManager)
         {
             this.network = network;
             this.broadcasterManager = broadcasterManager;
             this.walletTransactionHandler = walletTransactionHandler;
+            this.walletManager = walletManager;
             this.regStorePath = Path.Combine(nodeSettings.DataDir, "registrationHistory.json");
         }
 
@@ -133,6 +137,7 @@ namespace Redstone.Features.ServiceNode
 
                 transaction = TransactionUtils.BuildTransaction(this.network, 
                     this.walletTransactionHandler, 
+                    this.walletManager,
                     registrationConfig, 
                     registrationToken, 
                     walletName, 
