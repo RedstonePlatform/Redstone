@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <RuntimeFrameworkVersion>2.1.1</RuntimeFrameworkVersion>
+    <IsPackable>false</IsPackable>
+    <CodeAnalysisRuleSet>..\..\..\None.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.5" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.8.0" />
+    <PackageReference Include="xunit" Version="2.4" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.Wallet\Stratis.Bitcoin.Features.Wallet.csproj" />
+    <ProjectReference Include="..\..\..\Stratis.Bitcoin.IntegrationTests.Common\Stratis.Bitcoin.IntegrationTests.Common.csproj" />
+    <ProjectReference Include="..\..\..\Stratis.Bitcoin.IntegrationTests\Stratis.Bitcoin.IntegrationTests.csproj" />
+    <ProjectReference Include="..\..\Core\Redstone.Core\Redstone.Core.csproj" />
+    <ProjectReference Include="..\..\Features\Redstone.Features.ServiceNode\Redstone.Features.ServiceNode.csproj" />
+  </ItemGroup>
+
+</Project>

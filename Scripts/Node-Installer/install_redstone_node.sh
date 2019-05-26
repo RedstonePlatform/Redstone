@@ -55,7 +55,6 @@ function setGeneralVars() {
 COINRUNCMD="sudo dotnet ./Redstone.RedstoneFullNodeD.dll ${NETWORK} -datadir=/home/${NODE_USER}/.redstonenode -iprangefiltering=0 ${DNS}"  ## additional commands can be used here e.g. -testnet or -stake=1
 CONF=release
 COINGITHUB=https://github.com/RedstonePlatform/Redstone.git
-#COINGITHUB=https://github.com/spartacrypt/RedstoneServiceNode.git
 COINDAEMON=redstoned
 COINCONFIG=redstone.conf
 COINSTARTUP=/home/${NODE_USER}/redstoned

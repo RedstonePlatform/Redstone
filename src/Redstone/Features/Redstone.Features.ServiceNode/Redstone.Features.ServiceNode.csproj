@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <PreserveCompilationContext>true</PreserveCompilationContext>
+    <AssemblyName>Redstone.Features.MasterNode</AssemblyName>
+    <OutputType>Library</OutputType>
+    <PackageId>Redstone.Breeze</PackageId>
+    <RuntimeFrameworkVersion>2.1.1</RuntimeFrameworkVersion>
+    <Version>1.0.0-alpha</Version>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <ApplicationIcon />
+    <OutputTypeEx>library</OutputTypeEx>
+    <StartupObject />
+    <!-- Force packing of a web project https://github.com/aspnet/websdk/issues/228 -->
+    <IsPackable>true</IsPackable>
+    <CodeAnalysisRuleSet>..\..\..\None.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile></DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\NBitcoin\NBitcoin.csproj" />
+    <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.Api\Stratis.Bitcoin.Features.Api.csproj" />
+    <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.Notifications\Stratis.Bitcoin.Features.Notifications.csproj" />
+    <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.Wallet\Stratis.Bitcoin.Features.Wallet.csproj" />
+    <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.WatchOnlyWallet\Stratis.Bitcoin.Features.WatchOnlyWallet.csproj" />
+    <ProjectReference Include="..\..\..\Stratis.Bitcoin\Stratis.Bitcoin.csproj" />
+    <ProjectReference Include="..\..\Core\Redstone.Core\Redstone.Core.csproj" />
+    <ProjectReference Include="..\Redstone.Features.Api\Redstone.Features.Api.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -195,7 +195,7 @@ namespace Stratis.Bitcoin.Features.Wallet
             this.AddOpReturnOutput(context);
             this.AddCoins(context);
             this.AddSecrets(context);
-            this.FindChangeAddress(context);
+            this.SetChange(context);            
             this.AddFee(context);
         }
 
@@ -236,6 +236,18 @@ namespace Stratis.Bitcoin.Features.Wallet
         {
             // Get an address to send the change to.
             context.ChangeAddress = this.walletManager.GetUnusedChangeAddress(new WalletAccountReference(context.AccountReference.WalletName, context.AccountReference.AccountName));
+            context.TransactionBuilder.SetChange(context.ChangeAddress.ScriptPubKey);
+        }
+
+        /// <summary>
+        /// Sets change. If ChangeAddress is null will first set it to the next available change address.
+        /// </summary>
+        /// <param name="context">The context associated with the current transaction being built.</param>
+        private void SetChange(TransactionBuildContext context)
+        {
+            if (context.ChangeAddress == null)
+                context.ChangeAddress = this.walletManager.GetUnusedChangeAddress(new WalletAccountReference(context.AccountReference.WalletName, context.AccountReference.AccountName));
+
             context.TransactionBuilder.SetChange(context.ChangeAddress.ScriptPubKey);
         }
 

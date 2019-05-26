@@ -6,12 +6,11 @@ namespace Redstone.RedstoneFullNodeD
     using NBitcoin;
     using NBitcoin.Networks;
     using NBitcoin.Protocol;
-    using Redstone.Core.Networks;
-    using Redstone.Features.Api;
+    using Core.Networks;
+    using Features.Api;
     using Stratis.Bitcoin.Builder;
     using Stratis.Bitcoin.Configuration;
     using Stratis.Bitcoin.Features.BlockStore;
-    using Stratis.Bitcoin.Features.ColdStaking;
     using Stratis.Bitcoin.Features.Consensus;
     using Stratis.Bitcoin.Features.Dns;
     using Stratis.Bitcoin.Features.MemoryPool;

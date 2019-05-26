@@ -254,3 +254,4 @@ ModelManifest.xml
 /src/Stratis.StratisD/Logs
 /src/Stratis.BitcoinD/Logs
 /src/Stratis.Benchmark/BenchmarkDotNet.Artifacts/results
+/src/Redstone/Tests/TestCase
