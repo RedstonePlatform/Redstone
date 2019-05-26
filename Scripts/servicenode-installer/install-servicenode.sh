@@ -77,10 +77,8 @@ curl -sX POST "http://localhost:$apiport/api/Wallet/recover" -H  "accept: applic
 ServiceNodeAddress=$(sed -e 's/^"//' -e 's/"$//' <<<$(curl -sX GET "http://localhost:$apiport/api/Wallet/unusedaddress?WalletName=$WalletName&AccountName=account 0" -H  "accept: application/json"))
 ServiceNodeAddress=${ServiceNodeAddress:12:34}
 
-Pause
-
 ### Stop the Daemon & add the service node configuration
-service ${USER}d@${USER} stop
+service ${fork}d@${USER} stop
 
 ### Inject or add servicenode details to redstone.conf file 
 #sed -i "s/^\(servicenode.ipv4\).*/\1${SERVER_IP}/" ${COINCORE}/${FORK}.conf
