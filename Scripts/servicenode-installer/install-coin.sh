@@ -27,7 +27,7 @@ while getopts ":f:u:p:n:" option; do
 done
 shift "$((OPTIND-1))"
 
-source config-${FORK}.sh
+source ~/config-${FORK}.sh
 
 SCRIPT_LOGFILE="/tmp/${NODE_USER}_${DATE_STAMP}_output.log"
 

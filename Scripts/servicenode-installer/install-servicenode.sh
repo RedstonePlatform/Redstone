@@ -8,6 +8,7 @@ COINSERVICECONFIG="https://raw.githubusercontent.com/RedstonePlatform/Redstone/m
 USER=redstone-testnet #redstone
 fork=redstone
 
+clear
 if [ "$(id -u)" != "0" ]; then
     echo -e "${RED}* Sorry, this script needs to be run as root. Do \"sudo su root\" and then re-run this script${NONE}"
     exit 1
@@ -43,20 +44,17 @@ WalletPassphrase=""
 ServiceNodeAddress=""
 
 ### Install Coins Service
-wget ${COINSERVICEINSTALLER} -O /home/${USER}/install-coin.sh
-wget ${COINSERVICECONFIG} -O /home/${USER}/config-redstone.sh
-chmod +x /home/${USER}/install-coin.sh
-/home/${USER}/install-coin.sh -f ${fork} -n
+wget ${COINSERVICEINSTALLER} -O ~/install-coin.sh
+wget ${COINSERVICECONFIG} -O ~/config-redstone.sh
+chmod +x ~/install-coin.sh
+~/install-coin.sh -f ${fork} -n ${net}
 
 ### Wallet setup ####
 
 ######## Get some information from the user about the wallet ############
-clear
-echo -e "###########################################################################"
 echo -e "####################### SERVICENODE WALLET CREATION #######################"
-echo -e "###########################################################################"
 echo
-echo -e "Please enter the details about your servicenode wallet."
+echo -e "You are going to create your servicenode wallet - we need some information first."
 echo 
 read -p "Name (default=servicenode-wallet):" response
 if [[ "$response" != "" ]] ; then 
