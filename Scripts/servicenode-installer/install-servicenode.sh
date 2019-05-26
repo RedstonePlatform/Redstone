@@ -1,10 +1,10 @@
 #!/bin/bash
 # =================== YOUR DATA ========================
-#bash <( curl -s https://raw.githubusercontent.com/RedstonePlatform/Redstone/master/Scripts/servicenode-installer/servicenode-installer/install-servicenode.sh )
+#bash <( curl -s https://raw.githubusercontent.com/RedstonePlatform/Redstone/master/Scripts/servicenode-installer/install-servicenode.sh )
 
 SERVER_IP=$(curl --silent ipinfo.io/ip)
-COINSERVICEINSTALLER="https://raw.githubusercontent.com/RedstonePlatform/Redstone/master/Scripts/servicenode-installer/servicenode-installer/install-coin.sh"
-COINSERVICECONFIG="https://raw.githubusercontent.com/RedstonePlatform/Redstone/master/Scripts/servicenode-installer/servicenode-installer/config-redstone.sh"
+COINSERVICEINSTALLER="https://raw.githubusercontent.com/RedstonePlatform/Redstone/master/Scripts/servicenode-installer/install-coin.sh"
+COINSERVICECONFIG="https://raw.githubusercontent.com/RedstonePlatform/Redstone/master/Scripts/servicenode-installer/config-redstone.sh"
 USER=redstone-testnet #redstone
 fork=redstone
 
