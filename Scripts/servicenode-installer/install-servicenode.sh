@@ -61,7 +61,7 @@ if [[ "$response" != "" ]] ; then
    WalletName="$response" 
 fi
 read -p "Password:" WalletPassword
-read -p "Passphrase:" WalletPassword
+read -p "Passphrase:" WalletPassphrase
 echo 
 
 ### Setup the hot wallet
@@ -74,8 +74,8 @@ WalletSecretWords=$(sed -e 's/^"//' -e 's/"$//' <<<$(curl -sX GET "http://localh
 curl -sX POST "http://localhost:$apiport/api/Wallet/recover" -H  "accept: application/json" -H  "Content-Type: application/json-patch+json" -d "{  \"mnemonic\": \"$WalletSecretWords\",  \"password\": \"$WalletPassword\",  \"passphrase\": \"$WalletPassphrase\",  \"name\": \"$WalletName\",  \"creationDate\": \"2019-01-01T07:33:09.051Z\"}" &>> ${logfile}
 
 ### Get the address
-ServiceNodeAddress=$(sed -e 's/^"//' -e 's/"$//' <<<$(curl -sX GET "http://localhost:$apiport/api/Wallet/unusedaddress?WalletName=$WalletName&AccountName=account 0" -H  "accept: application/json"))
-ServiceNodeAddress=${ServiceNodeAddress:12:34}
+ServiceNodeAddress=$(sed -e 's/^"//' -e 's/"$//' <<<$(curl -sX GET "http://localhost:$apiport/api/Wallet/unusedaddress?WalletName=$WalletName&AccountName=account%200" -H  "accept: application/json"))
+#ServiceNodeAddress=${ServiceNodeAddress:12:34} << TODO: Remove
 
 echo -e "Done"
 
@@ -83,27 +83,26 @@ echo -e "Done"
 service ${fork}d@${USER} stop
 
 ### Inject or add servicenode details to redstone.conf file 
-#sed -i "s/^\(servicenode.ipv4\).*/\1${SERVER_IP}/" ${COINCORE}/${FORK}.conf
-#sed -i "s/^\(servicenode.port\).*/\1${COINSNPORT}/" ${COINCORE}/${FORK}.conf
-#sed -i "s/^\(servicenode.ecdsakeyaddress\).*/\1${COINSNPORT}/" ${COINCORE}/${FORK}.conf
+#sed -i "s/^\(servicenode.ipv4\).*/\1${SERVER_IP}/" ${COINCORE}/${fork}.conf
+#sed -i "s/^\(servicenode.port\).*/\1${COINSNPORT}/" ${COINCORE}/${fork}.conf
+#sed -i "s/^\(servicenode.ecdsakeyaddress\).*/\1${COINSNPORT}/" ${COINCORE}/${fork}.conf
 
-sudo sh -c 'echo "" >> ${COINCORE}/${FORK}.conf'
-sudo sh -c 'echo "#### Redstone ServiceNode registration settings ####" >> ${COINCORE}/${FORK}.conf'
-sudo sh -c 'echo "servicenode.ipv4=127.0.0.1" >> ${COINCORE}/${FORK}.conf'
-sudo sh -c 'echo "#servicenode.ipv6=" >> ${COINCORE}/${FORK}.conf'
-sudo sh -c 'echo "#servicenode.onion=" >> ${COINCORE}/${FORK}.conf'
-sudo sh -c 'echo "servicenode.port=37123  >> ${COINCORE}/${FORK}.conf'
-sudo sh -c 'echo "# Value of each registration transaction output (in satoshi)" >> ${COINCORE}/${FORK}.conf'
-sudo sh -c 'echo "servicenode.txfeevalue=11000" >> ${COINCORE}/${FORK}.conf'
-sudo sh -c 'echo "#service.url=" >> ${COINCORE}/${FORK}.conf'
-sudo sh -c 'echo "#service.rsakeyfile=" >> ${COINCORE}/${FORK}.conf'
-sudo sh -c 'echo "service.ecdsakeyaddress=${ServiceNodeAddress}" >> ${COINCORE}/${FORK}.conf'
+sudo sh -c 'echo "####Service Node Settings####" >> ${COINCORE}/${fork}.conf'
+sudo sh -c 'echo "servicenode.ipv4=127.0.0.1" >> ${COINCORE}/${fork}.conf'
+sudo sh -c 'echo "#servicenode.ipv6=" >> ${COINCORE}/${fork}.conf'
+sudo sh -c 'echo "#servicenode.onion=" >> ${COINCORE}/${fork}.conf'
+sudo sh -c 'echo "servicenode.port=37123  >> ${COINCORE}/${fork}.conf'
+sudo sh -c 'echo "# Value of each registration transaction output (in satoshi)" >> ${COINCORE}/${fork}.conf'
+sudo sh -c 'echo "servicenode.txfeevalue=11000" >> ${COINCORE}/${fork}.conf'
+sudo sh -c 'echo "#service.url=" >> ${COINCORE}/${fork}.conf'
+sudo sh -c 'echo "#service.rsakeyfile=" >> ${COINCORE}/${fork}.conf'
+sudo sh -c 'echo "service.ecdsakeyaddress=${ServiceNodeAddress}" >> ${COINCORE}/${fork}.conf'
 
 ## Pause to fund the service node address
 read -p "Please send collateral to the Service Node address (then press a key): $ServiceNodeAddress" anyKey
 
 ### Restart the Daemon
-service ${USER}d@${USER} start
+service ${fork}d@${USER} start
 
 echo
 echo -e "Here's all the Service Node wallet details - keep this information safe offline, otherwise your funds are at risk:"
