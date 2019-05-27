@@ -104,6 +104,10 @@ read -p "Please send collateral to the Service Node address: ${ServiceNodeAddres
 ### Restart the Daemon
 service ${fork}d@${USER} start
 
+### Register Servicenode
+sleep 60
+curl -SX POST "http://localhost:$apiport/api/ServiceNode/register?WalletName=${WalletName}&AccountName=account%200&Password=${WalletPassword}" -H  "accept: application/json" &>> ${logfile}
+
 echo
 echo -e "Here's all the Service Node wallet details - keep this information safe offline, otherwise your funds are at risk:"
 echo
