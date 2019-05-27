@@ -87,16 +87,16 @@ service ${fork}d@${USER} stop
 #sed -i "s/^\(servicenode.port\).*/\1${COINSNPORT}/" ${COINCORE}/${fork}.conf
 #sed -i "s/^\(servicenode.ecdsakeyaddress\).*/\1${COINSNPORT}/" ${COINCORE}/${fork}.conf
 
-sudo sh -c 'echo "####Service Node Settings####" >> ${COINCORE}/${fork}.conf'
-sudo sh -c 'echo "servicenode.ipv4=127.0.0.1" >> ${COINCORE}/${fork}.conf'
-sudo sh -c 'echo "#servicenode.ipv6=" >> ${COINCORE}/${fork}.conf'
-sudo sh -c 'echo "#servicenode.onion=" >> ${COINCORE}/${fork}.conf'
-sudo sh -c 'echo "servicenode.port=37123  >> ${COINCORE}/${fork}.conf'
-sudo sh -c 'echo "# Value of each registration transaction output (in satoshi)" >> ${COINCORE}/${fork}.conf'
-sudo sh -c 'echo "servicenode.txfeevalue=11000" >> ${COINCORE}/${fork}.conf'
-sudo sh -c 'echo "#service.url=" >> ${COINCORE}/${fork}.conf'
-sudo sh -c 'echo "#service.rsakeyfile=" >> ${COINCORE}/${fork}.conf'
-sudo sh -c 'echo "service.ecdsakeyaddress=${ServiceNodeAddress}" >> ${COINCORE}/${fork}.conf'
+sudo sh -c "echo '####Service Node Settings####' >> ${COINCORE}/${fork}.conf"
+sudo sh -c "echo 'servicenode.ipv4=127.0.0.1' >> ${COINCORE}/${fork}.conf"
+sudo sh -c "echo '#servicenode.ipv6=' >> ${COINCORE}/${fork}.conf"
+sudo sh -c "echo '#servicenode.onion=' >> ${COINCORE}/${fork}.conf"
+sudo sh -c "echo 'servicenode.port=37123' >> ${COINCORE}/${fork}.conf"
+sudo sh -c "echo '# Value of each registration transaction output (in satoshi)' >> ${COINCORE}/${fork}.conf"
+sudo sh -c "echo 'servicenode.txfeevalue=11000' >> ${COINCORE}/${fork}.conf"
+sudo sh -c "echo '#service.url=' >> ${COINCORE}/${fork}.conf"
+sudo sh -c "echo '#service.rsakeyfile=' >> ${COINCORE}/${fork}.conf"
+sudo sh -c "echo 'service.ecdsakeyaddress=${ServiceNodeAddress}' >> ${COINCORE}/${fork}.conf"
 
 ## Pause to fund the service node address
 read -p "Please send collateral to the Service Node address (then press a key): $ServiceNodeAddress" anyKey
