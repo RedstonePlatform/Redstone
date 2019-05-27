@@ -99,7 +99,7 @@ sudo sh -c "echo '#service.rsakeyfile=' >> ${COINCORE}/${fork}.conf"
 sudo sh -c "echo 'service.ecdsakeyaddress=${ServiceNodeAddress}' >> ${COINCORE}/${fork}.conf"
 
 ## Pause to fund the service node address
-read -p "Please send collateral to the Service Node address (then press a key): $ServiceNodeAddress" anyKey
+read -p "Please send collateral to the Service Node address: ${ServiceNodeAddress} (then press a key): " anyKey
 
 ### Restart the Daemon
 service ${fork}d@${USER} start
@@ -107,9 +107,8 @@ service ${fork}d@${USER} start
 echo
 echo -e "Here's all the Service Node wallet details - keep this information safe offline, otherwise your funds are at risk:"
 echo
-echo -e "Name: " $WalletName
-echo -e "Password: " $WalletPassword
-echo -e "Passphrase: " $WalletPassphrase
-echo -e "Mnemonic: " $WalletSecretWords
-echo -e "Service Node address : ${RED}" $ServiceNodeAddress
-echo -e "${NONE}"
+echo -e "Name:       "$WalletName
+echo -e "Password:   "$WalletPassword
+echo -e "Passphrase: "$WalletPassphrase
+echo -e "Mnemonic:   "$WalletSecretWords
+echo -e "Service Node address : "$ServiceNodeAddress
