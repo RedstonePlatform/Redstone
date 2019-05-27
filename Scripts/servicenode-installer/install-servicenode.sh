@@ -44,8 +44,8 @@ WalletPassphrase=""
 ServiceNodeAddress=""
 
 ### Install Coins Service
-wget ${COINSERVICEINSTALLER} -O ~/install-coin.sh
-wget ${COINSERVICECONFIG} -O ~/config-redstone.sh
+wget –quiet ${COINSERVICEINSTALLER} -O ~/install-coin.sh
+wget –quiet ${COINSERVICECONFIG} -O ~/config-redstone.sh
 chmod +x ~/install-coin.sh
 ~/install-coin.sh -f ${fork} -n ${net}
 
