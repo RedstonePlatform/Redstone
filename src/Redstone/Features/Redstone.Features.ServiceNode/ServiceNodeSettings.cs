@@ -245,35 +245,22 @@ namespace Redstone.Features.ServiceNode
         /// <param name="network">The network to extract values from.</param>
         public static void PrintHelp(Network network)
         {
-            // TODO: SN do this too
-
             Guard.NotNull(network, nameof(network));
 
-            NodeSettings defaults = NodeSettings.Default(network: network);
-            string daemonName = Path.GetFileName(Assembly.GetEntryAssembly().Location);
-
             var builder = new StringBuilder();
-            builder.AppendLine("Usage:");
-            builder.AppendLine($" dotnet run {daemonName} [arguments]");
-            builder.AppendLine();
-            builder.AppendLine("Command line arguments:");
-            builder.AppendLine();
-            builder.AppendLine($"-help/--help              Show this help.");
-            builder.AppendLine($"-conf=<Path>              Path to the configuration file. Defaults to {defaults.ConfigurationFile}.");
-            builder.AppendLine($"-datadir=<Path>           Path to the data directory. Defaults to {defaults.DataDir}.");
-            builder.AppendLine($"-debug[=<string>]         Set 'Debug' logging level. Specify what to log via e.g. '-debug=Stratis.Bitcoin.Miner,Stratis.Bitcoin.Wallet'.");
-            builder.AppendLine($"-loglevel=<string>        Direct control over the logging level: '-loglevel=trace/debug/info/warn/error/fatal'.");
 
-            // Can be overridden in configuration file.
-            builder.AppendLine($"-testnet                  Use the testnet chain.");
-            builder.AppendLine($"-regtest                  Use the regtestnet chain.");
-            //builder.AppendLine($"-mintxfee=<number>        Minimum fee rate. Defaults to {network.MinTxFee}.");
-            //builder.AppendLine($"-fallbackfee=<number>     Fallback fee rate. Defaults to {network.FallbackFee}.");
-            //builder.AppendLine($"-minrelaytxfee=<number>   Minimum relay fee rate. Defaults to {network.MinRelayTxFee}.");
+            builder.AppendLine($"-network=<network>                         Network - e.g. testnet or mainnet");
+            builder.AppendLine($"-servicenode.ipv4=<ipv4 address>           IPv4 address of servicenode");
+            builder.AppendLine($"-servicenode.ipv6=<ipv6 address>           IPv6 address of servicenode");
+            builder.AppendLine($"-servicenode.onion=<onion address>         Onion address of servicenode");
+            builder.AppendLine($"-servicenode.port=<port>                   Port of servicenode. Default - 37123");
+            builder.AppendLine($"-servicenode.regtxoutputvalue=<value>      Value of each registration transaction output (in satoshi) default = 1000");
+            builder.AppendLine($"-servicenode.regtxfeevalue=<value>         Value of registration transaction fee (in satoshi) default = 10000");
+            builder.AppendLine($"-service.url=<url>");
+            builder.AppendLine($"-service.rsakeyfile=<rsakeyfile>");
+            builder.AppendLine($"-service.ecdsakeyaddress=<key address>");
 
-            defaults.Logger.LogInformation(builder.ToString());
-
-            ConnectionManagerSettings.PrintHelp(network);
+            NodeSettings.Default(network).Logger.LogInformation(builder.ToString());
         }
 
         /// <summary>
@@ -283,28 +270,12 @@ namespace Redstone.Features.ServiceNode
         /// <param name="network">The network to base the defaults off.</param>
         public static void BuildDefaultConfigurationFile(StringBuilder builder, Network network)
         {
-            //builder.AppendLine("####Node Settings####");
-            //builder.AppendLine($"#Test network. Defaults to 0.");
-            //builder.AppendLine($"testnet={((network.IsTest() && !network.IsRegTest()) ? 1 : 0)}");
-            //builder.AppendLine($"#Regression test network. Defaults to 0.");
-            //builder.AppendLine($"regtest={(network.IsRegTest() ? 1 : 0)}");
-            //builder.AppendLine($"#Minimum fee rate. Defaults to {network.MinTxFee}.");
-            //builder.AppendLine($"#mintxfee={network.MinTxFee}");
-            //builder.AppendLine($"#Fallback fee rate. Defaults to {network.FallbackFee}.");
-            //builder.AppendLine($"#fallbackfee={network.FallbackFee}");
-            //builder.AppendLine($"#Minimum relay fee rate. Defaults to {network.MinRelayTxFee}.");
-            //builder.AppendLine($"#minrelaytxfee={network.MinRelayTxFee}");
-            //builder.AppendLine();
-
-            builder.AppendLine("# Redstone ServiceNode daemon settings");
+            builder.AppendLine("####Redstone ServiceNode registration settings####");
             builder.AppendLine("#network=testnet");
-            builder.AppendLine("#rpc.user=");
-            builder.AppendLine("#rpc.password=");
-            builder.AppendLine("#rpc.url=http://127.0.0.1:19257");
-            builder.AppendLine("#servicenode.ipv4=");
+            builder.AppendLine("#servicenode.ipv4=127.0.0.1");
             builder.AppendLine("#servicenode.ipv6=");
             builder.AppendLine("#servicenode.onion=");
-            builder.AppendLine("#servicenode.port=");
+            builder.AppendLine("#servicenode.port=37123");
             builder.AppendLine("# Value of each registration transaction output (in satoshi) default = 1000");
             builder.AppendLine("#servicenode.regtxoutputvalue=");
             builder.AppendLine("# Value of registration transaction fee (in satoshi) default = 10000");
@@ -312,8 +283,6 @@ namespace Redstone.Features.ServiceNode
             builder.AppendLine("#service.url=");
             builder.AppendLine("#service.rsakeyfile=");
             builder.AppendLine("#service.ecdsakeyaddress=");
-
-            //ConnectionManagerSettings.BuildDefaultConfigurationFile(builder, network);
         }
 
         /// <inheritdoc />
