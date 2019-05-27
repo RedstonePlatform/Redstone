@@ -36,17 +36,17 @@ namespace Redstone.RedstoneServiceNodeD
                     : args.Contains("-regnet")
                     ? NetworkRegistration.Register(new RedstoneRegTest())
                     : NetworkRegistration.Register(new RedstoneMain());
-
-                var nodeSettings = new NodeSettings(network: network, protocolVersion: ProtocolVersion.PROVEN_HEADER_VERSION, args: args)
+                 
+                var nodeSettings = new NodeSettings(network: network, protocolVersion: ProtocolVersion.PROVEN_HEADER_VERSION, args: args.Concat(new [] { "-txIndex=1", "-addressIndex=1" }).ToArray())
                 {
                     MinProtocolVersion = ProtocolVersion.ALT_PROTOCOL_VERSION
                 };
 
                 var dnsSettings = new DnsSettings(nodeSettings);
 
-                var isDns = !String.IsNullOrWhiteSpace(dnsSettings.DnsHostName) &&
-                    !String.IsNullOrWhiteSpace(dnsSettings.DnsNameServer) &&
-                    !String.IsNullOrWhiteSpace(dnsSettings.DnsMailBox);
+                var isDns = !string.IsNullOrWhiteSpace(dnsSettings.DnsHostName) &&
+                            !string.IsNullOrWhiteSpace(dnsSettings.DnsNameServer) &&
+                            !string.IsNullOrWhiteSpace(dnsSettings.DnsMailBox);
 
                 var builder = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings);

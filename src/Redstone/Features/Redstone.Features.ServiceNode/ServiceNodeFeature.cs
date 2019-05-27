@@ -1,20 +1,17 @@
 using System.Collections.Generic;
-using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Redstone.Core.Networks;
 using Redstone.Features.ServiceNode.Common;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.BlockStore.AddressIndexing;
 using Stratis.Bitcoin.Features.Notifications;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Interfaces;
 
 namespace Redstone.Features.ServiceNode
 {
@@ -46,6 +43,7 @@ namespace Redstone.Features.ServiceNode
             this.registrationStore.SetStorePath(nodeSettings.DataDir);
         }
 
+        /// <inheritdoc />
         public override Task InitializeAsync()
         {
             this.logger.LogTrace("()");
@@ -65,6 +63,25 @@ namespace Redstone.Features.ServiceNode
             this.logger.LogTrace("(-)");
 
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Prints command-line help.
+        /// </summary>
+        /// <param name="network">The network to extract values from.</param>
+        public static void PrintHelp(Network network)
+        {
+            ServiceNodeSettings.PrintHelp(network);
+        }
+
+        /// <summary>
+        /// Get the default configuration.
+        /// </summary>
+        /// <param name="builder">The string builder to add the settings to.</param>
+        /// <param name="network">The network to base the defaults off.</param>
+        public static void BuildDefaultConfigurationFile(StringBuilder builder, Network network)
+        {
+            ServiceNodeSettings.BuildDefaultConfigurationFile(builder, network);
         }
 
         private void RevertRegistrations()
