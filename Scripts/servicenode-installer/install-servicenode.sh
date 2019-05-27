@@ -5,7 +5,9 @@
 SERVER_IP=$(curl --silent ipinfo.io/ip)
 COINSERVICEINSTALLER="https://raw.githubusercontent.com/RedstonePlatform/Redstone/master/Scripts/servicenode-installer/install-coin.sh"
 COINSERVICECONFIG="https://raw.githubusercontent.com/RedstonePlatform/Redstone/master/Scripts/servicenode-installer/config-redstone.sh"
+COINSNPORT=37123
 USER=redstone-testnet #redstone
+apiport=38222
 fork=redstone
 
 clear
@@ -34,7 +36,6 @@ case $net in
 esac
 
 # ================= SERVICE NODE SETTINGS ===========================
-apiport=38222
 date_stamp="$(date +%y-%m-%d-%s)"
 logfile="/tmp/log_$date_stamp_output.log"
 WalletName="servicenode-wallet"
@@ -80,9 +81,10 @@ ServiceNodeAddress=$(sed -e 's/^"//' -e 's/"$//' <<<$(curl -sX GET "http://local
 service ${fork}d@${USER} stop
 
 ### Inject or add servicenode details to redstone.conf file 
-#sed -i "s/^\(servicenode.ipv4\).*/\1${SERVER_IP}/" ${COINCORE}/${fork}.conf
-#sed -i "s/^\(servicenode.port\).*/\1${COINSNPORT}/" ${COINCORE}/${fork}.conf
-#sed -i "s/^\(servicenode.ecdsakeyaddress\).*/\1${COINSNPORT}/" ${COINCORE}/${fork}.conf
+sed -i "s/^\(servicenode.ipv4\).*/\1${SERVER_IP}/" ${COINCORE}/${fork}.conf
+sed -i "s/^\(servicenode.port\).*/\1${COINSNPORT}/" ${COINCORE}/${fork}.conf
+sed -i "s/^\(servicenode.txfeevalue\).*/\111000/" ${COINCORE}/${fork}.conf
+sed -i "s/^\(servicenode.ecdsakeyaddress\).*/\1${ServiceNodeAddress}}/" ${COINCORE}/${fork}.conf
 
 sudo sh -c "echo '####Service Node Settings####' >> ${COINCORE}/${fork}.conf"
 sudo sh -c "echo 'servicenode.ipv4=${SERVER_IP}' >> ${COINCORE}/${fork}.conf"
