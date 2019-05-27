@@ -19,10 +19,10 @@ read -p "Mainnet (m), Testnet (t) or Upgrade (u)? " net
 
 case $net in
          m)
-            COINCORE=/home/${USER}/.${FORK}node/${FORK}/RedstoneMain
+            COINCORE=/home/${USER}/.${fork}node/${fork}/RedstoneMain
             ;;
          t)
-            COINCORE=/home/${USER}/.${FORK}node/${FORK}/RedstoneTest
+            COINCORE=/home/${USER}/.${fork}node/${fork}/RedstoneTest
             ;;
         u)
            COINCORE=""
