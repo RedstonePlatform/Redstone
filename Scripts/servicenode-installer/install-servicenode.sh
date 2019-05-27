@@ -44,8 +44,8 @@ WalletPassphrase=""
 ServiceNodeAddress=""
 
 ### Install Coins Service
-wget –quiet ${COINSERVICEINSTALLER} -O ~/install-coin.sh
-wget –quiet ${COINSERVICECONFIG} -O ~/config-redstone.sh
+wget --quiet ${COINSERVICEINSTALLER} -O ~/install-coin.sh
+wget --quiet ${COINSERVICECONFIG} -O ~/config-redstone.sh
 chmod +x ~/install-coin.sh
 ~/install-coin.sh -f ${fork} -n ${net}
 
@@ -56,12 +56,12 @@ echo -e "####################### SERVICENODE WALLET CREATION ###################
 echo
 echo -e "You are going to create your servicenode wallet - we need some information first."
 echo 
-read -p "Name (default=servicenode-wallet):" response
+read -p "Name (default=servicenode-wallet): " response
 if [[ "$response" != "" ]] ; then 
    WalletName="$response" 
 fi
-read -p "Password:" WalletPassword
-read -p "Passphrase:" WalletPassphrase
+read -p "Password: " WalletPassword
+read -p "Passphrase: " WalletPassphrase
 echo 
 
 ### Setup the hot wallet
@@ -75,9 +75,6 @@ curl -sX POST "http://localhost:$apiport/api/Wallet/recover" -H  "accept: applic
 
 ### Get the address
 ServiceNodeAddress=$(sed -e 's/^"//' -e 's/"$//' <<<$(curl -sX GET "http://localhost:$apiport/api/Wallet/unusedaddress?WalletName=$WalletName&AccountName=account%200" -H  "accept: application/json"))
-#ServiceNodeAddress=${ServiceNodeAddress:12:34} << TODO: Remove
-
-echo -e "Done"
 
 ### Stop the Daemon & add the service node configuration
 service ${fork}d@${USER} stop
@@ -88,7 +85,7 @@ service ${fork}d@${USER} stop
 #sed -i "s/^\(servicenode.ecdsakeyaddress\).*/\1${COINSNPORT}/" ${COINCORE}/${fork}.conf
 
 sudo sh -c "echo '####Service Node Settings####' >> ${COINCORE}/${fork}.conf"
-sudo sh -c "echo 'servicenode.ipv4=127.0.0.1' >> ${COINCORE}/${fork}.conf"
+sudo sh -c "echo 'servicenode.ipv4=${SERVER_IP}' >> ${COINCORE}/${fork}.conf"
 sudo sh -c "echo '#servicenode.ipv6=' >> ${COINCORE}/${fork}.conf"
 sudo sh -c "echo '#servicenode.onion=' >> ${COINCORE}/${fork}.conf"
 sudo sh -c "echo 'servicenode.port=37123' >> ${COINCORE}/${fork}.conf"
@@ -102,7 +99,11 @@ sudo sh -c "echo 'service.ecdsakeyaddress=${ServiceNodeAddress}' >> ${COINCORE}/
 read -p "Please send collateral to the Service Node address: ${ServiceNodeAddress} (then press a key): " anyKey
 
 ### Restart the Daemon
+echo -e "*Starting your Service Node now ... please wait."
+
 service ${fork}d@${USER} start
+
+##TODO: Wait for collateral to land using a loop around >> curl -X GET "http://localhost:38222/api/BlockStore/getaddressbalance?address=TH3VEB716PzWMYKLNrAT7fT3XDgmw7Wmey&minConfirmations=10" -H  "accept: application/json"
 
 ### Register Servicenode
 sleep 60
