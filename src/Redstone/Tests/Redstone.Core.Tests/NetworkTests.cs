@@ -130,10 +130,8 @@
             Network network = RedstoneNetworks.TestNet;
 
             Assert.Empty(network.Checkpoints);
-            Assert.True(network.DNSSeeds.Count == 0);
-            //Assert.Equal("seed.redstoneplatform.com", network.DNSSeeds[0].Host);
-
-            Assert.True(network.SeedNodes.Count == 0);
+            Assert.Equal("seed.redstoneplatform.com", network.DNSSeeds[0].Host);
+            Assert.True(network.SeedNodes.Count == 3);
 
             Assert.Equal("RedstoneTest", network.Name);
             Assert.Equal(RedstoneMain.RedstoneRootFolderName, network.RootFolderName);

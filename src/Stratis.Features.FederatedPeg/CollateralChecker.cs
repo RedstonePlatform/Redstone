@@ -15,7 +15,15 @@ using Stratis.Bitcoin.Signals;
 namespace Stratis.Features.FederatedPeg
 {
     /// <summary>Class that checks if federation members fulfill the collateral requirement.</summary>
-    public class CollateralChecker : IDisposable
+    public interface ICollateralChecker : IDisposable
+    {
+        Task InitializeAsync();
+
+        /// <summary>Checks if given federation member fulfills the collateral requirement.</summary>
+        bool CheckCollateral(IFederationMember federationMember);
+    }
+
+    public class CollateralChecker : ICollateralChecker
     {
         private readonly IBlockStoreClient blockStoreClient;
 
@@ -26,7 +34,6 @@ namespace Stratis.Features.FederatedPeg
         private readonly ILogger logger;
 
         /// <summary>Protects access to <see cref="depositsByAddress"/>.</summary>
-
         private readonly object locker;
 
         private readonly CancellationTokenSource cancellationSource;
@@ -45,7 +52,7 @@ namespace Stratis.Features.FederatedPeg
         /// Deposits are not updated if federation member doesn't have collateral requirement enabled.
         /// All access should be protected by <see cref="locker"/>.
         /// </remarks>
-        private Dictionary<string, Money> depositsByAddress;
+        private readonly Dictionary<string, Money> depositsByAddress;
 
         private Task updateCollateralContinuouslyTask;
 
@@ -59,7 +66,7 @@ namespace Stratis.Features.FederatedPeg
             this.locker = new object();
             this.depositsByAddress = new Dictionary<string, Money>();
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
-            this.blockStoreClient = new BlockStoreClient(loggerFactory, httpClientFactory, settings.CounterChainApiPort);
+            this.blockStoreClient = new BlockStoreClient(loggerFactory, httpClientFactory, $"http://{settings.CounterChainApiHost}", settings.CounterChainApiPort);
         }
 
         public async Task InitializeAsync()
@@ -67,18 +74,23 @@ namespace Stratis.Features.FederatedPeg
             this.memberAddedToken = this.signals.Subscribe<FedMemberAdded>(this.OnFedMemberAdded);
             this.memberKickedToken = this.signals.Subscribe<FedMemberKicked>(this.OnFedMemberKicked);
 
-            foreach (CollateralFederationMember federationMember in this.federationManager.GetFederationMembers().Cast<CollateralFederationMember>().Where(x => x.CollateralAmount != null && x.CollateralAmount > 0))
+            foreach (CollateralFederationMember federationMember in this.federationManager.GetFederationMembers()
+                .Cast<CollateralFederationMember>().Where(x => x.CollateralAmount != null && x.CollateralAmount > 0))
+            {
+                this.logger.LogDebug("Initializing federation member {0} with amount {1}.", federationMember.CollateralMainchainAddress, federationMember.CollateralAmount);
+
                 this.depositsByAddress.Add(federationMember.CollateralMainchainAddress, null);
+            }
 
             while (true)
             {
                 bool success = await this.UpdateCollateralInfoAsync(this.cancellationSource.Token).ConfigureAwait(false);
 
-                this.logger.LogWarning("Failed to update collateral. Ensure that mainnet gateway node is running and API is enabled. " +
-                                       "Node will not continue initialization before another gateway node responds.");
-
                 if (!success)
                 {
+                    this.logger.LogWarning("Failed to update collateral. Ensure that mainnet gateway node is running and API is enabled. " +
+                                       "Node will not continue initialization before another gateway node responds.");
+
                     try
                     {
                         await Task.Delay(CollateralInitializationUpdateIntervalSeconds * 1000, this.cancellationSource.Token).ConfigureAwait(false);
@@ -98,6 +110,7 @@ namespace Stratis.Features.FederatedPeg
             this.updateCollateralContinuouslyTask = this.UpdateCollateralInfoContinuouslyAsync();
         }
 
+        /// <summary>Continuously updates info about money deposited to fed member's addresses.</summary>
         private async Task UpdateCollateralInfoContinuouslyAsync()
         {
             while (!this.cancellationSource.Token.IsCancellationRequested)
@@ -106,7 +119,7 @@ namespace Stratis.Features.FederatedPeg
                 {
                     await Task.Delay(CollateralUpdateIntervalSeconds * 1000, this.cancellationSource.Token).ConfigureAwait(false);
                 }
-                catch (OperationCanceledException )
+                catch (OperationCanceledException)
                 {
                     this.logger.LogTrace("(-)[CANCELLED]");
                     return;
@@ -134,6 +147,8 @@ namespace Stratis.Features.FederatedPeg
                 return true;
             }
 
+            this.logger.LogDebug("Addresses to check {0}.", addressesToCheck.Count);
+
             Dictionary<string, Money> collateral = await this.blockStoreClient.GetAddressBalancesAsync(addressesToCheck, RequiredConfirmations, cancellation).ConfigureAwait(false);
 
             if (collateral == null)
@@ -144,6 +159,8 @@ namespace Stratis.Features.FederatedPeg
 
             if (collateral.Count != addressesToCheck.Count)
             {
+                this.logger.LogDebug("Expected {0} data entries but received {1}.", addressesToCheck.Count, collateral.Count);
+
                 this.logger.LogTrace("(-)[INCONSISTENT_DATA]:false");
                 return false;
             }
@@ -161,6 +178,12 @@ namespace Stratis.Features.FederatedPeg
         {
             var member = federationMember as CollateralFederationMember;
 
+            if (member == null)
+            {
+                this.logger.LogTrace("(-)[WRONG_TYPE]");
+                throw new ArgumentException($"{nameof(federationMember)} should be of type: {nameof(CollateralFederationMember)}.");
+            }
+
             if ((member.CollateralAmount == null) || (member.CollateralAmount == 0))
             {
                 this.logger.LogTrace("(-)[NO_COLLATERAL_REQUIREMENT]:true");
@@ -177,7 +200,8 @@ namespace Stratis.Features.FederatedPeg
         {
             lock (this.locker)
             {
-                this.depositsByAddress.Remove(((CollateralFederationMember) fedMemberKicked.KickedMember).CollateralMainchainAddress);
+                this.logger.LogDebug("Removing federation member {0}", ((CollateralFederationMember)fedMemberKicked.KickedMember).CollateralMainchainAddress);
+                this.depositsByAddress.Remove(((CollateralFederationMember)fedMemberKicked.KickedMember).CollateralMainchainAddress);
             }
         }
 
@@ -185,10 +209,12 @@ namespace Stratis.Features.FederatedPeg
         {
             lock (this.locker)
             {
+                this.logger.LogDebug("Adding federation member {0}", ((CollateralFederationMember)fedMemberAdded.AddedMember).CollateralMainchainAddress);
                 this.depositsByAddress.Add(((CollateralFederationMember)fedMemberAdded.AddedMember).CollateralMainchainAddress, null);
             }
         }
 
+        /// <inheritdoc />
         public void Dispose()
         {
             this.signals.Unsubscribe(this.memberAddedToken);

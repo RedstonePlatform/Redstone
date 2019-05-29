@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.489
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.156
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Redstone", "Redstone", "{14FAE76E-2EE8-44AF-B322-35B8D59301CF}"
 EndProject
@@ -212,6 +212,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Demo", "Demo", "{4A34A3EC-BC76-4446-81EA-A55B0A4AB468}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sdk", "Sdk", "{74D27AB4-EE72-407B-93A8-6BC836514CCA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.CirrusDnsD", "Stratis.CirrusDnsD\Stratis.CirrusDnsD.csproj", "{CE96E9A1-130D-4EEF-8439-0ADBF115E782}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -539,6 +541,10 @@ Global
 		{B8BC6552-6409-4BE1-B085-E8E6513EC251}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B8BC6552-6409-4BE1-B085-E8E6513EC251}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B8BC6552-6409-4BE1-B085-E8E6513EC251}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE96E9A1-130D-4EEF-8439-0ADBF115E782}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE96E9A1-130D-4EEF-8439-0ADBF115E782}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE96E9A1-130D-4EEF-8439-0ADBF115E782}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE96E9A1-130D-4EEF-8439-0ADBF115E782}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

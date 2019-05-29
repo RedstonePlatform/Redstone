@@ -99,7 +99,7 @@ namespace Redstone.Feature.ServiceNode.Tests
         }
 
         [Fact]
-        public void RegistrationWithoutFullCollateralShouldPersist()
+        public void RegistrationWithoutFullCollateralShouldNotPersist()
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {
