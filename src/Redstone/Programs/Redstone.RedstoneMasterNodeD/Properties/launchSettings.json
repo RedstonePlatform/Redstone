@@ -6,6 +6,10 @@
     "Redstone.RedstoneServiceNodeD Test": {
       "commandName": "Project",
       "commandLineArgs": "-testnet"
+    },
+    "Redstone.RedstoneServiceNodeD Cold Test": {
+      "commandName": "Project",
+      "commandLineArgs": "-testnet -cold"
     }
   }
 }

@@ -20,6 +20,7 @@ namespace Redstone.RedstoneFullNodeD
     using Stratis.Bitcoin.Features.Apps;
     using Stratis.Bitcoin.Features.Wallet;
     using static System.String;
+    using Stratis.Bitcoin.Features.ColdStaking;
 
     public class Program
     {
@@ -49,6 +50,11 @@ namespace Redstone.RedstoneFullNodeD
 
                 if (isDns)
                 {
+                    if (args.Contains("-cold"))
+                    {
+                        throw new InvalidOperationException("-cold not allowed with Dns");
+                    }
+
                     // Run as a full node with DNS or just a DNS service?
                     if (dnsSettings.DnsFullNode)
                     {
@@ -75,9 +81,18 @@ namespace Redstone.RedstoneFullNodeD
                        .UseBlockStore()
                        .UsePosConsensus()
                        .UseMempool()
-                       .UseWallet()
-                       //.UseColdStakingWallet()
-                       .AddPowPosMining()
+                       .UseWallet();
+
+                    if (args.Contains("-cold"))
+                    {
+                        builder = builder.UseColdStakingWallet();
+                    }
+                    else
+                    {
+                        builder = builder.UseWallet();
+                    }
+
+                    builder = builder.AddPowPosMining()
                        .UseApi()
                        .UseApps()
                        .AddRPC();

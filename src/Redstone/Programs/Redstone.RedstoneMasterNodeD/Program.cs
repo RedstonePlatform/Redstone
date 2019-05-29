@@ -36,8 +36,8 @@ namespace Redstone.RedstoneServiceNodeD
                     : args.Contains("-regnet")
                     ? NetworkRegistration.Register(new RedstoneRegTest())
                     : NetworkRegistration.Register(new RedstoneMain());
-                 
-                var nodeSettings = new NodeSettings(network: network, protocolVersion: ProtocolVersion.PROVEN_HEADER_VERSION, args: args.Concat(new [] { "-txIndex=1", "-addressIndex=1" }).ToArray())
+
+                var nodeSettings = new NodeSettings(network: network, protocolVersion: ProtocolVersion.PROVEN_HEADER_VERSION, args: args.Concat(new[] { "-txIndex=1", "-addressIndex=1" }).ToArray())
                 {
                     MinProtocolVersion = ProtocolVersion.ALT_PROTOCOL_VERSION
                 };
@@ -78,17 +78,23 @@ namespace Redstone.RedstoneServiceNodeD
                     builder = builder
                        .UseBlockStore()
                        .UsePosConsensus()
-                       .UseMempool()
-                       .UseWallet()
-                       .UseColdStakingWallet()
-                       .AddPowPosMining()
-                       .UseApi()
+                       .UseMempool();
 
+                    if (args.Contains("-cold"))
+                    {
+                        builder = builder.UseColdStakingWallet();
+                    }
+                    else
+                    {
+                        builder = builder.UseWallet();
+                    }
+
+                    builder = builder.AddPowPosMining()
+                       .UseApi()
                        .UseWatchOnlyWallet()
                        .UseBlockNotification()
                        .UseTransactionNotification()
                        .AddServiceNodeRegistration()
-
                        .UseApps()
                        .UseBlockExplorer()
                        .AddRPC();

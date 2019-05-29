@@ -133,7 +133,6 @@ namespace Redstone.Features.ServiceNode
                     .DependOn<BlockStoreFeature>()
                     .DependOn<BlockNotificationFeature>()
                     .DependOn<TransactionNotificationFeature>()
-                    .DependOn<WalletFeature>()
                     .FeatureServices(services =>
                     {
                         services.AddSingleton<RegistrationStore>();
