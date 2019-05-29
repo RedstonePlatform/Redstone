@@ -5,7 +5,9 @@
 SERVER_IP=$(curl --silent ipinfo.io/ip)
 COINSERVICEINSTALLER="https://raw.githubusercontent.com/RedstonePlatform/Redstone/master/Scripts/servicenode-installer/install-coin.sh"
 COINSERVICECONFIG="https://raw.githubusercontent.com/RedstonePlatform/Redstone/master/Scripts/servicenode-installer/config-redstone.sh"
+COINSNPORT=37123
 USER=redstone-testnet #redstone
+apiport=38222
 fork=redstone
 
 clear
@@ -34,10 +36,9 @@ case $net in
 esac
 
 # ================= SERVICE NODE SETTINGS ===========================
-apiport=38222
 date_stamp="$(date +%y-%m-%d-%s)"
 logfile="/tmp/log_$date_stamp_output.log"
-WalletName="servicenode-wallet"
+WalletName="servicenode"
 WalletSecretWords=""
 WalletPassword=""
 WalletPassphrase=""
@@ -56,7 +57,7 @@ echo -e "####################### SERVICENODE WALLET CREATION ###################
 echo
 echo -e "You are going to create your servicenode wallet - we need some information first."
 echo 
-read -p "Name (default=servicenode-wallet): " response
+read -p "Name (default=${WalletName}): " response
 if [[ "$response" != "" ]] ; then 
    WalletName="$response" 
 fi
@@ -80,9 +81,10 @@ ServiceNodeAddress=$(sed -e 's/^"//' -e 's/"$//' <<<$(curl -sX GET "http://local
 service ${fork}d@${USER} stop
 
 ### Inject or add servicenode details to redstone.conf file 
-#sed -i "s/^\(servicenode.ipv4\).*/\1${SERVER_IP}/" ${COINCORE}/${fork}.conf
-#sed -i "s/^\(servicenode.port\).*/\1${COINSNPORT}/" ${COINCORE}/${fork}.conf
-#sed -i "s/^\(servicenode.ecdsakeyaddress\).*/\1${COINSNPORT}/" ${COINCORE}/${fork}.conf
+#sed -i "s/#servicenode.ipv4.*/servicenode.ipv4=${SERVER_IP}/" ${COINCORE}/${fork}.conf
+#sed -i "s/#servicenode.port.*/servicenode.port=${COINSNPORT}/" ${COINCORE}/${fork}.conf
+#sed -i "s/#servicenode.txfeevalue.*/servicenode.txfeevalue=11000/" ${COINCORE}/${fork}.conf
+#sed -i "s/#service.ecdsakeyaddress.*/service.ecdsakeyaddress=${ServiceNodeAddress}/" ${COINCORE}/${fork}.conf
 
 sudo sh -c "echo '####Service Node Settings####' >> ${COINCORE}/${fork}.conf"
 sudo sh -c "echo 'servicenode.ipv4=${SERVER_IP}' >> ${COINCORE}/${fork}.conf"
@@ -117,3 +119,7 @@ echo -e "Password:   "$WalletPassword
 echo -e "Passphrase: "$WalletPassphrase
 echo -e "Mnemonic:   "$WalletSecretWords
 echo -e "Service Node address : "$ServiceNodeAddress
+
+echo -e "Service Node Registrations:"
+echo -e ""
+curl -X POST "http://localhost:$apiport/api/ServiceNode/registrations" -H  "accept: application/json"
