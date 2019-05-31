@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <PreserveCompilationContext>true</PreserveCompilationContext>
-    <AssemblyName>Redstone.Features.MasterNode</AssemblyName>
+    <AssemblyName>Redstone.Features.ServiceNode</AssemblyName>
     <OutputType>Library</OutputType>
-    <PackageId>Redstone.Breeze</PackageId>
+    <PackageId>Redstone.Features.ServiceNode</PackageId>
     <RuntimeFrameworkVersion>2.1.1</RuntimeFrameworkVersion>
     <Version>1.0.0-alpha</Version>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
@@ -29,6 +29,7 @@
     <ProjectReference Include="..\..\..\Stratis.Bitcoin.Features.WatchOnlyWallet\Stratis.Bitcoin.Features.WatchOnlyWallet.csproj" />
     <ProjectReference Include="..\..\..\Stratis.Bitcoin\Stratis.Bitcoin.csproj" />
     <ProjectReference Include="..\..\Core\Redstone.Core\Redstone.Core.csproj" />
+    <ProjectReference Include="..\..\Core\Redstone.ServiceNode\Redstone.ServiceNode.csproj" />
     <ProjectReference Include="..\Redstone.Features.Api\Redstone.Features.Api.csproj" />
   </ItemGroup>
 
