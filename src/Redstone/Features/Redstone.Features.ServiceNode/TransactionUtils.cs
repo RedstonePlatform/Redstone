@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using NBitcoin;
 using Redstone.ServiceNode.Models;
+using Redstone.ServiceNode.Utils;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 

@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
 using NBitcoin;
 using Redstone.Core.Networks;
 using Redstone.Features.ServiceNode;
-using Redstone.Features.ServiceNode.Common;
-using Redstone.Features.ServiceNode.Models;
+using Redstone.ServiceNode;
+using Redstone.ServiceNode.Models;
 using Stratis.Bitcoin.Features.BlockStore.AddressIndexing;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
@@ -30,12 +28,10 @@ namespace Redstone.Feature.ServiceNode.Tests
         private CoreNode watchingNode;
         private IWalletTransactionHandler walletTransactionHandler;
         private IWalletManager walletManager;
-        private ServiceNodeManager rm;
-        private RegistrationStore rs;
-        private IAddressIndexer ai;
-        private ServiceNodeManager watchingRm;
-        private RegistrationStore watchingRs;
-        private IAddressIndexer watchinAi;
+        private ServiceNodeManager serviceNodeManager;
+        private IAddressIndexer addressIndexer;
+        private ServiceNodeManager watchingServiceNodeManager;
+        private IAddressIndexer watchingAddressIndexer;
         private BitcoinSecret serverSecret;
         private readonly Money collateral;
         private readonly int maturity;
@@ -142,13 +138,11 @@ namespace Redstone.Feature.ServiceNode.Tests
             this.walletTransactionHandler = this.node.FullNode.NodeService<IWalletTransactionHandler>();
             this.walletManager = this.node.FullNode.NodeService<IWalletManager>();
 
-            this.rm = this.node.FullNode.NodeService<ServiceNodeManager>();
-            this.rs = this.rm.GetRegistrationStore();
-            this.ai = this.node.FullNode.NodeService<IAddressIndexer>();
+            this.serviceNodeManager = this.node.FullNode.NodeService<ServiceNodeManager>();
+            this.addressIndexer = this.node.FullNode.NodeService<IAddressIndexer>();
 
-            this.watchingRm = this.watchingNode.FullNode.NodeService<ServiceNodeManager>();
-            this.watchingRs = this.watchingRm.GetRegistrationStore();
-            this.watchinAi = this.watchingNode.FullNode.NodeService<IAddressIndexer>();
+            this.watchingServiceNodeManager = this.watchingNode.FullNode.NodeService<ServiceNodeManager>();
+            this.watchingAddressIndexer = this.watchingNode.FullNode.NodeService<IAddressIndexer>();
 
             this.serverSecret = this.GetWalletPrivateKeyForServer();
         }
@@ -175,17 +169,17 @@ namespace Redstone.Feature.ServiceNode.Tests
 
         private void AssertStoreAndBalance(int requiredStoreCount, Money requiredBalance)
         {
-            Money balance = this.ai.GetAddressBalance(this.serverSecret.GetAddress().ToString());
-            List<RegistrationRecord> records = this.rs.GetAll();
+            Money balance = this.addressIndexer.GetAddressBalance(this.serverSecret.GetAddress().ToString());
+            List<IServiceNode> nodes = this.serviceNodeManager.GetServiceNodes();
 
-            Money watchingBalance = this.watchinAi.GetAddressBalance(this.serverSecret.GetAddress().ToString());
-            List<RegistrationRecord> watchingRecords = this.watchingRs.GetAll();
+            Money watchingBalance = this.watchingAddressIndexer.GetAddressBalance(this.serverSecret.GetAddress().ToString());
+            List<IServiceNode> watchingNodes = this.watchingServiceNodeManager.GetServiceNodes();
 
             this.output.WriteLine($"Required {requiredBalance?.ToUnit(MoneyUnit.BTC)} Balance: {balance?.ToUnit(MoneyUnit.BTC)}");
             this.output.WriteLine($"Required {requiredBalance?.ToUnit(MoneyUnit.BTC)} WatchingBalance: {watchingBalance?.ToUnit(MoneyUnit.BTC)}");
 
-            this.output.WriteLine($"Required {requiredStoreCount} StoreCount {records.Count}");
-            this.output.WriteLine($"Required {requiredStoreCount} StoreCount {watchingRecords.Count}");
+            this.output.WriteLine($"Required {requiredStoreCount} StoreCount {nodes.Count}");
+            this.output.WriteLine($"Required {requiredStoreCount} StoreCount {watchingNodes.Count}");
             //Assert.Equal(requiredBalance, balance);
             //Assert.Equal(requiredBalance, watchingBalance);
             //Assert.Equal(requiredStoreCount, records.Count);

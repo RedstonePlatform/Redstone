@@ -211,8 +211,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Demo", "Demo", "{4A34A3EC-B
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sdk", "Sdk", "{74D27AB4-EE72-407B-93A8-6BC836514CCA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.CirrusDnsD", "Stratis.CirrusDnsD\Stratis.CirrusDnsD.csproj", "{CE96E9A1-130D-4EEF-8439-0ADBF115E782}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redstone.ServiceNode", "Redstone\Core\Redstone.ServiceNode\Redstone.ServiceNode.csproj", "{AB82E381-CD4D-4344-98FA-E0D8B3ED32DA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redstone.Features.ServiceNode", "Redstone\Features\Redstone.Features.ServiceNode\Redstone.Features.ServiceNode.csproj", "{23196034-2F12-43AD-86F3-6446FBE8BB07}"
@@ -539,10 +537,6 @@ Global
 		{B8BC6552-6409-4BE1-B085-E8E6513EC251}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B8BC6552-6409-4BE1-B085-E8E6513EC251}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B8BC6552-6409-4BE1-B085-E8E6513EC251}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CE96E9A1-130D-4EEF-8439-0ADBF115E782}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CE96E9A1-130D-4EEF-8439-0ADBF115E782}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CE96E9A1-130D-4EEF-8439-0ADBF115E782}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CE96E9A1-130D-4EEF-8439-0ADBF115E782}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AB82E381-CD4D-4344-98FA-E0D8B3ED32DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AB82E381-CD4D-4344-98FA-E0D8B3ED32DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AB82E381-CD4D-4344-98FA-E0D8B3ED32DA}.Release|Any CPU.ActiveCfg = Release|Any CPU

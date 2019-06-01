@@ -4,7 +4,7 @@ using System.Net;
 using System.Text;
 using NBitcoin;
 using Redstone.Core.Networks;
-using Redstone.Features.ServiceNode.Common;
+using Redstone.ServiceNode;
 using Redstone.ServiceNode.Models;
 using Redstone.ServiceNode.Utils;
 using Xunit;

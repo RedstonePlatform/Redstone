@@ -1,7 +1,8 @@
 using System.Net;
 using NBitcoin;
 using Redstone.Core.Networks;
-using Redstone.Features.ServiceNode.Common;
+using Redstone.ServiceNode.Models;
+using Redstone.ServiceNode.Utils;
 using Xunit;
 
 namespace Redstone.Feature.ServiceNode.Tests

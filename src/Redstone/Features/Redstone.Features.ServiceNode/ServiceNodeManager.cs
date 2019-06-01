@@ -177,9 +177,9 @@ namespace Redstone.Features.ServiceNode
         protected abstract void LoadServiceNodes();
     }
 
-    public class KeyValueStorageServiceNodeManager : ServiceNodeManagerBase
+    public class ServiceNodeManager : ServiceNodeManagerBase
     {
-        public KeyValueStorageServiceNodeManager(NodeSettings nodeSettings, Network network, ILoggerFactory loggerFactory, IKeyValueRepository keyValueRepo, ISignals signals)
+        public ServiceNodeManager(NodeSettings nodeSettings, Network network, ILoggerFactory loggerFactory, IKeyValueRepository keyValueRepo, ISignals signals)
             : base(nodeSettings, network, loggerFactory, keyValueRepo, signals)
         {
         }
