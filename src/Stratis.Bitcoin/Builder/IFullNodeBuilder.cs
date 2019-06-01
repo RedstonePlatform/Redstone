@@ -49,5 +49,6 @@ namespace Stratis.Bitcoin.Builder
         /// <param name="configure">A method that configures the service provider.</param>
         /// <returns>Interface to allow fluent code.</returns>
         IFullNodeBuilder ConfigureServiceProvider(Action<IServiceProvider> configure);
+        object UseWatchOnlyWallet();
     }
 }

@@ -7,7 +7,6 @@ using NBitcoin.Protocol;
 using Redstone.Core.Networks;
 using Redstone.Features.Api;
 using Redstone.Features.BlockExplorer;
-using Redstone.Features.ServiceNode;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.Apps;
@@ -20,7 +19,6 @@ using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.Notifications;
 using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.WatchOnlyWallet;
 using Stratis.Bitcoin.Utilities;
 
 namespace Redstone.RedstoneServiceNodeD

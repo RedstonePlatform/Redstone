@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using NBitcoin;
 
-namespace Redstone.Features.ServiceNode.Common
+namespace Redstone.ServiceNode.Utils
 {
     public class CryptoUtils
     {
@@ -17,7 +17,7 @@ namespace Redstone.Features.ServiceNode.Common
         public byte[] SignDataRSA(byte[] message)
         {
             byte[] signedBytes;
-            NBitcoin.uint160 temp1;
+            uint160 temp1;
 
             signedBytes = this.TumblerRsaKey.Sign(message, out temp1);
 

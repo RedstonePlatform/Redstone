@@ -4,9 +4,9 @@ using System.Net;
 using System.Text;
 using NBitcoin;
 using Newtonsoft.Json;
-using Redstone.Features.ServiceNode.Models;
+using Redstone.ServiceNode.Utils;
 
-namespace Redstone.Features.ServiceNode.Common
+namespace Redstone.ServiceNode.Models
 {
     /*
         Bitstream format for Redstone ServiceNode registration token
@@ -150,7 +150,7 @@ namespace Redstone.Features.ServiceNode.Common
         {
             var token = GetHeaderBytes();
 
-            CryptoUtils cryptoUtils = new CryptoUtils(rsaKey, privateKeyEcdsa);
+            var cryptoUtils = new CryptoUtils(rsaKey, privateKeyEcdsa);
 
             // Sign header (excluding preliminary length marker bytes) with RSA
             this.RsaSignature = cryptoUtils.SignDataRSA(token.ToArray());
@@ -236,7 +236,7 @@ namespace Redstone.Features.ServiceNode.Common
 
             var protocolVersion = (int)secondOutputData[0];
 
-            var headerLength = ((int)secondOutputData[2] << 8) + ((int)secondOutputData[1]);
+            var headerLength = (secondOutputData[2] << 8) + secondOutputData[1];
 
             // 64 = number of bytes we can store per output
             int numPubKeys = headerLength / 64;
@@ -245,12 +245,12 @@ namespace Redstone.Features.ServiceNode.Common
             if (headerLength % 64 != 0)
                 numPubKeys++;
 
-            if (tx.Outputs.Count < (numPubKeys + 1))
+            if (tx.Outputs.Count < numPubKeys + 1)
                 throw new Exception("Too few transaction outputs, registration transaction incomplete");
 
             PubKey[] tempPK;
-            List<PubKey> pubKeyList = new List<PubKey>();
-            for (int i = markerIndex + 1; i < (numPubKeys + markerIndex + 1); i++)
+            var pubKeyList = new List<PubKey>();
+            for (int i = markerIndex + 1; i < numPubKeys + markerIndex + 1; i++)
             {
                 tempPK = tx.Outputs[i].ScriptPubKey.GetDestinationPublicKeys(network);
 
@@ -341,18 +341,18 @@ namespace Redstone.Features.ServiceNode.Common
             position += 16;
 
             var temp = GetSubArray(bitstream, position, 2);
-            this.Port = ((int)temp[1] << 8) + ((int)temp[0]);
+            this.Port = (temp[1] << 8) + temp[0];
             position += 2;
 
             temp = GetSubArray(bitstream, position, 2);
-            var rsaLength = ((int)temp[1] << 8) + ((int)temp[0]);
+            var rsaLength = (temp[1] << 8) + temp[0];
             position += 2;
 
             this.RsaSignature = GetSubArray(bitstream, position, rsaLength);
             position += rsaLength;
 
             temp = GetSubArray(bitstream, position, 2);
-            var ecdsaLength = ((int)temp[1] << 8) + ((int)temp[0]);
+            var ecdsaLength = (temp[1] << 8) + temp[0];
             position += 2;
 
             this.EcdsaSignature = GetSubArray(bitstream, position, ecdsaLength);
@@ -363,7 +363,7 @@ namespace Redstone.Features.ServiceNode.Common
             position += 40;
 
             temp = GetSubArray(bitstream, position, 2);
-            var ecdsaPubKeyLength = ((int)temp[1] << 8) + ((int)temp[0]);
+            var ecdsaPubKeyLength = (temp[1] << 8) + temp[0];
             position += 2;
 
             this.EcdsaPubKey = new PubKey(GetSubArray(bitstream, position, ecdsaPubKeyLength));
@@ -374,7 +374,7 @@ namespace Redstone.Features.ServiceNode.Common
 
         public bool VerifySignatures()
         {
-            if ((this.EcdsaPubKey != null) && (this.EcdsaSignature != null))
+            if (this.EcdsaPubKey != null && this.EcdsaSignature != null)
                 return this.EcdsaPubKey.VerifyMessage(GetHeaderBytes().ToArray(), Encoding.UTF8.GetString(this.EcdsaSignature));
             else
                 return false;
@@ -391,10 +391,10 @@ namespace Redstone.Features.ServiceNode.Common
             if (this.EcdsaPubKey.GetAddress(network).ToString() != this.ServerId)
                 return false;
 
-            if (this.Ipv4Addr == null && this.Ipv6Addr == null &&  this.OnionAddress == null)
+            if (this.Ipv4Addr == null && this.Ipv6Addr == null && this.OnionAddress == null)
                 return false;
 
-            if (!this.VerifySignatures())
+            if (!VerifySignatures())
                 return false;
 
             // TODO: What other validation is required?
@@ -406,6 +406,37 @@ namespace Redstone.Features.ServiceNode.Common
             byte[] result = new byte[length];
             Array.Copy(data, index, result, 0, length);
             return result;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is RegistrationToken token &&
+                   this.ProtocolVersion == token.ProtocolVersion &&
+                   this.ServerId == token.ServerId &&
+                   EqualityComparer<IPAddress>.Default.Equals(this.Ipv4Addr, token.Ipv4Addr) &&
+                   EqualityComparer<IPAddress>.Default.Equals(this.Ipv6Addr, token.Ipv6Addr) &&
+                   this.OnionAddress == token.OnionAddress &&
+                   this.Port == token.Port &&
+                   EqualityComparer<byte[]>.Default.Equals(this.RsaSignature, token.RsaSignature) &&
+                   EqualityComparer<byte[]>.Default.Equals(this.EcdsaSignature, token.EcdsaSignature) &&
+                   this.ConfigurationHash == token.ConfigurationHash &&
+                   EqualityComparer<PubKey>.Default.Equals(this.EcdsaPubKey, token.EcdsaPubKey);
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = -77319232;
+            hashCode = hashCode * -1521134295 + this.ProtocolVersion.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(this.ServerId);
+            hashCode = hashCode * -1521134295 + EqualityComparer<IPAddress>.Default.GetHashCode(this.Ipv4Addr);
+            hashCode = hashCode * -1521134295 + EqualityComparer<IPAddress>.Default.GetHashCode(this.Ipv6Addr);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(this.OnionAddress);
+            hashCode = hashCode * -1521134295 + this.Port.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<byte[]>.Default.GetHashCode(this.RsaSignature);
+            hashCode = hashCode * -1521134295 + EqualityComparer<byte[]>.Default.GetHashCode(this.EcdsaSignature);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(this.ConfigurationHash);
+            hashCode = hashCode * -1521134295 + EqualityComparer<PubKey>.Default.GetHashCode(this.EcdsaPubKey);
+            return hashCode;
         }
     }
 }

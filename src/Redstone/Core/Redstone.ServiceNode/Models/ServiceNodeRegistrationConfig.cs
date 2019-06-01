@@ -1,8 +1,7 @@
 ﻿using System.Net;
 using NBitcoin;
-using Redstone.Features.ServiceNode.Common;
 
-namespace Redstone.Features.ServiceNode.Models
+namespace Redstone.ServiceNode.Models
 {
     public class ServiceNodeRegistrationConfig : IServiceNodeRegistrationConfig
     {
@@ -25,7 +24,7 @@ namespace Redstone.Features.ServiceNode.Models
         public string OnionAddress { get; set; }
         public int Port { get; set; }
         public Money TxOutputValue { get; set; } = new Money(1000);
-        public Money TxFeeValue { get; set; } = new Money(10000);       
+        public Money TxFeeValue { get; set; } = new Money(10000);
         public string ConfigurationHash { get; set; }
         public BitcoinSecret EcdsaPrivateKey { get; set; }
     }

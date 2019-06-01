@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Stratis.Bitcoin.Features.Wallet.Models;
 
-namespace Redstone.Features.ServiceNode.Models
+namespace Redstone.ServiceNode.Models
 {
     public class RegisterServiceNodeRequest : RequestModel
     {

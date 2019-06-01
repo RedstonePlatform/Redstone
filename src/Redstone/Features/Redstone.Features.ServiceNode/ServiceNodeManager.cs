@@ -1,160 +1,202 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Redstone.Features.ServiceNode.Common;
+using Redstone.ServiceNode.Events;
+using Redstone.ServiceNode.Models;
+using Redstone.ServiceNode.Utils;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.EventBus;
-using Stratis.Bitcoin.EventBus.CoreEvents;
-using Stratis.Bitcoin.Features.Api;
-using Stratis.Bitcoin.Features.BlockStore.AddressIndexing;
-using Stratis.Bitcoin.Features.BlockStore.Controllers;
 using Stratis.Bitcoin.Signals;
+using Stratis.Bitcoin.Utilities;
 
 namespace Redstone.Features.ServiceNode
 {
-    public class ServiceNodeManager : IServiceNodeManager
+    public interface IServiceNodeManager
     {
-        public static readonly int MAX_PROTOCOL_VERSION = 128; // >128 = regard as test versions
-        public static readonly int MIN_PROTOCOL_VERSION = 1;
+        /// <summary><c>true</c> in case current node is a registered service node.</summary>
+        bool IsServiceNode { get; }
 
-        private readonly RegistrationStore registrationStore;
+        /// <summary>Current service node's private key. <c>null</c> if <see cref="IsServiceNode"/> is <c>false</c>.</summary>
+        Key CurrentServiceNodeKey { get; }
+
+        void Initialize();
+
+        /// <summary>Provides up to date list of service nodes.</summary>
+        /// <remarks>
+        /// Blocks that are not signed with private keys that correspond
+        /// to public keys from this list are considered to be invalid.
+        /// </remarks>
+        List<IServiceNode> GetServiceNodes();
+
+        void AddServiceNode(IServiceNode serviceNodeMember);
+
+        void RemoveServiceNode(IServiceNode serviceNodeMember);
+    }
+
+    public abstract class ServiceNodeManagerBase : IServiceNodeManager
+    {
+        /// <inheritdoc />
+        public bool IsServiceNode { get; private set; }
+
+        /// <inheritdoc />
+        public Key CurrentServiceNodeKey { get; private set; }
+
+        protected readonly IKeyValueRepository keyValueRepo;
+
+        protected readonly ILogger logger;
+
+        private readonly NodeSettings settings;
+
         private readonly Network network;
+
         private readonly ISignals signals;
-        private readonly ILogger logger;
-        //private readonly IBlockStoreClient blockStoreClient;
-        public readonly IAddressIndexer addressIndexer;
-        private SubscriptionToken blockConnectedSubscription;
 
-        public ServiceNodeManager(
-            ILoggerFactory loggerFactory,
-            NodeSettings nodeSettings,
-            RegistrationStore registrationStore,
-            ISignals signals,
-            IAddressIndexer addressIndexer)
-        //    IHttpClientFactory httpClientFactory, 
-        //    ApiSettings settings)
+        /// <summary>Key for accessing list of nodes from <see cref="IKeyValueRepository"/>.</summary>
+        protected const string serviceNodesKey = "servicenodes";
+
+        /// <summary>Collection of all active service nodes.</summary>
+        /// <remarks>All access should be protected by <see cref="locker"/>.</remarks>
+        protected List<IServiceNode> serviceNodes;
+
+        /// <summary>Protects access to <see cref="serviceNodes"/>.</summary>
+        private readonly object locker;
+
+        public ServiceNodeManagerBase(NodeSettings nodeSettings, Network network, ILoggerFactory loggerFactory, IKeyValueRepository keyValueRepo, ISignals signals)
         {
+            this.settings = Guard.NotNull(nodeSettings, nameof(nodeSettings));
+            this.network = Guard.NotNull(network, nameof(network));
+            this.keyValueRepo = Guard.NotNull(keyValueRepo, nameof(keyValueRepo));
+            this.signals = Guard.NotNull(signals, nameof(signals));
+
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
-            this.registrationStore = registrationStore;
-            this.network = nodeSettings.Network;
-            this.signals = signals;
-
-            // swap for block store client when separating out node
-            this.addressIndexer = addressIndexer;
-            //this.blockStoreClient = new BlockStoreClient(loggerFactory, httpClientFactory, settings.ApiPort);
-            this.logger.LogInformation("Initialized RegistrationManager");
+            this.locker = new object();
         }
 
-        public void Initialize()
+        public virtual void Initialize()
         {
-            this.blockConnectedSubscription = this.signals.Subscribe<BlockConnected>(this.OnBlockConnected);
-        }
+            LoadServiceNodes();
 
-        public void Dispose()
-        {
-            this.signals.Unsubscribe(this.blockConnectedSubscription);
-        }
-
-        private void OnBlockConnected(BlockConnected blockConnected)
-        {
-            this.ProcessBlock(blockConnected.ConnectedBlock.ChainedHeader.Height, blockConnected.ConnectedBlock.Block);
-        }
-
-        public RegistrationStore GetRegistrationStore()
-        {
-            return this.registrationStore;
-        }
-
-        private void ProcessBlock(int height, Block block)
-        {
-            this.logger.LogTrace("()");
-
-            // Check for any server registration transactions
-            if (block.Transactions != null)
+            if (this.serviceNodes == null)
             {
-                this.CheckForServiceNodeRegistrations(height, block);
-                this.CheckCollateral(height);
+                this.serviceNodes = new List<IServiceNode>();
+                this.SaveServiceNodes();
             }
 
-            this.logger.LogTrace("(-)");
+            this.logger.LogInformation("Network contains {0} service nodes. Their public keys are: {1}",
+                this.serviceNodes.Count, Environment.NewLine + string.Join(Environment.NewLine, this.serviceNodes));
+
+            // Load key.
+            Key key = new KeyTool(this.settings.DataFolder).LoadPrivateKey();
+
+            this.CurrentServiceNodeKey = key;
+            this.SetIsServiceNode();
+
+            if (this.CurrentServiceNodeKey == null)
+            {
+                this.logger.LogTrace("(-)[NOT_FED_MEMBER]");
+                return;
+            }
+
+            // Loaded key has to be a key for current service node.
+            if (!this.serviceNodes.Any(x => x.PubKey == this.CurrentServiceNodeKey.PubKey))
+            {
+                string message = "Key provided is not registered on the network!";
+
+                this.logger.LogWarning(message);
+            }
+
+            this.logger.LogInformation("Federation key pair was successfully loaded. Your public key is: '{0}'.", this.CurrentServiceNodeKey.PubKey);
         }
 
-        private void CheckForServiceNodeRegistrations(int height, Block block)
+        private void SetIsServiceNode()
         {
-            foreach (Transaction tx in block.Transactions.Where(RegistrationToken.HasMarker))
+            this.IsServiceNode = this.serviceNodes.Any(x => x.PubKey == this.CurrentServiceNodeKey?.PubKey);
+        }
+
+        /// <inheritdoc />
+        public List<IServiceNode> GetServiceNodes()
+        {
+            lock (this.locker)
             {
-                this.logger.LogDebug("Received a new service node registration transaction: " + tx.GetHash());
-
-                try
-                {
-                    var registrationToken = new RegistrationToken();
-                    registrationToken.ParseTransaction(tx, this.network);
-
-                    if (!registrationToken.Validate(this.network))
-                    {
-                        this.logger.LogDebug("Registration token failed validation");
-                        continue;
-                    }
-
-                    var merkleBlock = new MerkleBlock(block, new[] { tx.GetHash() });
-                    var registrationRecord = new RegistrationRecord(DateTime.Now, Guid.NewGuid(), tx.GetHash().ToString(), tx.ToHex(), registrationToken, merkleBlock.PartialMerkleTree, height);
-
-                    // Ignore protocol versions outside the accepted bounds
-                    if ((registrationRecord.Token.ProtocolVersion < MIN_PROTOCOL_VERSION) ||
-                        (registrationRecord.Token.ProtocolVersion > MAX_PROTOCOL_VERSION))
-                    {
-                        this.logger.LogDebug("Registration protocol version out of bounds " + tx.GetHash());
-                        continue;
-                    }
-
-                    // If there were other registrations for this server previously, remove them and add the new one                         
-                    this.logger.LogTrace("Registrations - AddWithReplace");
-
-                    this.registrationStore.AddWithReplace(registrationRecord);
-
-                    this.logger.LogTrace("Registration transaction for server collateral address: " + registrationRecord.Token.ServerId);
-                    this.logger.LogTrace("Server Onion address: " + registrationRecord.Token.OnionAddress);
-                    this.logger.LogTrace("Server configuration hash: " + registrationRecord.Token.ConfigurationHash);
-                }
-                catch (Exception e)
-                {
-                    this.logger.LogDebug("Failed to parse registration transaction, exception: " + e);
-                }
+                return new List<IServiceNode>(this.serviceNodes);
             }
         }
 
-        private void CheckCollateral(int height)
+        public void AddServiceNode(IServiceNode serviceNode)
         {
-            foreach (RegistrationRecord registrationRecord in this.registrationStore.GetAll())
+            lock (this.locker)
             {
-                try
+                if (this.serviceNodes.Contains(serviceNode))
                 {
-                    Money serverCollateralBalance =
-                        //await this.blockStoreClient.GetAddressBalanceAsync(registrationRecord.Token.ServerId, 1);
-                        this.addressIndexer.GetAddressBalance(registrationRecord.Token.ServerId, 1) ?? new Money(0);
-
-                    this.logger.LogDebug("Collateral balance for server " + registrationRecord.Token.ServerId + " is " +
-                                         serverCollateralBalance.ToString() + ", original registration height " +
-                                         registrationRecord.BlockReceived + ", current height " + height);
-
-                    if (serverCollateralBalance.ToUnit(MoneyUnit.BTC) < this.network.Consensus.ServiceNodeCollateralThreshold &&
-                        height - registrationRecord.BlockReceived > this.network.Consensus.ServiceNodeCollateralBlockPeriod)
-                    {
-                        // Remove server registrations as funding has not been performed within block count,
-                        // or funds have been removed from the collateral address subsequent to the
-                        // registration being performed
-                        this.logger.LogDebug("Insufficient collateral within window period for server: " + registrationRecord.Token.ServerId);
-                        this.logger.LogDebug("Deleting registration records for server: " + registrationRecord.Token.ServerId);
-                        this.registrationStore.DeleteAllForServer(registrationRecord.Token.ServerId);
-                    }
+                    this.logger.LogTrace("(-)[ALREADY_EXISTS]");
+                    return;
                 }
-                catch (Exception e)
+
+                // Remove any that have a matching pubkey
+                IEnumerable<IServiceNode> nodesWithMatchingPubKeys = this.serviceNodes.Where(s => s.PubKey == serviceNode.PubKey);
+
+                foreach (IServiceNode node in nodesWithMatchingPubKeys)
                 {
-                    this.logger.LogError("Error calculating server collateral balance: " + e);
+                    this.serviceNodes.Remove(serviceNode);
                 }
+
+                this.serviceNodes.Add(serviceNode);
+
+                this.SaveServiceNodes();
+                this.SetIsServiceNode();
+
+                this.logger.LogInformation("Federation member '{0}' was added!", serviceNode);
+
+                foreach (IServiceNode node in nodesWithMatchingPubKeys)
+                {
+                    this.signals.Publish(new ServiceNodeRemoved(serviceNode));
+                }
+
+                this.signals.Publish(new ServiceNodeAdded(serviceNode));
+            }
+        }
+
+        public void RemoveServiceNode(IServiceNode serviceNode)
+        {
+            lock (this.locker)
+            {
+                this.serviceNodes.Remove(serviceNode);
+
+                this.SaveServiceNodes();
+                this.SetIsServiceNode();
+
+                this.logger.LogInformation("Federation member '{0}' was removed!", serviceNode);
+                this.signals.Publish(new ServiceNodeRemoved(serviceNode));
+            }
+        }
+
+        protected abstract void SaveServiceNodes();
+
+        /// <summary>Loads saved collection of service nodes from the database.</summary>
+        protected abstract void LoadServiceNodes();
+    }
+
+    public class KeyValueStorageServiceNodeManager : ServiceNodeManagerBase
+    {
+        public KeyValueStorageServiceNodeManager(NodeSettings nodeSettings, Network network, ILoggerFactory loggerFactory, IKeyValueRepository keyValueRepo, ISignals signals)
+            : base(nodeSettings, network, loggerFactory, keyValueRepo, signals)
+        {
+        }
+
+        protected override void SaveServiceNodes()
+        {
+            this.keyValueRepo.SaveValueJson(serviceNodesKey, this.serviceNodes);
+        }
+
+        /// <inheritdoc />
+        protected override void LoadServiceNodes()
+        {
+            this.serviceNodes = this.keyValueRepo.LoadValueJson<List<IServiceNode>>(serviceNodesKey);
+
+            if (this.serviceNodes == null)
+            {
+                this.logger.LogTrace("(-)[NOT_FOUND]:null");
             }
         }
     }

@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NBitcoin;
-using Redstone.Features.ServiceNode.Common;
-using Redstone.Features.ServiceNode.Models;
+using Redstone.ServiceNode.Models;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 

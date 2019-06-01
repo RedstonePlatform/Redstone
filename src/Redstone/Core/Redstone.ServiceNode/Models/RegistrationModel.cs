@@ -1,10 +1,9 @@
 ﻿using System;
 using NBitcoin;
 using Newtonsoft.Json;
-using Redstone.Features.ServiceNode.Common;
 using Stratis.Bitcoin.Features.Wallet;
 
-namespace Redstone.Features.ServiceNode.Models
+namespace Redstone.ServiceNode.Models
 {
     public class RegistrationModel
     {

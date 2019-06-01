@@ -5,7 +5,7 @@ using System.Linq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
-namespace Redstone.Features.ServiceNode.Common
+namespace Redstone.ServiceNode.Utils
 {
     public class BlockChainDataConversions
     {
@@ -17,7 +17,7 @@ namespace Redstone.Features.ServiceNode.Common
             unusable. The last 4 bytes are the checksum and are similarly
             unusable. */
 
-            List<BitcoinAddress> addressList = new List<BitcoinAddress>();
+            var addressList = new List<BitcoinAddress>();
 
             if (dataToEncode.Length == 0)
             {
@@ -35,8 +35,8 @@ namespace Redstone.Features.ServiceNode.Common
                 {
                     IEnumerable<byte> augmentedSubSet = subSet;
 
-                    KeyId key = new KeyId(augmentedSubSet.ToArray());
-                    BitcoinPubKeyAddress address = new BitcoinPubKeyAddress(key, network);
+                    var key = new KeyId(augmentedSubSet.ToArray());
+                    var address = new BitcoinPubKeyAddress(key, network);
                     base58address = address.ToString();
                     addressList.Add(BitcoinAddress.Create(base58address));
                 }
@@ -52,8 +52,8 @@ namespace Redstone.Features.ServiceNode.Common
                     IEnumerable<byte> tempSuffix = arr;
                     IEnumerable<byte> augmentedSubSet = subSet.Concat(tempSuffix);
 
-                    KeyId key = new KeyId(augmentedSubSet.ToArray());
-                    BitcoinPubKeyAddress address = new BitcoinPubKeyAddress(key, network);
+                    var key = new KeyId(augmentedSubSet.ToArray());
+                    var address = new BitcoinPubKeyAddress(key, network);
                     base58address = address.ToString();
                     addressList.Add(BitcoinAddress.Create(base58address));
 
@@ -123,7 +123,7 @@ namespace Redstone.Features.ServiceNode.Common
             Each P2PK output can store 64 bytes of arbitrary data. The first byte
             of the 65 byte script is unusable for data storage. */
 
-            List<PubKey> pubKeyList = new List<PubKey>();
+            var pubKeyList = new List<PubKey>();
 
             if (dataToEncode.Length == 0)
             {

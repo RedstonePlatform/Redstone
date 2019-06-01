@@ -8,7 +8,7 @@ using System.Text;
 using DBreeze;
 using Stratis.Bitcoin.Utilities.JsonConverters;
 
-namespace Redstone.Features.ServiceNode.Common
+namespace Redstone.ServiceNode.Utils
 {
     public class DBUtils : IDisposable
     {
@@ -47,10 +47,10 @@ namespace Redstone.Features.ServiceNode.Common
 
         private byte[] Zip(string unzipped)
         {
-            MemoryStream ms = new MemoryStream();
-            using (GZipStream gzip = new GZipStream(ms, CompressionMode.Compress))
+            var ms = new MemoryStream();
+            using (var gzip = new GZipStream(ms, CompressionMode.Compress))
             {
-                StreamWriter writer = new StreamWriter(gzip, Encoding.UTF8);
+                var writer = new StreamWriter(gzip, Encoding.UTF8);
                 writer.Write(unzipped);
                 writer.Flush();
             }
@@ -61,10 +61,10 @@ namespace Redstone.Features.ServiceNode.Common
         {
             try
             {
-                MemoryStream ms = new MemoryStream(bytes);
-                using (GZipStream gzip = new GZipStream(ms, CompressionMode.Decompress))
+                var ms = new MemoryStream(bytes);
+                using (var gzip = new GZipStream(ms, CompressionMode.Decompress))
                 {
-                    StreamReader reader = new StreamReader(gzip, Encoding.UTF8);
+                    var reader = new StreamReader(gzip, Encoding.UTF8);
                     var unzipped = reader.ReadToEnd();
                     return unzipped;
                 }
@@ -169,7 +169,7 @@ namespace Redstone.Features.ServiceNode.Common
         {
             lock (this._EnginesByParitionKey)
             {
-                List<T> result = new List<T>();
+                var result = new List<T>();
                 var engine = GetEngine(partitionKey);
                 using (var tx = engine.GetTransaction())
                 {
@@ -186,7 +186,7 @@ namespace Redstone.Features.ServiceNode.Common
         {
             lock (this._EnginesByParitionKey)
             {
-                Dictionary<TKey, TVal> result = new Dictionary<TKey, TVal>();
+                var result = new Dictionary<TKey, TVal>();
                 var engine = GetEngine(partitionKey);
                 using (var tx = engine.GetTransaction())
                 {
@@ -220,7 +220,7 @@ namespace Redstone.Features.ServiceNode.Common
         {
             var row = tx.Select<string, byte[]>(GetTableName<T>(), rowKey);
             if (row == null || !row.Exists)
-                return default(T);
+                return default;
             return Serializer.ToObject<T>(Unzip(row.Value));
         }
 

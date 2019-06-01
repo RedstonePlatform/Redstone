@@ -2,7 +2,7 @@
 
 namespace Redstone.Features.ServiceNode
 {
-    public interface IServiceNodeManager : IDisposable
+    public interface IRegistrationManager : IDisposable
     {
         void Initialize();
     }

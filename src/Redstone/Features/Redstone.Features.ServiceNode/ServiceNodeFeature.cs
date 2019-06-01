@@ -4,7 +4,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Redstone.Features.ServiceNode.Common;
+using Redstone.ServiceNode;
+using Redstone.ServiceNode.Models;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration;
@@ -25,13 +26,13 @@ namespace Redstone.Features.ServiceNode
         private readonly ILogger logger;
         private readonly RegistrationStore registrationStore;
         private readonly IWalletSyncManager walletSyncManager;
-        private readonly IServiceNodeManager registrationManager;
+        private readonly IRegistrationManager registrationManager;
 
         private readonly Network network;
 
         public ServiceNodeFeature(ILoggerFactory loggerFactory,
             NodeSettings nodeSettings,
-            ServiceNodeManager registrationManager,
+            RegistrationManager registrationManager,
             RegistrationStore registrationStore,
             IWalletSyncManager walletSyncManager)
         {
@@ -136,7 +137,7 @@ namespace Redstone.Features.ServiceNode
                     .FeatureServices(services =>
                     {
                         services.AddSingleton<RegistrationStore>();
-                        services.AddSingleton<ServiceNodeManager>();
+                        services.AddSingleton<RegistrationManager>();
                         services.AddSingleton<ServiceNodeController>();
                         services.AddSingleton<ServiceNodeSettings>();
                         // Swap to using block store client when separating service node from full node

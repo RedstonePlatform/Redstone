@@ -1,8 +1,7 @@
 ﻿using System.Net;
 using NBitcoin;
-using Redstone.Features.ServiceNode.Common;
 
-namespace Redstone.Features.ServiceNode.Models
+namespace Redstone.ServiceNode.Models
 {
     public interface IServiceNodeRegistrationConfig
     {

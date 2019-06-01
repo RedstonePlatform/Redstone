@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
+using Redstone.ServiceNode.Models;
 
-namespace Redstone.Features.ServiceNode.Common
+namespace Redstone.ServiceNode
 {
     public class RegistrationStore : IRegistrationStore
     {
@@ -35,7 +36,7 @@ namespace Redstone.Features.ServiceNode.Common
 
         public bool Add(RegistrationRecord regRecord)
         {
-            lock (RegistrationStore.lock_object)
+            lock (lock_object)
             {
                 List<RegistrationRecord> registrations = GetRecordsOrCreateFile();
 
@@ -70,7 +71,7 @@ namespace Redstone.Features.ServiceNode.Common
                 Delete(record.RecordGuid);
             }
 
-            lock (RegistrationStore.lock_object)
+            lock (lock_object)
             {
                 List<RegistrationRecord> registrations = GetRecordsOrCreateFile();
 
@@ -102,7 +103,7 @@ namespace Redstone.Features.ServiceNode.Common
         public List<RegistrationRecord> GetByServerId(string serverId)
         {
             List<RegistrationRecord> registrations = GetRecordsOrCreateFile();
-            List<RegistrationRecord> filtered = new List<RegistrationRecord>();
+            var filtered = new List<RegistrationRecord>();
 
             foreach (RegistrationRecord record in registrations)
             {
@@ -153,10 +154,10 @@ namespace Redstone.Features.ServiceNode.Common
 
         public bool Delete(Guid guid)
         {
-            lock (RegistrationStore.lock_object)
+            lock (lock_object)
             {
                 List<RegistrationRecord> registrations = GetRecordsOrCreateFile();
-                List<RegistrationRecord> modified = new List<RegistrationRecord>();
+                var modified = new List<RegistrationRecord>();
 
                 foreach (RegistrationRecord record in registrations)
                 {
@@ -195,9 +196,9 @@ namespace Redstone.Features.ServiceNode.Common
         {
             try
             {
-                foreach (RegistrationRecord record in this.GetByServerId(serverId))
+                foreach (RegistrationRecord record in GetByServerId(serverId))
                 {
-                    this.Delete(record.RecordGuid);
+                    Delete(record.RecordGuid);
                 }
             }
             catch (Exception)
@@ -210,9 +211,9 @@ namespace Redstone.Features.ServiceNode.Common
 
         private List<RegistrationRecord> GetRecordsOrCreateFile()
         {
-            lock (RegistrationStore.lock_object)
+            lock (lock_object)
             {
-                List<RegistrationRecord> registrations = new List<RegistrationRecord>();
+                var registrations = new List<RegistrationRecord>();
 
                 try
                 {

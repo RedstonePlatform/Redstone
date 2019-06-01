@@ -6,7 +6,7 @@ using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Redstone.Features.ServiceNode.Common
+namespace Redstone.ServiceNode.Utils
 {
     public class IPAddressConverter : JsonConverter
     {
@@ -87,7 +87,7 @@ namespace Redstone.Features.ServiceNode.Common
             throw new NotImplementedException();
         }
     }
-    
+
     public class PubKeyConverter : JsonConverter
     {
         /// <inheritdoc />
@@ -110,7 +110,7 @@ namespace Redstone.Features.ServiceNode.Common
         {
             if ((PubKey)value == null)
                 writer.WriteNull();
-            
+
             writer.WriteValue(Convert.ToBase64String(((PubKey)value).ToBytes()));
         }
     }
