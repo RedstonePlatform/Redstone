@@ -11,7 +11,6 @@ using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.Notifications;
-using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 
 namespace Redstone.Features.ServiceNode
@@ -26,8 +25,8 @@ namespace Redstone.Features.ServiceNode
         private readonly ILogger logger;
         private readonly RegistrationStore registrationStore;
         private readonly IWalletSyncManager walletSyncManager;
-        private readonly IRegistrationManager registrationManager;
         private readonly IRegistrationScanner registrationScanner;
+        private readonly IServiceNodeManager serviceNodeManager;
         private readonly IServiceNodeCollateralChecker serviceNodeCollateralChecker;
 
         private readonly Network network;
@@ -36,12 +35,12 @@ namespace Redstone.Features.ServiceNode
             NodeSettings nodeSettings,
             RegistrationStore registrationStore,
             IWalletSyncManager walletSyncManager,
-            IRegistrationManager registrationManager,
             IRegistrationScanner registrationScanner,
+            IServiceNodeManager registrationManager,
             IServiceNodeCollateralChecker serviceNodeCollateralChecker)
         {
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
-            this.registrationManager = registrationManager;
+            this.serviceNodeManager = registrationManager;
             this.registrationScanner = registrationScanner;
             this.serviceNodeCollateralChecker = serviceNodeCollateralChecker;
             this.registrationStore = registrationStore;
@@ -65,7 +64,7 @@ namespace Redstone.Features.ServiceNode
                 this.VerifyRegistrationStore(registrationRecords);
 
             this.registrationScanner.Initialize();
-            this.registrationManager.Initialize();
+            this.serviceNodeManager.Initialize();
 
             await this.serviceNodeCollateralChecker.InitializeAsync().ConfigureAwait(false);
 
@@ -142,9 +141,9 @@ namespace Redstone.Features.ServiceNode
                     .DependOn<TransactionNotificationFeature>()
                     .FeatureServices(services =>
                     {
-                        services.AddSingleton<RegistrationStore>();
-                        services.AddSingleton<RegistrationManager>();
-                        services.AddSingleton<RegistrationScanner>();
+                        services.AddSingleton<ServiceNodeManager>();
+                        services.AddSingleton<ServiceNodeRegistrationChecker>();
+                        services.AddSingleton<ServiceNodeCollateralChecker>();
                         services.AddSingleton<ServiceNodeController>();
                         services.AddSingleton<ServiceNodeSettings>();
                     });

@@ -10,7 +10,7 @@ using Stratis.Bitcoin.Signals;
 
 namespace Redstone.Features.ServiceNode
 {
-    public class RegistrationScanner : IRegistrationScanner
+    public class ServiceNodeRegistrationChecker : IRegistrationScanner
     {
         private readonly Network network;
         private readonly IServiceNodeManager serviceNodeManager;
@@ -18,7 +18,7 @@ namespace Redstone.Features.ServiceNode
         private readonly ILogger logger;
         private SubscriptionToken blockConnectedSubscription;
 
-        public RegistrationScanner(
+        public ServiceNodeRegistrationChecker(
             ILoggerFactory loggerFactory,
             IServiceNodeManager serviceNodeManager,
             NodeSettings nodeSettings,

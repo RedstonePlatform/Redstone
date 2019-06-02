@@ -8,7 +8,6 @@ using NBitcoin;
 using Redstone.ServiceNode.Events;
 using Redstone.ServiceNode.Models;
 using Stratis.Bitcoin.EventBus;
-using Stratis.Bitcoin.Features.Api;
 using Stratis.Bitcoin.Features.BlockStore.AddressIndexing;
 using Stratis.Bitcoin.Signals;
 
@@ -172,44 +171,43 @@ namespace Redstone.Features.ServiceNode
             return true;
         }
 
+        //private async Task CheckCollateralAsync(int height)
+        //{
+        //    foreach (IServiceNode serviceNode in this.serviceNodeManager.GetServiceNodes())
+        //    {
+        //        try
+        //        {
+        //            Script scriptToCheck = BitcoinAddress.Create(serviceNode.RegistrationRecord.Token.ServerId, this.network).ScriptPubKey;
 
-        private async Task CheckCollateralAsync(int height)
-        {
-            foreach (IServiceNode serviceNode in this.serviceNodeManager.GetServiceNodes())
-            {
-                try
-                {
-                    Script scriptToCheck = BitcoinAddress.Create(serviceNode.RegistrationRecord.Token.ServerId, this.network).ScriptPubKey;
 
+        //            Money serverCollateralBalance =
+        //                //await this.blockStoreClient.GetAddressBalanceAsync(registractionRecord.Token.ServerId, 1);
+        //                this.addressIndexer.GetAddressBalance(serviceNode.RegistrationRecord.Token.ServerId, 1);
 
-                    Money serverCollateralBalance =
-                        //await this.blockStoreClient.GetAddressBalanceAsync(registractionRecord.Token.ServerId, 1);
-                        this.addressIndexer.GetAddressBalance(serviceNode.RegistrationRecord.Token.ServerId, 1);
+        //            this.logger.LogDebug("Collateral balance for server " + serviceNode.RegistrationRecord.Token.ServerId + " is " +
+        //                                 serverCollateralBalance.ToString() + ", original registration height " +
+        //                                 serviceNode.RegistrationRecord.BlockReceived + ", current height " + height);
 
-                    this.logger.LogDebug("Collateral balance for server " + serviceNode.RegistrationRecord.Token.ServerId + " is " +
-                                         serverCollateralBalance.ToString() + ", original registration height " +
-                                         serviceNode.RegistrationRecord.BlockReceived + ", current height " + height);
+        //            if ((serverCollateralBalance.ToUnit(MoneyUnit.BTC) < this.network.Consensus.ServiceNodeCollateralThreshold) &&
+        //                ((height - serviceNode.RegistrationRecord.BlockReceived) > this.network.Consensus.ServiceNodeCollateralBlockPeriod))
+        //            {
+        //                // Remove server registrations as funding has not been performed within block count,
+        //                // or funds have been removed from the collateral address subsequent to the
+        //                // registration being performed
+        //                this.logger.LogDebug("Insufficient collateral within window period for server: " + serviceNode.RegistrationRecord.Token.ServerId);
+        //                this.logger.LogDebug("Deleting registration records for server: " + serviceNode.RegistrationRecord.Token.ServerId);
 
-                    if ((serverCollateralBalance.ToUnit(MoneyUnit.BTC) < this.network.Consensus.ServiceNodeCollateralThreshold) &&
-                        ((height - serviceNode.RegistrationRecord.BlockReceived) > this.network.Consensus.ServiceNodeCollateralBlockPeriod))
-                    {
-                        // Remove server registrations as funding has not been performed within block count,
-                        // or funds have been removed from the collateral address subsequent to the
-                        // registration being performed
-                        this.logger.LogDebug("Insufficient collateral within window period for server: " + serviceNode.RegistrationRecord.Token.ServerId);
-                        this.logger.LogDebug("Deleting registration records for server: " + serviceNode.RegistrationRecord.Token.ServerId);
+        //                this.serviceNodeManager.RemoveServiceNode(serviceNode);
 
-                        this.serviceNodeManager.RemoveServiceNode(serviceNode);
-
-                        // TODO: Need to make the TumbleBitFeature change its server address if this is the address it was using
-                    }
-                }
-                catch (Exception e)
-                {
-                    this.logger.LogError("Error calculating server collateral balance: " + e);
-                }
-            }
-        }
+        //                // TODO: Need to make the TumbleBitFeature change its server address if this is the address it was using
+        //            }
+        //        }
+        //        catch (Exception e)
+        //        {
+        //            this.logger.LogError("Error calculating server collateral balance: " + e);
+        //        }
+        //    }
+        //}
 
         public bool CheckCollateral(IServiceNode serviceNode)
         {
