@@ -2,42 +2,33 @@
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Redstone.ServiceNode;
-using Redstone.ServiceNode.Events;
 using Redstone.ServiceNode.Models;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.EventBus;
 using Stratis.Bitcoin.EventBus.CoreEvents;
-using Stratis.Bitcoin.Features.BlockStore.AddressIndexing;
 using Stratis.Bitcoin.Signals;
 
 namespace Redstone.Features.ServiceNode
 {
-    public class RegistrationScanner
+    public class RegistrationScanner : IRegistrationScanner
     {
-        public static readonly int MAX_PROTOCOL_VERSION = 128; // >128 = regard as test versions
-        public static readonly int MIN_PROTOCOL_VERSION = 1;
-
         private readonly Network network;
         private readonly IServiceNodeManager serviceNodeManager;
         private readonly ISignals signals;
         private readonly ILogger logger;
-        public readonly IAddressIndexer addressIndexer;
         private SubscriptionToken blockConnectedSubscription;
 
         public RegistrationScanner(
             ILoggerFactory loggerFactory,
             IServiceNodeManager serviceNodeManager,
             NodeSettings nodeSettings,
-            ISignals signals,
-            IAddressIndexer addressIndexer)
+            ISignals signals)
         {
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.network = nodeSettings.Network;
             this.serviceNodeManager = serviceNodeManager;
             this.signals = signals;
 
-            this.addressIndexer = addressIndexer;
             this.logger.LogInformation("Initialized RegistrationManager");
         }
 
@@ -89,16 +80,10 @@ namespace Redstone.Features.ServiceNode
                     var merkleBlock = new MerkleBlock(block, new[] { tx.GetHash() });
                     var registrationRecord = new RegistrationRecord(DateTime.Now, Guid.NewGuid(), tx.GetHash().ToString(), tx.ToHex(), registrationToken, merkleBlock.PartialMerkleTree, height);
 
-                    // Ignore protocol versions outside the accepted bounds
-                    if ((registrationRecord.Token.ProtocolVersion < MIN_PROTOCOL_VERSION) ||
-                        (registrationRecord.Token.ProtocolVersion > MAX_PROTOCOL_VERSION))
-                    {
-                        this.logger.LogDebug("Registration protocol version out of bounds " + tx.GetHash());
-                        continue;
-                    }
+                    string collateralAddress = BitcoinAddress.Create(registrationRecord.Token.ServerId, this.network).ScriptPubKey.ToString();
 
                     this.logger.LogTrace("New Service Node Registration");
-                    var serviceNode = new Redstone.ServiceNode.Models.ServiceNode(registrationRecord);
+                    var serviceNode = new Redstone.ServiceNode.Models.ServiceNode(registrationRecord, collateralAddress);
                     this.serviceNodeManager.AddServiceNode(serviceNode);
                 }
                 catch (Exception e)

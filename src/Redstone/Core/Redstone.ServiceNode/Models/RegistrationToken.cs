@@ -54,11 +54,12 @@ namespace Redstone.ServiceNode.Models
 
     public class RegistrationToken
     {
+        public static readonly int MAX_PROTOCOL_VERSION = 128; // >128 = regard as test versions
+        public static readonly int MIN_PROTOCOL_VERSION = 1;
+
         public static string Marker => "REDSTONE_SN_REGISTRATION_MARKER";
 
         public static string MarkerHex => "6a1f52454453544f4e455f534e5f524547495354524154494f4e5f4d41524b4552";
-        //"6a1a425245455a455f524547495354524154494f4e5f4d41524b4552"
-        //public static string MarkerHex => "a91473f8bb02cbc5b07968e3ebde6a9c68a527aaa01787";
 
         public int ProtocolVersion { get; set; }
 
@@ -395,6 +396,10 @@ namespace Redstone.ServiceNode.Models
                 return false;
 
             if (!VerifySignatures())
+                return false;
+
+            // Ignore protocol versions outside the accepted bounds
+            if (this.ProtocolVersion < MIN_PROTOCOL_VERSION || this.ProtocolVersion > MAX_PROTOCOL_VERSION)
                 return false;
 
             // TODO: What other validation is required?

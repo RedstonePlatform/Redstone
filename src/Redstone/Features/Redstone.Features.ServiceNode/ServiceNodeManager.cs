@@ -42,9 +42,9 @@ namespace Redstone.Features.ServiceNode
         /// <inheritdoc />
         public Key CurrentServiceNodeKey { get; private set; }
 
-        protected readonly IKeyValueRepository keyValueRepo;
+        protected readonly IKeyValueRepository KeyValueRepo;
 
-        protected readonly ILogger logger;
+        protected readonly ILogger Logger;
 
         private readonly NodeSettings settings;
 
@@ -53,38 +53,38 @@ namespace Redstone.Features.ServiceNode
         private readonly ISignals signals;
 
         /// <summary>Key for accessing list of nodes from <see cref="IKeyValueRepository"/>.</summary>
-        protected const string serviceNodesKey = "servicenodes";
+        protected const string ServiceNodesKey = "servicenodes";
 
         /// <summary>Collection of all active service nodes.</summary>
         /// <remarks>All access should be protected by <see cref="locker"/>.</remarks>
-        protected List<IServiceNode> serviceNodes;
+        protected List<IServiceNode> ServiceNodes;
 
-        /// <summary>Protects access to <see cref="serviceNodes"/>.</summary>
+        /// <summary>Protects access to <see cref="ServiceNodes"/>.</summary>
         private readonly object locker;
 
-        public ServiceNodeManagerBase(NodeSettings nodeSettings, Network network, ILoggerFactory loggerFactory, IKeyValueRepository keyValueRepo, ISignals signals)
+        protected ServiceNodeManagerBase(NodeSettings nodeSettings, Network network, ILoggerFactory loggerFactory, IKeyValueRepository keyValueRepo, ISignals signals)
         {
             this.settings = Guard.NotNull(nodeSettings, nameof(nodeSettings));
             this.network = Guard.NotNull(network, nameof(network));
-            this.keyValueRepo = Guard.NotNull(keyValueRepo, nameof(keyValueRepo));
+            this.KeyValueRepo = Guard.NotNull(keyValueRepo, nameof(keyValueRepo));
             this.signals = Guard.NotNull(signals, nameof(signals));
 
-            this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
+            this.Logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.locker = new object();
         }
 
         public virtual void Initialize()
         {
-            LoadServiceNodes();
+            this.LoadServiceNodes();
 
-            if (this.serviceNodes == null)
+            if (this.ServiceNodes == null)
             {
-                this.serviceNodes = new List<IServiceNode>();
+                this.ServiceNodes = new List<IServiceNode>();
                 this.SaveServiceNodes();
             }
 
-            this.logger.LogInformation("Network contains {0} service nodes. Their public keys are: {1}",
-                this.serviceNodes.Count, Environment.NewLine + string.Join(Environment.NewLine, this.serviceNodes));
+            this.Logger.LogInformation("Network contains {0} service nodes. Their public keys are: {1}",
+                this.ServiceNodes.Count, Environment.NewLine + string.Join(Environment.NewLine, this.ServiceNodes));
 
             // Load key.
             Key key = new KeyTool(this.settings.DataFolder).LoadPrivateKey();
@@ -94,24 +94,24 @@ namespace Redstone.Features.ServiceNode
 
             if (this.CurrentServiceNodeKey == null)
             {
-                this.logger.LogTrace("(-)[NOT_FED_MEMBER]");
+                this.Logger.LogTrace("(-)[NOT_FED_MEMBER]");
                 return;
             }
 
             // Loaded key has to be a key for current service node.
-            if (!this.serviceNodes.Any(x => x.PubKey == this.CurrentServiceNodeKey.PubKey))
+            if (this.ServiceNodes.All(x => x.PubKey != this.CurrentServiceNodeKey.PubKey))
             {
                 string message = "Key provided is not registered on the network!";
 
-                this.logger.LogWarning(message);
+                this.Logger.LogWarning(message);
             }
 
-            this.logger.LogInformation("Federation key pair was successfully loaded. Your public key is: '{0}'.", this.CurrentServiceNodeKey.PubKey);
+            this.Logger.LogInformation("Federation key pair was successfully loaded. Your public key is: '{0}'.", this.CurrentServiceNodeKey.PubKey);
         }
 
         private void SetIsServiceNode()
         {
-            this.IsServiceNode = this.serviceNodes.Any(x => x.PubKey == this.CurrentServiceNodeKey?.PubKey);
+            this.IsServiceNode = this.ServiceNodes.Any(x => x.PubKey == this.CurrentServiceNodeKey?.PubKey);
         }
 
         /// <inheritdoc />
@@ -119,7 +119,15 @@ namespace Redstone.Features.ServiceNode
         {
             lock (this.locker)
             {
-                return new List<IServiceNode>(this.serviceNodes);
+                return new List<IServiceNode>(this.ServiceNodes);
+            }
+        }
+
+        protected void SetServiceNodes(List<IServiceNode> serviceNodesToSet)
+        {
+            lock (this.locker)
+            {
+                this.ServiceNodes = serviceNodesToSet;
             }
         }
 
@@ -127,26 +135,26 @@ namespace Redstone.Features.ServiceNode
         {
             lock (this.locker)
             {
-                if (this.serviceNodes.Contains(serviceNode))
+                if (this.ServiceNodes.Contains(serviceNode))
                 {
-                    this.logger.LogTrace("(-)[ALREADY_EXISTS]");
+                    this.Logger.LogTrace("(-)[ALREADY_EXISTS]");
                     return;
                 }
 
                 // Remove any that have a matching pubkey
-                IEnumerable<IServiceNode> nodesWithMatchingPubKeys = this.serviceNodes.Where(s => s.PubKey == serviceNode.PubKey);
+                IEnumerable<IServiceNode> nodesWithMatchingPubKeys = this.ServiceNodes.Where(s => s.PubKey == serviceNode.PubKey).ToList();
 
                 foreach (IServiceNode node in nodesWithMatchingPubKeys)
                 {
-                    this.serviceNodes.Remove(serviceNode);
+                    this.ServiceNodes.Remove(serviceNode);
                 }
 
-                this.serviceNodes.Add(serviceNode);
+                this.ServiceNodes.Add(serviceNode);
 
                 this.SaveServiceNodes();
                 this.SetIsServiceNode();
 
-                this.logger.LogInformation("Federation member '{0}' was added!", serviceNode);
+                this.Logger.LogInformation("Federation member '{0}' was added!", serviceNode);
 
                 foreach (IServiceNode node in nodesWithMatchingPubKeys)
                 {
@@ -161,12 +169,12 @@ namespace Redstone.Features.ServiceNode
         {
             lock (this.locker)
             {
-                this.serviceNodes.Remove(serviceNode);
+                this.ServiceNodes.Remove(serviceNode);
 
                 this.SaveServiceNodes();
                 this.SetIsServiceNode();
 
-                this.logger.LogInformation("Federation member '{0}' was removed!", serviceNode);
+                this.Logger.LogInformation("Federation member '{0}' was removed!", serviceNode);
                 this.signals.Publish(new ServiceNodeRemoved(serviceNode));
             }
         }
@@ -186,17 +194,17 @@ namespace Redstone.Features.ServiceNode
 
         protected override void SaveServiceNodes()
         {
-            this.keyValueRepo.SaveValueJson(serviceNodesKey, this.serviceNodes);
+            this.KeyValueRepo.SaveValueJson(ServiceNodesKey, this.GetServiceNodes());
         }
 
         /// <inheritdoc />
         protected override void LoadServiceNodes()
         {
-            this.serviceNodes = this.keyValueRepo.LoadValueJson<List<IServiceNode>>(serviceNodesKey);
+            this.SetServiceNodes(this.KeyValueRepo.LoadValueJson<List<IServiceNode>>(ServiceNodesKey));
 
-            if (this.serviceNodes == null)
+            if (this.ServiceNodes == null)
             {
-                this.logger.LogTrace("(-)[NOT_FOUND]:null");
+                this.Logger.LogTrace("(-)[NOT_FOUND]:null");
             }
         }
     }

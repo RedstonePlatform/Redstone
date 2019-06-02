@@ -27,17 +27,23 @@ namespace Redstone.Features.ServiceNode
         private readonly RegistrationStore registrationStore;
         private readonly IWalletSyncManager walletSyncManager;
         private readonly IRegistrationManager registrationManager;
+        private readonly IRegistrationScanner registrationScanner;
+        private readonly IServiceNodeCollateralChecker serviceNodeCollateralChecker;
 
         private readonly Network network;
 
         public ServiceNodeFeature(ILoggerFactory loggerFactory,
             NodeSettings nodeSettings,
-            RegistrationManager registrationManager,
             RegistrationStore registrationStore,
-            IWalletSyncManager walletSyncManager)
+            IWalletSyncManager walletSyncManager,
+            IRegistrationManager registrationManager,
+            IRegistrationScanner registrationScanner,
+            IServiceNodeCollateralChecker serviceNodeCollateralChecker)
         {
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.registrationManager = registrationManager;
+            this.registrationScanner = registrationScanner;
+            this.serviceNodeCollateralChecker = serviceNodeCollateralChecker;
             this.registrationStore = registrationStore;
             this.network = nodeSettings.Network;
             this.walletSyncManager = walletSyncManager;
@@ -45,7 +51,7 @@ namespace Redstone.Features.ServiceNode
         }
 
         /// <inheritdoc />
-        public override Task InitializeAsync()
+        public override async Task InitializeAsync()
         {
             this.logger.LogTrace("()");
 
@@ -54,16 +60,16 @@ namespace Redstone.Features.ServiceNode
 
             // If there are no registrations then revert back to the block height of when the service nodes were set-up.
             if (registrationRecords.Count == 0)
-                RevertRegistrations();
+                this.RevertRegistrations();
             else
-                VerifyRegistrationStore(registrationRecords);
+                this.VerifyRegistrationStore(registrationRecords);
 
+            this.registrationScanner.Initialize();
             this.registrationManager.Initialize();
 
+            await this.serviceNodeCollateralChecker.InitializeAsync().ConfigureAwait(false);
 
             this.logger.LogTrace("(-)");
-
-            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -90,7 +96,7 @@ namespace Redstone.Features.ServiceNode
             this.logger.LogTrace("()");
 
             // For RegTest, it is not clear that re-issuing a sync command will be beneficial. Generally you want to sync from genesis in that case.
-            var syncHeight = this.network.Name == "RedstoneMain"
+            int syncHeight = this.network.Name == "RedstoneMain"
                 ? SyncHeightMain
                 : this.network.Name == "RedstoneTest"
                     ? SyncHeightTest
@@ -103,14 +109,14 @@ namespace Redstone.Features.ServiceNode
             this.logger.LogTrace("(-)");
         }
 
-        private void VerifyRegistrationStore(IList<RegistrationRecord> list)
+        private void VerifyRegistrationStore(IEnumerable<RegistrationRecord> list)
         {
             this.logger.LogTrace("()");
 
             this.logger.LogTrace("VerifyRegistrationStore");
 
             // Verify that the registration store is in a consistent state on start-up. The signatures of all the records need to be validated.
-            foreach (var registrationRecord in list)
+            foreach (RegistrationRecord registrationRecord in list)
             {
                 if (registrationRecord.Token.Validate(this.network)) continue;
 
@@ -138,10 +144,9 @@ namespace Redstone.Features.ServiceNode
                     {
                         services.AddSingleton<RegistrationStore>();
                         services.AddSingleton<RegistrationManager>();
+                        services.AddSingleton<RegistrationScanner>();
                         services.AddSingleton<ServiceNodeController>();
                         services.AddSingleton<ServiceNodeSettings>();
-                        // Swap to using block store client when separating service node from full node
-                        //services.AddSingleton<IHttpClientFactory, Stratis.Bitcoin.Controllers.HttpClientFactory>();
                     });
             });
 

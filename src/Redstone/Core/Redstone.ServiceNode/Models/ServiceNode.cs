@@ -6,13 +6,12 @@ namespace Redstone.ServiceNode.Models
     /// <summary>Representation of a service node.</summary>
     public class ServiceNode : IServiceNode
     {
-        public ServiceNode(RegistrationRecord registrationRecord, Money collateralAmount = null, string collateralMainchainAddress = null)
+        public ServiceNode(RegistrationRecord registrationRecord, string collateralAddress)
         {
             Guard.NotNull(registrationRecord, nameof(registrationRecord));
 
             this.RegistrationRecord = registrationRecord;
-            this.CollateralAmount = collateralAmount;
-            this.CollateralMainchainAddress = collateralMainchainAddress;
+            this.CollateralAddress = collateralAddress;
         }
 
         /// <inheritdoc />
@@ -22,19 +21,13 @@ namespace Redstone.ServiceNode.Models
         public RegistrationRecord RegistrationRecord { get; }
 
         /// <inheritdoc />
-        public Money CollateralAmount { get; set; }
-
-        /// <inheritdoc />
-        public string CollateralMainchainAddress { get; set; }
+        public string CollateralAddress { get; set; }
 
         /// <inheritdoc />
         public override bool Equals(object obj)
         {
             var item = obj as ServiceNode;
-            if (item == null)
-                return false;
-
-            return this.RegistrationRecord.Equals(item.RegistrationRecord);
+            return item != null && this.RegistrationRecord.Equals(item.RegistrationRecord);
         }
 
         /// <inheritdoc />
@@ -51,7 +44,8 @@ namespace Redstone.ServiceNode.Models
             if ((object)a == null || (object)b == null)
                 return false;
 
-            return a.RegistrationRecord == b.RegistrationRecord && a.CollateralAmount == b.CollateralAmount && a.CollateralMainchainAddress == b.CollateralMainchainAddress;
+            return a.RegistrationRecord == b.RegistrationRecord 
+                   && a.CollateralAddress == b.CollateralAddress;
         }
 
         public static bool operator !=(ServiceNode a, ServiceNode b)
@@ -62,7 +56,7 @@ namespace Redstone.ServiceNode.Models
         /// <inheritdoc />
         public override string ToString()
         {
-            return base.ToString() + $",{nameof(this.CollateralAmount)}:{this.CollateralAmount},{nameof(this.CollateralMainchainAddress)}:{this.CollateralMainchainAddress ?? "null"}";
+            return base.ToString() + $"{nameof(this.CollateralAddress)}:{this.CollateralAddress ?? "null"}";
         }
     }
 }

@@ -11,10 +11,7 @@ namespace Redstone.ServiceNode.Models
         /// <summary> The service nodes registration token </summary>
         RegistrationRecord RegistrationRecord { get; }
 
-        /// <summary>Amount that federation member has to have on mainchain.</summary>
-        Money CollateralAmount { get; set; }
-
-        /// <summary>Mainchain address that should have the collateral.</summary>
-        string CollateralMainchainAddress { get; set; }
+        /// <summary>Address that should have the collateral.</summary>
+        string CollateralAddress { get; set; }
     }
 }
