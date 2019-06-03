@@ -77,6 +77,12 @@ namespace Redstone.Features.ServiceNode
         {
             this.LoadServiceNodes();
 
+            // If there are no registrations then revert back to the block height of when the service nodes were set-up.
+            //if (registrationRecords.Count == 0)
+            //    this.RevertRegistrations();
+            //else
+            //    this.VerifyRegistrationStore(registrationRecords);
+
             if (this.ServiceNodes == null)
             {
                 this.ServiceNodes = new List<IServiceNode>();
@@ -183,6 +189,44 @@ namespace Redstone.Features.ServiceNode
 
         /// <summary>Loads saved collection of service nodes from the database.</summary>
         protected abstract void LoadServiceNodes();
+
+
+        //private void RevertRegistrations()
+        //{
+        //    this.logger.LogTrace("()");
+
+        //    // For RegTest, it is not clear that re-issuing a sync command will be beneficial. Generally you want to sync from genesis in that case.
+        //    int syncHeight = this.network.Name == "RedstoneMain"
+        //        ? SyncHeightMain
+        //        : this.network.Name == "RedstoneTest"
+        //            ? SyncHeightTest
+        //            : SyncHeightRegTest;
+
+        //    this.logger.LogInformation("No registrations have been found; Syncing from height {0} in order to get service node registrations", syncHeight);
+
+        //    this.walletSyncManager.SyncFromHeight(syncHeight);
+
+        //    this.logger.LogTrace("(-)");
+        //}
+
+        //private void VerifyRegistrationStore(IEnumerable<RegistrationRecord> list)
+        //{
+        //    this.logger.LogTrace("()");
+
+        //    this.logger.LogTrace("VerifyRegistrationStore");
+
+        //    // Verify that the registration store is in a consistent state on start-up. The signatures of all the records need to be validated.
+        //    foreach (RegistrationRecord registrationRecord in list)
+        //    {
+        //        if (registrationRecord.Token.Validate(this.network)) continue;
+
+        //        this.logger.LogTrace("Deleting invalid registration : {0}", registrationRecord.RecordGuid);
+
+        //        this.registrationStore.Delete(registrationRecord.RecordGuid);
+        //    }
+
+        //    this.logger.LogTrace("(-)");
+        //}
     }
 
     public class ServiceNodeManager : ServiceNodeManagerBase

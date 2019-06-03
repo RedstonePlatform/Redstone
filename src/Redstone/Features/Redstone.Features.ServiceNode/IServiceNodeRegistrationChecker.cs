@@ -1,6 +1,6 @@
 ﻿namespace Redstone.Features.ServiceNode
 {
-    public interface IRegistrationScanner
+    public interface IServiceNodeRegistrationChecker
     {
         void Initialize();
     }

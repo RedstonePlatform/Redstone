@@ -1,19 +1,22 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Redstone.ServiceNode.Models;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.EventBus;
 using Stratis.Bitcoin.EventBus.CoreEvents;
+using Stratis.Bitcoin.Features.BlockStore.AddressIndexing;
 using Stratis.Bitcoin.Signals;
 
 namespace Redstone.Features.ServiceNode
 {
-    public class ServiceNodeRegistrationChecker : IRegistrationScanner
+    public class ServiceNodeRegistrationChecker : IServiceNodeRegistrationChecker
     {
         private readonly Network network;
         private readonly IServiceNodeManager serviceNodeManager;
+        private readonly IAddressIndexer addressIndexer;
         private readonly ISignals signals;
         private readonly ILogger logger;
         private SubscriptionToken blockConnectedSubscription;
@@ -21,12 +24,14 @@ namespace Redstone.Features.ServiceNode
         public ServiceNodeRegistrationChecker(
             ILoggerFactory loggerFactory,
             IServiceNodeManager serviceNodeManager,
+            IAddressIndexer addressIndexer,
             NodeSettings nodeSettings,
             ISignals signals)
         {
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.network = nodeSettings.Network;
             this.serviceNodeManager = serviceNodeManager;
+            this.addressIndexer = addressIndexer;
             this.signals = signals;
 
             this.logger.LogInformation("Initialized RegistrationManager");
@@ -54,6 +59,7 @@ namespace Redstone.Features.ServiceNode
             if (block.Transactions != null)
             {
                 this.ScanForServiceNodeRegistrations(height, block);
+                this.CheckCollateral(height);
             }
 
             this.logger.LogTrace("(-)");
@@ -89,6 +95,38 @@ namespace Redstone.Features.ServiceNode
                 catch (Exception e)
                 {
                     this.logger.LogDebug("Failed to parse registration transaction, exception: " + e);
+                }
+            }
+        }
+
+        private void CheckCollateral(int height)
+        {
+            foreach (IServiceNode serviceNode in this.serviceNodeManager.GetServiceNodes())
+            {
+                try
+                {
+                    Money serverCollateralBalance =
+                        this.addressIndexer.GetAddressBalance(serviceNode.RegistrationRecord.Token.ServerId, 1);
+
+                    this.logger.LogDebug("Collateral balance for server " + serviceNode.RegistrationRecord.Token.ServerId + " is " +
+                                         serverCollateralBalance.ToString() + ", original registration height " +
+                                         serviceNode.RegistrationRecord.BlockReceived + ", current height " + height);
+
+                    if ((serverCollateralBalance.ToUnit(MoneyUnit.BTC) < this.network.Consensus.ServiceNodeCollateralThreshold) &&
+                        ((height - serviceNode.RegistrationRecord.BlockReceived) > this.network.Consensus.ServiceNodeCollateralBlockPeriod))
+                    {
+                        // Remove server registrations as funding has not been performed within block count,
+                        // or funds have been removed from the collateral address subsequent to the
+                        // registration being performed
+                        this.logger.LogDebug("Insufficient collateral within window period for server: " + serviceNode.RegistrationRecord.Token.ServerId);
+                        this.logger.LogDebug("Deleting registration records for server: " + serviceNode.RegistrationRecord.Token.ServerId);
+
+                        this.serviceNodeManager.RemoveServiceNode(serviceNode);
+                    }
+                }
+                catch (Exception e)
+                {
+                    this.logger.LogError("Error calculating server collateral balance: " + e);
                 }
             }
         }
