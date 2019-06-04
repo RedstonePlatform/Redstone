@@ -80,8 +80,7 @@ namespace Redstone.RedstoneFullNodeD
                     builder = builder
                        .UseBlockStore()
                        .UsePosConsensus()
-                       .UseMempool()
-                       .UseWallet();
+                       .UseMempool();
 
                     if (args.Contains("-cold"))
                     {
