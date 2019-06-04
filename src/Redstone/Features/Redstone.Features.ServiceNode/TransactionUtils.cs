@@ -40,7 +40,7 @@ namespace Redstone.Features.ServiceNode
                 Sign = true,
                 OverrideFeeRate = new FeeRate(registrationConfig.TxFeeValue),
                 WalletPassword = password,
-                ChangeAddress = hdAddress
+                //ChangeAddress = hdAddress
             };
             context.TransactionBuilder.CoinSelector = new DefaultCoinSelector
             {

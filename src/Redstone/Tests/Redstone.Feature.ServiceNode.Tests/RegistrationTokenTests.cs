@@ -1,6 +1,7 @@
 using System.Net;
 using NBitcoin;
 using Redstone.Core.Networks;
+using Redstone.Features.ServiceNode;
 using Redstone.ServiceNode.Models;
 using Redstone.ServiceNode.Utils;
 using Xunit;
@@ -10,14 +11,15 @@ namespace Redstone.Feature.ServiceNode.Tests
     public class RegistrationTokenTests
     {
         [Fact]
-        public void CanValidateRegistrationToken()
+         public void CanValidateRegistrationToken()
         {
             var rsa = new RsaKey();
             var ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.Main);
 
             var serverAddress = ecdsa.GetAddress().ToString();
             
-            var token = new RegistrationToken(255,
+            var token = new RegistrationToken(
+                (int)ServiceNodeProtocolVersion.INITIAL,
                 serverAddress,
                 IPAddress.Parse("127.0.0.1"),
                 IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),

@@ -37,7 +37,7 @@ namespace Redstone.Features.ServiceNode
 
         private readonly IBroadcasterManager broadcasterManager;
 
-        private readonly RegistrationStore registrationStore;
+        private readonly IServiceNodeManager serviceNodeManager;
 
         private readonly NodeSettings nodeSettings;
 
@@ -49,7 +49,7 @@ namespace Redstone.Features.ServiceNode
             IWalletTransactionHandler walletTransactionHandler,
             Network network,
             IBroadcasterManager broadcasterManager,
-            RegistrationStore registrationStore,
+            IServiceNodeManager serviceNodeManager,
             NodeSettings nodeSettings,
             ServiceNodeSettings serviceNodeSettings)
         {
@@ -58,7 +58,7 @@ namespace Redstone.Features.ServiceNode
             this.network = network;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.broadcasterManager = broadcasterManager;
-            this.registrationStore = registrationStore;
+            this.serviceNodeManager = serviceNodeManager;
             this.nodeSettings = nodeSettings;
             this.serviceNodeSettings = serviceNodeSettings;
         }
@@ -68,14 +68,14 @@ namespace Redstone.Features.ServiceNode
         {
             try
             {
-                List<RegistrationRecord> registrationRecords = this.registrationStore.GetAll();
-                IEnumerable<RegistrationModel> models = registrationRecords.Select(m => new RegistrationModel
+                List<IServiceNode> serviceNodes = this.serviceNodeManager.GetServiceNodes();
+                IEnumerable<RegistrationModel> models = serviceNodes.Select(m => new RegistrationModel
                 {
-                    ServerId = m.Token.ServerId,
-                    BlockReceived = m.BlockReceived,
-                    RecordTimestamp = m.RecordTimestamp,
-                    RecordTxHex = m.RecordTxHex,
-                    RecordTxId = m.RecordTxId
+                    ServerId = m.RegistrationRecord.Token.ServerId,
+                    BlockReceived = m.RegistrationRecord.BlockReceived,
+                    RecordTimestamp = m.RegistrationRecord.RecordTimestamp,
+                    RecordTxHex = m.RegistrationRecord.RecordTxHex,
+                    RecordTxId = m.RegistrationRecord.RecordTxId
                 });
                 return this.Json(models);
             }

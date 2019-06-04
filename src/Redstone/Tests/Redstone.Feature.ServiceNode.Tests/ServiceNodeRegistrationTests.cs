@@ -28,9 +28,9 @@ namespace Redstone.Feature.ServiceNode.Tests
         private CoreNode watchingNode;
         private IWalletTransactionHandler walletTransactionHandler;
         private IWalletManager walletManager;
-        private ServiceNodeManager serviceNodeManager;
+        private IServiceNodeManager serviceNodeManager;
         private IAddressIndexer addressIndexer;
-        private ServiceNodeManager watchingServiceNodeManager;
+        private IServiceNodeManager watchingServiceNodeManager;
         private IAddressIndexer watchingAddressIndexer;
         private BitcoinSecret serverSecret;
         private readonly Money collateral;
@@ -73,23 +73,24 @@ namespace Redstone.Feature.ServiceNode.Tests
 
                 // Seed 
                 MineConnectAndSync(this.maturity + 1);
+                AssertNodeCountAndBalance(0, new Money(0, MoneyUnit.BTC));
 
                 // Register
                 CreateRegistrationTransactionAndBroadcast();
                 MineConnectAndSync();
-                AssertStoreAndBalance(1, new Money(0, MoneyUnit.BTC));
+                AssertNodeCountAndBalance(1, new Money(0, MoneyUnit.BTC));
 
                 // Pay Collateral
                 CreateTransactionAndBroadcast(this.collateral, this.serverSecret);
                 MineConnectAndSync();
-                AssertStoreAndBalance(1, this.collateral);
+                AssertNodeCountAndBalance(1, this.collateral);
 
                 // Transactions up to collateral block period + 1
                 for (int i = 0; i < this.network.Consensus.ServiceNodeCollateralBlockPeriod; i++)
                 {
                     BuildTransactionAndBroadcast(new Money(6 + i, MoneyUnit.BTC));
                     MineConnectAndSync();
-                    AssertStoreAndBalance(1, this.collateral);
+                    AssertNodeCountAndBalance(1, this.collateral);
                 }
             }
         }
@@ -103,28 +104,31 @@ namespace Redstone.Feature.ServiceNode.Tests
 
                 // Seed 
                 MineConnectAndSync(this.maturity + 1);
+                AssertNodeCountAndBalance(0, new Money(0, MoneyUnit.BTC));
 
                 // Register
                 CreateRegistrationTransactionAndBroadcast();
                 MineConnectAndSync();
-                AssertStoreAndBalance(1, new Money(0, MoneyUnit.BTC));
+                AssertNodeCountAndBalance(1, new Money(0, MoneyUnit.BTC));
+
+                Money collateral = this.collateral - 1;
 
                 // Pay Collateral
-                CreateTransactionAndBroadcast(this.collateral - 1, this.serverSecret);
+                CreateTransactionAndBroadcast(collateral, this.serverSecret);
                 MineConnectAndSync();
-                AssertStoreAndBalance(1, this.collateral);
+                AssertNodeCountAndBalance(1, collateral);
 
                 // Transactions up to collateral block period
                 for (int i = 0; i < this.network.Consensus.ServiceNodeCollateralBlockPeriod - 1; i++)
                 {
                     BuildTransactionAndBroadcast(new Money(6 + i, MoneyUnit.BTC));
                     MineConnectAndSync();
-                    AssertStoreAndBalance(1, this.collateral);
+                    AssertNodeCountAndBalance(1, collateral);
                 }
 
                 BuildTransactionAndBroadcast(new Money(5, MoneyUnit.BTC));
                 MineConnectAndSync();
-                AssertStoreAndBalance(0, this.collateral);
+                AssertNodeCountAndBalance(0, collateral);
             }
         }
 
@@ -138,10 +142,10 @@ namespace Redstone.Feature.ServiceNode.Tests
             this.walletTransactionHandler = this.node.FullNode.NodeService<IWalletTransactionHandler>();
             this.walletManager = this.node.FullNode.NodeService<IWalletManager>();
 
-            this.serviceNodeManager = this.node.FullNode.NodeService<ServiceNodeManager>();
+            this.serviceNodeManager = this.node.FullNode.NodeService<IServiceNodeManager>();
             this.addressIndexer = this.node.FullNode.NodeService<IAddressIndexer>();
 
-            this.watchingServiceNodeManager = this.watchingNode.FullNode.NodeService<ServiceNodeManager>();
+            this.watchingServiceNodeManager = this.watchingNode.FullNode.NodeService<IServiceNodeManager>();
             this.watchingAddressIndexer = this.watchingNode.FullNode.NodeService<IAddressIndexer>();
 
             this.serverSecret = this.GetWalletPrivateKeyForServer();
@@ -167,23 +171,26 @@ namespace Redstone.Feature.ServiceNode.Tests
             TestHelper.ConnectAndSync(this.node, this.watchingNode);
         }
 
-        private void AssertStoreAndBalance(int requiredStoreCount, Money requiredBalance)
+        private void AssertNodeCountAndBalance(int expectedNodeCount, Money expectedBalance)
         {
-            Money balance = this.addressIndexer.GetAddressBalance(this.serverSecret.GetAddress().ToString());
+            Money balance = this.addressIndexer.GetAddressBalance(this.serverSecret.GetAddress().ToString()) ?? 0;
             List<IServiceNode> nodes = this.serviceNodeManager.GetServiceNodes();
 
-            Money watchingBalance = this.watchingAddressIndexer.GetAddressBalance(this.serverSecret.GetAddress().ToString());
+            Money watchingBalance = this.watchingAddressIndexer.GetAddressBalance(this.serverSecret.GetAddress().ToString()) ?? 0;
             List<IServiceNode> watchingNodes = this.watchingServiceNodeManager.GetServiceNodes();
 
-            this.output.WriteLine($"Required {requiredBalance?.ToUnit(MoneyUnit.BTC)} Balance: {balance?.ToUnit(MoneyUnit.BTC)}");
-            this.output.WriteLine($"Required {requiredBalance?.ToUnit(MoneyUnit.BTC)} WatchingBalance: {watchingBalance?.ToUnit(MoneyUnit.BTC)}");
+            this.output.WriteLine($"Expected {expectedBalance?.ToUnit(MoneyUnit.BTC)} | Balance: {balance?.ToUnit(MoneyUnit.BTC)}");
+            this.output.WriteLine($"Expected {expectedBalance?.ToUnit(MoneyUnit.BTC)} | WatchingBalance: {watchingBalance?.ToUnit(MoneyUnit.BTC)}");
 
-            this.output.WriteLine($"Required {requiredStoreCount} StoreCount {nodes.Count}");
-            this.output.WriteLine($"Required {requiredStoreCount} StoreCount {watchingNodes.Count}");
-            //Assert.Equal(requiredBalance, balance);
-            //Assert.Equal(requiredBalance, watchingBalance);
-            //Assert.Equal(requiredStoreCount, records.Count);
-            //Assert.Equal(requiredStoreCount, watchingRecords.Count);
+            this.output.WriteLine($"Expected {expectedNodeCount} | Actual StoreCount {nodes.Count}");
+            this.output.WriteLine($"Expected {expectedNodeCount} | Actual StoreCount {watchingNodes.Count}");
+
+            this.output.WriteLine("-------------------------------------------------------------------");
+
+            Assert.Equal(expectedBalance, balance);
+            Assert.Equal(expectedBalance, watchingBalance);
+            Assert.Equal(expectedNodeCount, nodes.Count);
+            Assert.Equal(expectedNodeCount, watchingNodes.Count);
         }
 
         private void CreateTransactionAndBroadcast(Money amount, BitcoinSecret dest = null)

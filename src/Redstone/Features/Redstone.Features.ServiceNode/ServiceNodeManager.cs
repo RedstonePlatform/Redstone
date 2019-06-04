@@ -190,6 +190,10 @@ namespace Redstone.Features.ServiceNode
         /// <summary>Loads saved collection of service nodes from the database.</summary>
         protected abstract void LoadServiceNodes();
 
+        // Default initial sysc height
+        //private const int SyncHeightMain = 0;
+        //private const int SyncHeightTest = 0;
+        //private const int SyncHeightRegTest = 0;
 
         //private void RevertRegistrations()
         //{

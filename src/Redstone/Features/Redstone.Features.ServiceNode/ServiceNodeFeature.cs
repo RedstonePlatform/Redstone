@@ -17,15 +17,10 @@ namespace Redstone.Features.ServiceNode
 {
     public class ServiceNodeFeature : FullNodeFeature
     {
-        // Default initial sysc height
-        private const int SyncHeightMain = 0;
-        private const int SyncHeightTest = 0;
-        private const int SyncHeightRegTest = 0;
-
         private readonly ILogger logger;
         private readonly IWalletSyncManager walletSyncManager;
-        private readonly IServiceNodeRegistrationChecker serviceNodeRegistrationChecker;
         private readonly IServiceNodeManager serviceNodeManager;
+        private readonly IServiceNodeRegistrationChecker serviceNodeRegistrationChecker;
         private readonly IServiceNodeCollateralChecker serviceNodeCollateralChecker;
 
         private readonly Network network;
@@ -33,8 +28,8 @@ namespace Redstone.Features.ServiceNode
         public ServiceNodeFeature(ILoggerFactory loggerFactory,
             NodeSettings nodeSettings,
             IWalletSyncManager walletSyncManager,
-            IServiceNodeRegistrationChecker serviceNodeRegistrationChecker,
             IServiceNodeManager registrationManager,
+            IServiceNodeRegistrationChecker serviceNodeRegistrationChecker,
             IServiceNodeCollateralChecker serviceNodeCollateralChecker)
         {
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
@@ -91,9 +86,9 @@ namespace Redstone.Features.ServiceNode
                     .DependOn<TransactionNotificationFeature>()
                     .FeatureServices(services =>
                     {
-                        services.AddSingleton<ServiceNodeManager>();
-                        services.AddSingleton<ServiceNodeRegistrationChecker>();
-                        services.AddSingleton<ServiceNodeCollateralChecker>();
+                        services.AddSingleton<IServiceNodeManager, ServiceNodeManager>();
+                        services.AddSingleton<IServiceNodeRegistrationChecker, ServiceNodeRegistrationChecker>();
+                        services.AddSingleton<IServiceNodeCollateralChecker, ServiceNodeCollateralChecker>();
                         services.AddSingleton<ServiceNodeController>();
                         services.AddSingleton<ServiceNodeSettings>();
                     });
