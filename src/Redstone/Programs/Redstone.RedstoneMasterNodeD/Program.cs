@@ -78,11 +78,9 @@ namespace Redstone.RedstoneServiceNodeD
                     builder = builder
                        .UseBlockStore()
                        .UsePosConsensus()
-                       .UseMempool();
-
-                    builder = args.Contains("-cold") ? builder.UseColdStakingWallet() : builder.UseWallet();
-
-                    builder = builder.AddPowPosMining()
+                       .UseMempool()
+                       .UseColdStakingWallet()
+                       .AddPowPosMining()
                        .UseApi()
                        .UseWatchOnlyWallet()
                        .UseBlockNotification()

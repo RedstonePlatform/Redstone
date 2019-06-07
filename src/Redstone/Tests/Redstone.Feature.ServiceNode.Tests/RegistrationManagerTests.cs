@@ -2,7 +2,7 @@ using System;
 using System.Net;
 using NBitcoin;
 using Redstone.Core.Networks;
-using Redstone.Features.ServiceNode;
+using Redstone.ServiceNode;
 using Redstone.ServiceNode.Events;
 using Redstone.ServiceNode.Models;
 using Redstone.ServiceNode.Utils;

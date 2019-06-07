@@ -50,6 +50,26 @@ namespace NBitcoin
         decimal PosRewardReductionPercentage { get; }
 
         /// <summary>
+        /// Percentage of POS reward payable to the minter
+        /// </summary>
+        decimal PosRewardMinter { get; }
+
+        /// <summary>
+        /// Percentage of POS reward payable to the selected service node
+        /// </summary>
+        decimal PosRewardServiceNode { get; }
+
+        /// <summary>
+        /// Percentage of POS reward payable to the foundation
+        /// </summary>
+        decimal PosRewardFoundation { get; }
+
+        /// <summary>
+        /// Address to pay the reward foundation to
+        /// </summary>
+        string PosRewardFoundationAddress { get; }
+
+        /// <summary>
         /// The minimum amount in XRD required to remain in the service node service address in order for the service node to
         /// remain valid
         /// </summary>

@@ -10,7 +10,7 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Utilities;
 
-namespace Redstone.Features.ServiceNode
+namespace Redstone.ServiceNode
 {
     public interface IServiceNodeManager
     {
@@ -69,13 +69,13 @@ namespace Redstone.Features.ServiceNode
             this.KeyValueRepo = Guard.NotNull(keyValueRepo, nameof(keyValueRepo));
             this.signals = Guard.NotNull(signals, nameof(signals));
 
-            this.Logger = loggerFactory.CreateLogger(this.GetType().FullName);
+            this.Logger = loggerFactory.CreateLogger(GetType().FullName);
             this.locker = new object();
         }
 
         public virtual void Initialize()
         {
-            this.LoadServiceNodes();
+            LoadServiceNodes();
 
             // If there are no registrations then revert back to the block height of when the service nodes were set-up.
             //if (registrationRecords.Count == 0)
@@ -86,7 +86,7 @@ namespace Redstone.Features.ServiceNode
             if (this.ServiceNodes == null)
             {
                 this.ServiceNodes = new List<IServiceNode>();
-                this.SaveServiceNodes();
+                SaveServiceNodes();
             }
 
             this.Logger.LogInformation("Network contains {0} service nodes. Their public keys are: {1}",
@@ -96,7 +96,7 @@ namespace Redstone.Features.ServiceNode
             Key key = new KeyTool(this.settings.DataFolder).LoadPrivateKey();
 
             this.CurrentServiceNodeKey = key;
-            this.SetIsServiceNode();
+            SetIsServiceNode();
 
             if (this.CurrentServiceNodeKey == null)
             {
@@ -157,8 +157,8 @@ namespace Redstone.Features.ServiceNode
 
                 this.ServiceNodes.Add(serviceNode);
 
-                this.SaveServiceNodes();
-                this.SetIsServiceNode();
+                SaveServiceNodes();
+                SetIsServiceNode();
 
                 this.Logger.LogInformation("Federation member '{0}' was added!", serviceNode);
 
@@ -177,8 +177,8 @@ namespace Redstone.Features.ServiceNode
             {
                 this.ServiceNodes.Remove(serviceNode);
 
-                this.SaveServiceNodes();
-                this.SetIsServiceNode();
+                SaveServiceNodes();
+                SetIsServiceNode();
 
                 this.Logger.LogInformation("Federation member '{0}' was removed!", serviceNode);
                 this.signals.Publish(new ServiceNodeRemoved(serviceNode));
@@ -242,13 +242,13 @@ namespace Redstone.Features.ServiceNode
 
         protected override void SaveServiceNodes()
         {
-            this.KeyValueRepo.SaveValueJson(ServiceNodesKey, this.GetServiceNodes());
+            this.KeyValueRepo.SaveValueJson(ServiceNodesKey, GetServiceNodes());
         }
 
         /// <inheritdoc />
         protected override void LoadServiceNodes()
         {
-            this.SetServiceNodes(this.KeyValueRepo.LoadValueJson<List<IServiceNode>>(ServiceNodesKey));
+            SetServiceNodes(this.KeyValueRepo.LoadValueJson<List<IServiceNode>>(ServiceNodesKey));
 
             if (this.ServiceNodes == null)
             {

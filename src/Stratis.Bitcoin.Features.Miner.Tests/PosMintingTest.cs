@@ -7,6 +7,7 @@ using FluentAssertions;
 using Moq;
 using NBitcoin;
 using NBitcoin.BitcoinCore;
+using Redstone.ServiceNode;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Configuration;
@@ -49,6 +50,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
         private readonly Mock<IWalletManager> walletManager;
         private readonly Mock<IAsyncProvider> asyncProvider;
         private readonly Mock<ITimeSyncBehaviorState> timeSyncBehaviorState;
+        private readonly Mock<IServiceNodeManager> serviceNodeManager;
         private readonly CancellationTokenSource cancellationTokenSource;
 
         public PosMintingTest()
@@ -71,6 +73,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
             this.walletManager = new Mock<IWalletManager>();
             this.asyncProvider = new Mock<IAsyncProvider>();
             this.timeSyncBehaviorState = new Mock<ITimeSyncBehaviorState>();
+            this.serviceNodeManager = new Mock<IServiceNodeManager>();
 
             this.cancellationTokenSource = new CancellationTokenSource();
             this.nodeLifetime.Setup(n => n.ApplicationStopping).Returns(this.cancellationTokenSource.Token);
@@ -625,7 +628,8 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
                 this.asyncProvider.Object,
                 this.timeSyncBehaviorState.Object,
                 this.LoggerFactory.Object,
-                this.minerSettings);
+                this.minerSettings,
+                this.serviceNodeManager.Object);
         }
 
         private static ChainedHeader CreateChainedBlockWithNBits(Network network, uint bits)

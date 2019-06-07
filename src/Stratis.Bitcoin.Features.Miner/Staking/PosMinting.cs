@@ -8,6 +8,7 @@ using NBitcoin;
 using NBitcoin.BuilderExtensions;
 using NBitcoin.Crypto;
 using NBitcoin.Protocol;
+using Redstone.ServiceNode;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Consensus;
@@ -132,6 +133,7 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
 
         /// <summary>Factory for creating loggers.</summary>
         private readonly ILoggerFactory loggerFactory;
+        private readonly IServiceNodeManager serviceNodeManager;
 
         /// <summary>Instance logger.</summary>
         private readonly ILogger logger;
@@ -232,7 +234,8 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
             IAsyncProvider asyncProvider,
             ITimeSyncBehaviorState timeSyncBehaviorState,
             ILoggerFactory loggerFactory,
-            MinerSettings minerSettings)
+            MinerSettings minerSettings,
+            IServiceNodeManager serviceNodeManager)
         {
             this.blockProvider = blockProvider;
             this.consensusManager = consensusManager;
@@ -250,6 +253,7 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
             this.walletManager = walletManager;
             this.timeSyncBehaviorState = timeSyncBehaviorState;
             this.loggerFactory = loggerFactory;
+            this.serviceNodeManager = serviceNodeManager;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
 
             this.minerSleep = 500; // GetArg("-minersleep", 500);
@@ -693,6 +697,11 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
                 this.logger.LogTrace("(-)[NO_REWARD]:false");
                 return false;
             }
+
+            // Determine reward splits
+            var minterReward = reward * this.network.Consensus.PosRewardMinter;
+            var serviceNodeReward = reward * this.network.Consensus.PosRewardMinter;
+            var foundationReward = reward * this.network.Consensus.PosRewardMinter;
 
             // Input to coinstake transaction.
             UtxoStakeDescription coinstakeInput = workersResult.KernelCoin;

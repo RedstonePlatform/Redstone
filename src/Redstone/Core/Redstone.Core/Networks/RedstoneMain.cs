@@ -96,6 +96,9 @@ namespace Redstone.Core.Networks
                 posRewardReduction: true,
                 posRewardReductionBlockInterval: 525600,
                 posRewardReductionPercentage: 7.5m,
+                posRewardMinter: .45m,
+                posRewardServiceNode: .45m,
+                posRewardFoundation: .1m,
                 serviceNodeCollateralThreshold: 1500,
                 serviceNodeCollateralBlockPeriod: 30
             );

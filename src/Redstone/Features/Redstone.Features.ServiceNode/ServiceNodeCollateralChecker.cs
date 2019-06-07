@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Redstone.ServiceNode;
 using Redstone.ServiceNode.Events;
 using Redstone.ServiceNode.Models;
 using Stratis.Bitcoin.EventBus;

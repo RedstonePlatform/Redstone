@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Redstone.ServiceNode;
 using Redstone.ServiceNode.Models;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.EventBus;
@@ -106,7 +107,7 @@ namespace Redstone.Features.ServiceNode
                 try
                 {
                     Money serverCollateralBalance =
-                        this.addressIndexer.GetAddressBalance(serviceNode.RegistrationRecord.Token.ServerId, 1);
+                        this.addressIndexer.GetAddressBalance(serviceNode.RegistrationRecord.Token.ServerId, 1) ?? 0;
 
                     this.logger.LogDebug("Collateral balance for server " + serviceNode.RegistrationRecord.Token.ServerId + " is " +
                                          serverCollateralBalance.ToString() + ", original registration height " +
