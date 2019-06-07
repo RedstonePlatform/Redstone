@@ -21,7 +21,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         static GenerateCoinsFastDateTimeProvider()
         {
             adjustedTimeOffset = TimeSpan.Zero;
-            startFrom = new DateTime(2018, 1, 1);
+            startFrom = new DateTime(2018, 8, 1);
         }
 
         public GenerateCoinsFastDateTimeProvider(ISignals signals)

@@ -6,6 +6,7 @@ using NBitcoin.Protocol;
 using Stratis.Bitcoin.Features.Wallet;
 using Redstone.Core.Networks.Deployments;
 using System.Net;
+using Redstone.Core.Deployments;
 
 namespace Redstone.Core.Networks
 {

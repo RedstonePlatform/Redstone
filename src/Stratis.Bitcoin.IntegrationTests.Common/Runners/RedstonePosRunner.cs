@@ -28,7 +28,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.Runners
 
         public override void BuildNode()
         {
-            var settings = new NodeSettings(this.Network, ProtocolVersion.PROVEN_HEADER_VERSION, this.Agent, args: new string[] { "-txIndex=1", "-addressIndex=1", "-conf=redstone.conf", "-datadir=" + this.DataFolder });
+            var settings = new NodeSettings(this.Network, ProtocolVersion.PROVEN_HEADER_VERSION, this.Agent, args: new string[] { "-savetrxhex=1", "-txIndex=1", "-addressIndex=1", "-conf=redstone.conf", "-datadir=" + this.DataFolder });
 
             var builder = new FullNodeBuilder()
                 .UseNodeSettings(settings)
@@ -54,12 +54,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.Runners
                 builder.RemoveImplementation<PeerConnectorDiscovery>();
                 builder.ReplaceService<IPeerDiscovery, BaseFeature>(new PeerDiscoveryDisabled());
             }
-
-            //var storeSettings = new StoreSettings(NodeSettings.Default(this.Network));
-            //storeSettings.AddressIndex = true;
-            //storeSettings.TxIndex = true;
-
-            //builder.ReplaceService
 
             this.FullNode = (FullNode)builder.Build();
         }

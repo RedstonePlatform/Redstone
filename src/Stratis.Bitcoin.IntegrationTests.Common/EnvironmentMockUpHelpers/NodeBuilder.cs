@@ -166,9 +166,9 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         /// </para>
         /// </summary>
         /// <returns>The constructed PoS node.</returns>
-        public CoreNode CreateRedstonePosNode(Network network, string agent = "Redstone")
+        public CoreNode CreateRedstonePosNode(Network network, string agent = "Redstone", NodeConfigParameters configParameters = null)
         {
-            return CreateNode(new RedstonePosRunner(this.GetNextDataFolderName(), network, agent), "redstone.conf");
+            return CreateNode(new RedstonePosRunner(this.GetNextDataFolderName(), network, agent), "redstone.conf", configParameters: configParameters);
         }
 
         public CoreNode CloneStratisNode(CoreNode cloneNode, string agent = "StratisBitcoin")

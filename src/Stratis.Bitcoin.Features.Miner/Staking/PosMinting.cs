@@ -234,8 +234,9 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
             IAsyncProvider asyncProvider,
             ITimeSyncBehaviorState timeSyncBehaviorState,
             ILoggerFactory loggerFactory,
-            MinerSettings minerSettings,
-            IServiceNodeManager serviceNodeManager)
+            MinerSettings minerSettings
+            //,IServiceNodeManager serviceNodeManager
+            )
         {
             this.blockProvider = blockProvider;
             this.consensusManager = consensusManager;
@@ -253,7 +254,7 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
             this.walletManager = walletManager;
             this.timeSyncBehaviorState = timeSyncBehaviorState;
             this.loggerFactory = loggerFactory;
-            this.serviceNodeManager = serviceNodeManager;
+            //this.serviceNodeManager = serviceNodeManager;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
 
             this.minerSleep = 500; // GetArg("-minersleep", 500);

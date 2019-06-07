@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using NBitcoin;
 using NBitcoin.BouncyCastle.Math;
 using NBitcoin.Protocol;
+using Redstone.Core.Deployments;
 using Stratis.Bitcoin.Features.Wallet;
 using Redstone.Core.Networks.Deployments;
 

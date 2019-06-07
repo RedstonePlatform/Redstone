@@ -4,6 +4,7 @@ using NBitcoin.Protocol;
 using Redstone.Core.Networks.Deployments;
 using NBitcoin;
 using NBitcoin.BouncyCastle.Math;
+using Redstone.Core.Deployments;
 using Stratis.Bitcoin.Features.Wallet;
 
 namespace Redstone.Core.Networks
@@ -62,7 +63,11 @@ namespace Redstone.Core.Networks
                 [BuriedDeployments.BIP66] = 0
             };
 
-            var bip9Deployments = new RedstoneBIP9Deployments();
+            var bip9Deployments = new RedstoneBIP9Deployments()
+            {
+                // Always active on StratisRegTest.
+                [RedstoneBIP9Deployments.ColdStaking] = new BIP9DeploymentsParameters(1, BIP9DeploymentsParameters.AlwaysActive, 999999999)
+            };
 
             this.Consensus = new Consensus(
                 consensusFactory: consensusFactory,
