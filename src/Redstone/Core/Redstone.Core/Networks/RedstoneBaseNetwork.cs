@@ -1,10 +1,11 @@
 ﻿using NBitcoin;
 using NBitcoin.DataEncoders;
 using Redstone.Core.Policies;
+using Stratis.Bitcoin.Networks;
 
 namespace Redstone.Core.Networks
 {
-    public abstract class RedstoneBaseNetwork : Network
+    public abstract class RedstoneBaseNetwork : StratisMain
     {
         /// <summary> Redstone maximal value for the calculated time offset. If the value is over this limit, the time syncing feature will be switched off. </summary>
         public const int RedstoneMaxTimeOffsetSeconds = 25 * 60;

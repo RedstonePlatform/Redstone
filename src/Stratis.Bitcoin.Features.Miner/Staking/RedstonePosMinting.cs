@@ -8,6 +8,7 @@ using NBitcoin;
 using NBitcoin.BuilderExtensions;
 using NBitcoin.Crypto;
 using NBitcoin.Protocol;
+using Redstone.ServiceNode;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Consensus;
@@ -27,7 +28,7 @@ using Stratis.Bitcoin.Utilities;
 namespace Stratis.Bitcoin.Features.Miner.Staking
 {
     /// <summary>
-    /// <see cref="PosMinting"/> is used in order to generate new blocks. It involves a sort of lottery, similar to proof-of-work,
+    /// <see cref="RedstonePosMinting"/> is used in order to generate new blocks. It involves a sort of lottery, similar to proof-of-work,
     /// but the chances of winning this lottery is proportional to how many coins you are staking, not on hashing power.
     /// </summary>
     /// <remarks>
@@ -63,7 +64,7 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
     /// and the new value depends on the kernel, it is hard to predict its value in the future.
     /// </para>
     /// </remarks>
-    public class PosMinting : IPosMinting
+    public class RedstonePosMinting : IPosMinting
     {
 
         /// <summary>
@@ -132,6 +133,7 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
 
         /// <summary>Factory for creating loggers.</summary>
         private readonly ILoggerFactory loggerFactory;
+        private readonly IServiceNodeManager serviceNodeManager;
 
         /// <summary>Instance logger.</summary>
         private readonly ILogger logger;
@@ -215,8 +217,7 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
         /// <summary>State of time synchronization feature that stores collected data samples.</summary>
         private readonly ITimeSyncBehaviorState timeSyncBehaviorState;
 
-        // RS-Mergeflag
-        public PosMinting(
+        public RedstonePosMinting(
             IBlockProvider blockProvider,
             IConsensusManager consensusManager,
             ChainIndexer chainIndexer,
@@ -233,7 +234,8 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
             IAsyncProvider asyncProvider,
             ITimeSyncBehaviorState timeSyncBehaviorState,
             ILoggerFactory loggerFactory,
-            MinerSettings minerSettings)
+            MinerSettings minerSettings,
+            IServiceNodeManager serviceNodeManager)
         {
             this.blockProvider = blockProvider;
             this.consensusManager = consensusManager;
@@ -251,6 +253,7 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
             this.walletManager = walletManager;
             this.timeSyncBehaviorState = timeSyncBehaviorState;
             this.loggerFactory = loggerFactory;
+            this.serviceNodeManager = serviceNodeManager;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
 
             this.minerSleep = 500; // GetArg("-minersleep", 500);
@@ -694,6 +697,11 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
                 this.logger.LogTrace("(-)[NO_REWARD]:false");
                 return false;
             }
+
+            // Determine reward splits
+            var minterReward = reward * this.network.Consensus.PosRewardMinter;
+            var serviceNodeReward = reward * this.network.Consensus.PosRewardMinter;
+            var foundationReward = reward * this.network.Consensus.PosRewardMinter;
 
             // Input to coinstake transaction.
             UtxoStakeDescription coinstakeInput = workersResult.KernelCoin;

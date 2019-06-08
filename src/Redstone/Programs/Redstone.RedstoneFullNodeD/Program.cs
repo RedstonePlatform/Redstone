@@ -81,18 +81,9 @@ namespace Redstone.RedstoneFullNodeD
                        .UseBlockStore()
                        .UsePosConsensus()
                        .UseMempool()
-                       .UseWallet();
-
-                    if (args.Contains("-cold"))
-                    {
-                        builder = builder.UseColdStakingWallet();
-                    }
-                    else
-                    {
-                        builder = builder.UseWallet();
-                    }
-
-                    builder = builder.AddPowPosMining()
+                       .UseWallet()
+                       .UseColdStakingWallet()
+                       .AddRedstoneMining()
                        .UseApi()
                        .UseApps()
                        .AddRPC();

@@ -628,8 +628,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
                 this.asyncProvider.Object,
                 this.timeSyncBehaviorState.Object,
                 this.LoggerFactory.Object,
-                this.minerSettings,
-                this.serviceNodeManager.Object);
+                this.minerSettings);
         }
 
         private static ChainedHeader CreateChainedBlockWithNBits(Network network, uint bits)

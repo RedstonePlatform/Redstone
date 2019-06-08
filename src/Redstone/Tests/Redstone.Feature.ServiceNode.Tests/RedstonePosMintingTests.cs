@@ -9,12 +9,13 @@ using Stratis.Bitcoin.Features.Miner.Staking;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 
 namespace Redstone.Feature.ServiceNode.Tests
 {
-    public class PosMintingTests
+    public class RedstonePosMintingTests
     {
         private readonly HashSet<uint256> transactionsBeforeStaking = new HashSet<uint256>();
         private readonly ConcurrentDictionary<uint256, TransactionData> transactionLookup = new ConcurrentDictionary<uint256, TransactionData>();
@@ -25,7 +26,8 @@ namespace Redstone.Feature.ServiceNode.Tests
             using (var builder = NodeBuilder.Create(this))
             {
                 var configParameters = new NodeConfigParameters { { "savetrxhex", "true" } };
-				var network = RedstoneNetworks.RegTest;
+                //var network = new StratisRegTest();
+                var network = RedstoneNetworks.RegTest;
 
                 var minerA = builder.CreateRedstonePosNode(network, "stake-1-minerA", configParameters: configParameters).OverrideDateTimeProvider().WithWallet().Start();
 
@@ -65,7 +67,7 @@ namespace Redstone.Feature.ServiceNode.Tests
                         }
                     }
 
-                    return false;
+                   return false;
                 });
 
                 // build a dictionary of coinstake tx's indexed by tx id.

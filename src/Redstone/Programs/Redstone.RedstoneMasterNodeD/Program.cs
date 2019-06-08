@@ -80,7 +80,7 @@ namespace Redstone.RedstoneServiceNodeD
                        .UsePosConsensus()
                        .UseMempool()
                        .UseColdStakingWallet()
-                       .AddPowPosMining()
+                       .AddRedstoneMining()
                        .UseApi()
                        .UseWatchOnlyWallet()
                        .UseBlockNotification()
