@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
@@ -9,16 +10,50 @@ using Stratis.Bitcoin.Features.Miner.Staking;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Redstone.Feature.ServiceNode.Tests
 {
     public class RedstonePosMintingTests
     {
+        private readonly ITestOutputHelper output;
         private readonly HashSet<uint256> transactionsBeforeStaking = new HashSet<uint256>();
         private readonly ConcurrentDictionary<uint256, TransactionData> transactionLookup = new ConcurrentDictionary<uint256, TransactionData>();
+
+
+        public RedstonePosMintingTests(ITestOutputHelper output)
+        {
+            this.output = output;
+        }
+
+
+        [Fact]
+        public void KeyTest()
+        {
+            Key privateKey = new Key();
+            PubKey publicKey = privateKey.PubKey;
+            this.output.WriteLine(publicKey.ToString());
+
+            this.output.WriteLine(string.Empty);
+            this.output.WriteLine(publicKey.GetAddress(RedstoneNetworks.Main).ToString());
+            this.output.WriteLine(publicKey.GetAddress(RedstoneNetworks.TestNet).ToString());
+
+            this.output.WriteLine(string.Empty);
+            this.output.WriteLine(publicKey.Hash.ToString());
+            this.output.WriteLine(publicKey.Hash.GetAddress(RedstoneNetworks.Main).ToString());
+            this.output.WriteLine(publicKey.Hash.GetAddress(RedstoneNetworks.TestNet).ToString());
+
+            this.output.WriteLine(string.Empty);
+            this.output.WriteLine(publicKey.Hash.GetAddress(RedstoneNetworks.Main).ScriptPubKey.ToString());
+            this.output.WriteLine(publicKey.Hash.GetAddress(RedstoneNetworks.TestNet).ScriptPubKey.ToString());
+
+            this.output.WriteLine(string.Empty);
+            this.output.WriteLine(publicKey.Hash.GetAddress(RedstoneNetworks.Main).ScriptPubKey.GetDestinationAddress(RedstoneNetworks.Main).ToString());
+            this.output.WriteLine(publicKey.Hash.GetAddress(RedstoneNetworks.TestNet).ScriptPubKey.GetDestinationAddress(RedstoneNetworks.TestNet).ToString());
+        }
+
 
         [Fact]
         public void MintingTest()
@@ -26,8 +61,8 @@ namespace Redstone.Feature.ServiceNode.Tests
             using (var builder = NodeBuilder.Create(this))
             {
                 var configParameters = new NodeConfigParameters { { "savetrxhex", "true" } };
-                //var network = new StratisRegTest();
-                var network = RedstoneNetworks.RegTest;
+
+                var network = new RedstoneRegTest();
 
                 var minerA = builder.CreateRedstonePosNode(network, "stake-1-minerA", configParameters: configParameters).OverrideDateTimeProvider().WithWallet().Start();
 
@@ -67,7 +102,7 @@ namespace Redstone.Feature.ServiceNode.Tests
                         }
                     }
 
-                   return false;
+                    return false;
                 });
 
                 // build a dictionary of coinstake tx's indexed by tx id.

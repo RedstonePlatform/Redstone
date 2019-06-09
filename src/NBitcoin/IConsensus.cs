@@ -52,17 +52,17 @@ namespace NBitcoin
         /// <summary>
         /// Percentage of POS reward payable to the minter
         /// </summary>
-        decimal PosRewardMinter { get; }
+        decimal PosRewardMinterPercent { get; }
 
         /// <summary>
         /// Percentage of POS reward payable to the selected service node
         /// </summary>
-        decimal PosRewardServiceNode { get; }
+        decimal PosRewardServiceNodePercent { get; }
 
         /// <summary>
         /// Percentage of POS reward payable to the foundation
         /// </summary>
-        decimal PosRewardFoundation { get; }
+        decimal PosRewardFoundationPercent { get; }
 
         /// <summary>
         /// Address to pay the reward foundation to

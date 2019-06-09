@@ -1,11 +1,10 @@
 ﻿using NBitcoin;
 using NBitcoin.DataEncoders;
 using Redstone.Core.Policies;
-using Stratis.Bitcoin.Networks;
 
 namespace Redstone.Core.Networks
 {
-    public abstract class RedstoneBaseNetwork : StratisMain
+    public abstract class RedstoneBaseNetwork : Network
     {
         /// <summary> Redstone maximal value for the calculated time offset. If the value is over this limit, the time syncing feature will be switched off. </summary>
         public const int RedstoneMaxTimeOffsetSeconds = 25 * 60;
@@ -18,6 +17,35 @@ namespace Redstone.Core.Networks
 
         /// <summary> The default name used for the Redstone configuration file. </summary>
         public const string RedstoneDefaultConfigFilename = "redstone.conf";
+
+        protected static BuriedDeploymentsArray BuriedDeployments
+        {
+            get
+            {
+                var buriedDeployments = new BuriedDeploymentsArray
+                {
+                    [NBitcoin.BuriedDeployments.BIP34] = 0,
+                    [NBitcoin.BuriedDeployments.BIP65] = 0,
+                    [NBitcoin.BuriedDeployments.BIP66] = 0
+                };
+                return buriedDeployments;
+            }
+        }
+
+        protected static PosConsensusOptions PosConsensusOptions
+        {
+            get
+            {
+                var consensusOptions = new PosConsensusOptions(
+                    maxBlockBaseSize: 1_000_000,
+                    maxStandardVersion: 2,
+                    maxStandardTxWeight: 100_000,
+                    maxBlockSigopsCost: 20_000,
+                    maxStandardTxSigopsCost: 20_000 / 5
+                );
+                return consensusOptions;
+            }
+        }
 
         protected void SetDefaults()
         {
@@ -33,11 +61,14 @@ namespace Redstone.Core.Networks
 
             this.GenesisVersion = 1;
             this.GenesisReward = Money.Zero;
-
-            var encoder = new Bech32Encoder("bc");
-            this.Bech32Encoders = new Bech32Encoder[2];
-            this.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS] = encoder;
-            this.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS] = encoder;
+			
+			this.Bech32Encoders = new Bech32Encoder[2];
+            // Bech32 is currently unsupported on Redstone - once supported uncomment lines below
+            //var encoder = new Bech32Encoder("bc");
+            //this.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS] = encoder;
+            //this.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS] = encoder;
+            this.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS] = null;
+            this.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS] = null;
 
             this.StandardScriptsRegistry = new RedstoneStandardScriptsRegistry();
         }

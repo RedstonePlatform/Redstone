@@ -29,13 +29,13 @@ namespace NBitcoin
         public int PosRewardReductionBlockInterval { get; }
 
         /// <inheritdoc />
-        public decimal PosRewardMinter { get; }
+        public decimal PosRewardMinterPercent { get; }
 
         /// <inheritdoc />
-        public decimal PosRewardServiceNode { get; }
+        public decimal PosRewardServiceNodePercent { get; }
 
         /// <inheritdoc />
-        public decimal PosRewardFoundation { get; }
+        public decimal PosRewardFoundationPercent { get; }
 
         /// <inheritdoc />
         public string PosRewardFoundationAddress { get; }
@@ -179,9 +179,9 @@ namespace NBitcoin
             this.ProofOfStakeReward = proofOfStakeReward;
             this.PosRewardReduction = posRewardReduction;
             this.PosRewardReductionBlockInterval = posRewardReductionBlockInterval;
-            this.PosRewardMinter = posRewardMinter;
-            this.PosRewardServiceNode = posRewardServiceNode;
-            this.PosRewardFoundation = posRewardFoundation;
+            this.PosRewardMinterPercent = posRewardMinter;
+            this.PosRewardServiceNodePercent = posRewardServiceNode;
+            this.PosRewardFoundationPercent = posRewardFoundation;
             this.PosRewardFoundationAddress = posRewardFoundationAddress;
             this.PosRewardReductionPercentage = posRewardReductionPercentage;
             this.ServiceNodeCollateralThreshold = serviceNodeCollateralThreshold;

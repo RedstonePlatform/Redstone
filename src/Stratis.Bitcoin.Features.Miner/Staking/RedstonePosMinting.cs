@@ -699,18 +699,30 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
             }
 
             // Determine reward splits
-            var minterReward = reward * this.network.Consensus.PosRewardMinter;
-            var serviceNodeReward = reward * this.network.Consensus.PosRewardMinter;
-            var foundationReward = reward * this.network.Consensus.PosRewardMinter;
+            long minterReward = (long) (reward * this.network.Consensus.PosRewardMinterPercent);
+            long serviceNodeReward = (long) (reward * this.network.Consensus.PosRewardServiceNodePercent);
+            long foundationReward = (long) (reward * this.network.Consensus.PosRewardFoundationPercent);
+
+            if (minterReward + serviceNodeReward + foundationReward != reward)
+            {
+                this.logger.LogTrace("(-)[REWARD_SPLIT_CALC_FAILED]:false");
+                return false;
+            }
 
             // Input to coinstake transaction.
             UtxoStakeDescription coinstakeInput = workersResult.KernelCoin;
 
             // Total amount of input values in coinstake transaction.
-            long coinstakeOutputValue = coinstakeInput.TxOut.Value + reward;
+            long coinstakeMinterOutputValue = coinstakeInput.TxOut.Value + minterReward;
 
             int eventuallyStakableUtxosCount = utxoStakeDescriptions.Count;
-            Transaction coinstakeTx = this.PrepareCoinStakeTransactions(chainTip.Height, coinstakeContext, coinstakeOutputValue, eventuallyStakableUtxosCount, ourWeight);
+            Transaction coinstakeTx = this.PrepareCoinStakeTransactions(chainTip.Height, coinstakeContext, coinstakeMinterOutputValue, eventuallyStakableUtxosCount, ourWeight);
+
+            if (!this.AddFoundationAndServiceNodeReward(coinstakeTx, serviceNodeReward, foundationReward))
+            {
+                this.logger.LogTrace("(-)[FOUNDATION_SN_REWARD_FAILED]:false");
+                return false;
+            }
 
             // Sign.
             if (!this.SignTransactionInput(coinstakeInput, coinstakeTx))
@@ -893,6 +905,30 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
                 // If kernel is found or error occurred, stop searching.
                 if (stopWork) break;
             }
+        }
+
+        /// <summary>
+        /// Adds foundation and service node reward to transaction
+        /// </summary>
+        /// <param name="transaction">Transaction being built.</param>
+        /// <returns><c>true</c> if the function succeeds, <c>false</c> otherwise.</returns>
+        private bool AddFoundationAndServiceNodeReward(Transaction transaction, long serviceNodeReward, long foundationReward)
+        {
+            bool res = false;
+            try
+            {
+                // TODO SN address
+                transaction.AddOutput(new TxOut(serviceNodeReward, BitcoinAddress.Create(this.network.Consensus.PosRewardFoundationAddress)));
+                transaction.AddOutput(new TxOut(foundationReward, BitcoinAddress.Create(this.network.Consensus.PosRewardFoundationAddress)));
+
+                res = true;
+            }
+            catch (Exception e)
+            {
+                this.logger.LogDebug("Exception occurred: {0}", e.ToString());
+            }
+
+            return res;
         }
 
         /// <summary>

@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using NBitcoin;
 using NBitcoin.BouncyCastle.Math;
 using NBitcoin.Protocol;
 using Stratis.Bitcoin.Features.Wallet;
-using Redstone.Core.Networks.Deployments;
-using System.Net;
 using Redstone.Core.Deployments;
 
 namespace Redstone.Core.Networks
@@ -44,41 +43,25 @@ namespace Redstone.Core.Networks
             this.GenesisNonce = 1349369;
             this.GenesisBits = powLimit;
 
-            CreateRedstoneGenesisBlock(consensusFactory);
+            this.CreateRedstoneGenesisBlock(consensusFactory);
 
             // TODO: remove when resetting chain
             this.Genesis.Header.Time = 1544474470;
             this.Genesis.Header.Nonce = 2433759;
             this.Genesis.Header.Bits = powLimit;
 
-            // Taken from StratisX.
-            var consensusOptions = new PosConsensusOptions(
-                maxBlockBaseSize: 1_000_000,
-                maxStandardVersion: 2,
-                maxStandardTxWeight: 100_000,
-                maxBlockSigopsCost: 20_000,
-                maxStandardTxSigopsCost: 20_000 / 5
-            );
-
-            var buriedDeployments = new BuriedDeploymentsArray
-            {
-                [BuriedDeployments.BIP34] = 0,
-                [BuriedDeployments.BIP65] = 0,
-                [BuriedDeployments.BIP66] = 0
-            };
-
             var bip9Deployments = new RedstoneBIP9Deployments();
 
             this.Consensus = new Consensus(
                 consensusFactory: consensusFactory,
-                consensusOptions: consensusOptions,
+                consensusOptions: PosConsensusOptions,
                 coinType: (int)CoinType.Redstone,
                 hashGenesisBlock: this.Genesis.GetHash(),
                 subsidyHalvingInterval: 210000,
                 majorityEnforceBlockUpgrade: 750,
                 majorityRejectBlockOutdated: 950,
                 majorityWindow: 1000,
-                buriedDeployments: buriedDeployments,
+                buriedDeployments: BuriedDeployments,
                 bip9Deployments: bip9Deployments,
                 bip34Hash: new uint256("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"),
                 ruleChangeActivationThreshold: 1916, // 95% of 2016

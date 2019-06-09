@@ -40,36 +40,20 @@ namespace Redstone.Core.Networks
             this.GenesisNonce = 1831645;
             this.GenesisBits = 0x1e0fffff;
 
-            CreateRedstoneGenesisBlock(consensusFactory);
-
-            // Taken from StratisX.
-            var consensusOptions = new PosConsensusOptions(
-                maxBlockBaseSize: 1_000_000,
-                maxStandardVersion: 2,
-                maxStandardTxWeight: 100_000,
-                maxBlockSigopsCost: 20_000,
-                maxStandardTxSigopsCost: 20_000 / 5
-            );
-
-            var buriedDeployments = new BuriedDeploymentsArray
-            {
-                [BuriedDeployments.BIP34] = 0,
-                [BuriedDeployments.BIP65] = 0,
-                [BuriedDeployments.BIP66] = 0
-            };
+            this.CreateRedstoneGenesisBlock(consensusFactory);
 
             var bip9Deployments = new RedstoneBIP9Deployments();
 
             this.Consensus = new Consensus(
                 consensusFactory: consensusFactory,
-                consensusOptions: consensusOptions,
+                consensusOptions: PosConsensusOptions,
                 coinType: (int)CoinType.Redstone,
                 hashGenesisBlock: this.Genesis.GetHash(),
                 subsidyHalvingInterval: 210000,
                 majorityEnforceBlockUpgrade: 750,
                 majorityRejectBlockOutdated: 950,
                 majorityWindow: 1000,
-                buriedDeployments: buriedDeployments,
+                buriedDeployments: BuriedDeployments,
                 bip9Deployments: bip9Deployments,
                 bip34Hash: new uint256("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"),
                 ruleChangeActivationThreshold: 1916, // 95% of 2016
