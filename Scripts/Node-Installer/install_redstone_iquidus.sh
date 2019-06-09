@@ -24,6 +24,8 @@ function setMainVars() {
 	COINRPCPORT=19057
 	COINAPIPORT=37222
 	DNSPORT=53
+	COIN="XRD"
+	RPCBIND='127.0.0.1'
 }
 
 function setTestVars() {
@@ -35,6 +37,8 @@ function setTestVars() {
 	COINRPCPORT=19157
 	COINAPIPORT=38222
 	DNSPORT=53
+	COIN="TXRD"
+	RPCBIND='127.0.0.1'
 }
 
 function setDNSVars() {
@@ -225,7 +229,7 @@ function configureWallet() {
     RPCUSER=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
     RPCPASS=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
     sudo mkdir -p ${COINCORE}
-    echo -e "externalip=${NODE_IP}\ntxindex=1\nlisten=1\ndaemon=1\nmaxconnections=64" > $COINCONFIG
+    echo -e "externalip=${NODE_IP}\ntxindex=1\nlisten=1\ndaemon=1\nmaxconnections=64\nserver=1\nrpcuser=${RPCUSER}\nrpcpassword=${RPCPASS}\nrpcbind=${RPCBIND}\nrpcport=${COINRPCPORT}\nrpcallowip=${RPCBIND}" > ${COINCONFIG}
     sudo mv ${COINCONFIG} ${COINCORE}
     echo -e "${NONE}${GREEN}* Done${NONE}";
 }
@@ -259,13 +263,92 @@ function installUnattendedUpgrades() {
     echo -e "${GREEN}* Done${NONE}";
 }
 
+installMongodDB() {
+    echo
+	echo -e "* Installing MongoDB. Please wait..."
+	sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4 &>> ${SCRIPT_LOGFILE}
+	if [[ -r /etc/os-release ]]; then
+	. /etc/os-release
+		if [[ "${VERSION_ID}" = "16.04" ]]; then
+			echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list &>> ${SCRIPT_LOGFILE}
+		fi
+		if [[ "${VERSION_ID}" = "18.04" ]]; then
+			echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list &>> ${SCRIPT_LOGFILE}
+		fi
+	fi
+	sudo apt-get update &>> ${SCRIPT_LOGFILE}
+	sudo apt-get install -y mongodb-org &>> ${SCRIPT_LOGFILE}
+	echo "mongodb-org hold" | sudo dpkg --set-selections &>> ${SCRIPT_LOGFILE}
+	echo "mongodb-org-server hold" | sudo dpkg --set-selections &>> ${SCRIPT_LOGFILE}
+	echo "mongodb-org-shell hold" | sudo dpkg --set-selections &>> ${SCRIPT_LOGFILE}
+	echo "mongodb-org-mongos hold" | sudo dpkg --set-selections &>> ${SCRIPT_LOGFILE}
+	echo "mongodb-org-tools hold" | sudo dpkg --set-selections &>> ${SCRIPT_LOGFILE}
+	sudo service mongod start &>> ${SCRIPT_LOGFILE}
+	sleep 2
+	echo -e "${NONE}${GREEN}* Done${NONE}";
+	
+	MONGOPASS=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
+	echo "Mongo password used: ${MONGOPASS}" &>> ${SCRIPT_LOGFILE}
+	mongo explorerdb --eval 'db.createUser( { user: "iquidus", pwd: "'${MONGOPASS}'", roles: [ "readWrite" ] } );'
+}
+
+installNginx() {
+    echo
+	echo -e "* Installing nginx. Please wait..."
+	sudo apt-get -y install nginx &>> ${SCRIPT_LOGFILE}
+	sudo service nginx start &>> ${SCRIPT_LOGFILE}
+	sudo rm /etc/nginx/sites-available/default &>> ${SCRIPT_LOGFILE}
+	sudo echo -e "server {\n    listen        80;\n    location / {\n        proxy_pass         http://localhost:3001;\n        proxy_http_version 1.1;\n        proxy_set_header   Upgrade \$http_upgrade;\n        proxy_set_header   Connection keep-alive;\n        proxy_set_header   Host \$host;\n        proxy_cache_bypass \$http_upgrade;\n        proxy_set_header   X-Forwarded-For \$proxy_add_x_forwarded_for;\n        proxy_set_header   X-Forwarded-Proto \$scheme;\n    }\n}" > /etc/nginx/sites-available/default
+	sudo ufw allow 80 &>> ${SCRIPT_LOGFILE}
+	sudo nginx -s reload
+	sleep 2
+	echo -e "${NONE}${GREEN}* Done${NONE}";
+}
+
+installExplorer() {
+    echo
+	echo -e "* Installing nodejs, npm & Iquidus Explorer. "
+	cd /home/${NODE_USER}
+	
+	sudo apt-get update
+	sudo apt install -y -qq nodejs-legacy &>> ${SCRIPT_LOGFILE}
+	sudo apt-get install -y -qq npm &>> ${SCRIPT_LOGFILE}
+	sudo apt-get install -qq &>> ${SCRIPT_LOGFILE}
+
+	git clone https://github.com/RedstonePlatform/explorer /home/${NODE_USER}/explorer &>> ${SCRIPT_LOGFILE}
+	cd /home/${NODE_USER}/explorer && npm install --production &>> ${SCRIPT_LOGFILE}
+
+	cp settings.json.template settings.json &>> ${SCRIPT_LOGFILE}
+	sudo sed -i -e 's/COINX/'"${COIN}"'/g' settings.json
+	sudo sed -i -e 's/RPCUSERX/'"${RPCUSER}"'/g' settings.json
+	sudo sed -i -e 's/RPCPASSX/'"${RPCPASS}"'/g' settings.json
+	sudo sed -i -e 's/RPCPORTX/'"${COINRPCPORT}"'/g' settings.json
+	sudo sed -i -e 's/MONGOUSERX/'"iquidus"'/g' settings.json
+	sudo sed -i -e 's/MONGOPASSX/'"${MONGOPASS}"'/g' settings.json
+
+	cd /home/${NODE_USER}
+	sudo echo -e "#!/bin/bash\ncd /home/${NODE_USER}/explorer/\nnpm start" > /home/${NODE_USER}/iquidus.sh 
+	sudo chmod +x iquidus.sh &>> ${SCRIPT_LOGFILE}
+
+	sudo echo -e "[Unit]\nDescription=Redstone Iquidus Block Explorer\nAfter=network-online.target\n\n[Service]\nWorkingDirectory=/home/${NODE_USER}/explorer\nExecStart=/home/${NODE_USER}/iquidus.sh\nRestart=always\n\nTimeoutSec=10\nRestartSec=35\n[Install]\nWantedBy=multi-user.target\n" > /etc/systemd/system/iquidus@${NODE_USER}.service
+
+	sudo systemctl --system daemon-reload &>> ${SCRIPT_LOGFILE}
+	sudo systemctl enable iquidus@${NODE_USER} &>> ${SCRIPT_LOGFILE}
+	sudo systemctl start iquidus@${NODE_USER} &>> ${SCRIPT_LOGFILE}
+	sleep 2
+	echo -e "${NONE}${GREEN}* Done${NONE}";	
+}
+
 displayServiceStatus() {
 	echo
 	echo
 	on="${GREEN}ACTIVE${NONE}"
 	off="${RED}OFFLINE${NONE}"
 
-	if systemctl is-active --quiet ${COINSERVICENAME}; then echo -e "Service: ${on}"; else echo -e "Service: ${off}"; fi
+	if systemctl is-active --quiet redstoned@${NODE_USER}; then echo -e "Redstone Service: ${on}"; else echo -e "Redstone Service: ${off}"; fi
+	if systemctl is-active --quiet iquidus@${NODE_USER}; then echo -e "Explorer Service: ${on}"; else echo -e "Explorer Service: ${off}"; fi
+	if systemctl is-active --quiet mongod; then echo -e "Mongo Service   : ${on}"; else echo -e "Mongo Service   : ${off}"; fi
+	if systemctl is-active --quiet nginx; then echo -e "nginx Service   : ${on}"; else echo -e "nginx Service   : ${off}"; fi
 }
 
 displayCompleteMessage() {
@@ -274,6 +357,13 @@ displayCompleteMessage() {
     echo -e "${NONE} The log file can be found here: ${SCRIPT_LOGFILE}${NONE}"
     echo -e "${NONE} Please ensure to check the service journal as follows:"
     echo -e "${NONE} Redstone Node   : ${PURPLE}journalctl -f -u ${COINSERVICENAME}${NONE}"
+    echo -e "${NONE} Explorer Service: ${PURPLE}journalctl -f -u iquidus@${NODE_USER}${NONE}"
+	echo -e "${RED} Please sync your node and then perform initial indexing by issuing the following commands: "
+	echo -e "${RED} 1. cd ~/explorer && node scripts/sync.js index reindex"
+	echo -e "${RED} 2. cd ~/explorer && node scripts/sync.js index update"
+	echo -e "${RED} 3. Once completed, add the following to crontab to automate updates"
+	echo -e "${RED}    */1 * * * * root cd /home/${NODE_USER}/explorer && /usr/bin/nodejs scripts/sync.js index update > /dev/null 2>&1"
+	echo -e "${RED}    */5 * * * * root cd /home/${NODE_USER}/explorer && /usr/bin/nodejs scripts/peers.js > /dev/null 2>&1"
 }
 
 clear
@@ -288,7 +378,9 @@ echo -e "${RED}██║  ██║███████╗██████╔
 echo -e "${RED}╚═╝  ╚═╝╚══════╝╚═════╝ ╚══════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═══╝╚══════╝${NONE}"  
 echo -e ${RED}
 echo -e "${PURPLE}**********************************************************************${NONE}"
-echo -e "${PURPLE}*    This script will install and configure your Redstone node.      *${NONE}"
+echo -e "${PURPLE}*    ${NONE}This script will install and configure your Redstone node,      ${PURPLE}*"
+echo -e "${PURPLE}*    ${NONE}including Mongo & Iquidus Block Explorer                        ${PURPLE}*"
+echo -e "${PURPLE}*    ${NONE}on Mainnet or Testnet.  Upgrade updates the node only!          ${PURPLE}*"
 echo -e "${PURPLE}**********************************************************************${NONE}"
 echo -e "${BOLD}"
 
@@ -316,9 +408,12 @@ if [[ "$response" =~ ^([mM])+$ ]]; then
     installDependencies
     compileWallet
     installWallet
-    #configureWallet ### commented out so uses the default configuration
+    configureWallet
     installUnattendedUpgrades
     startWallet
+    installMongodDB
+    installNginx
+    installExplorer
     set_permissions
     displayServiceStatus
 	displayCompleteMessage
@@ -342,9 +437,12 @@ if [[ "$response" =~ ^([mM])+$ ]]; then
         installDependencies
         compileWallet
         installWallet
-        #configureWallet ### commented out so uses the default configuration
+        configureWallet 
         installUnattendedUpgrades
         startWallet
+        installMongodDB
+        installNginx
+        installExplorer		
         set_permissions
         displayServiceStatus
 		displayCompleteMessage
