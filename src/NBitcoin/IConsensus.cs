@@ -52,22 +52,22 @@ namespace NBitcoin
         /// <summary>
         /// Percentage of POS reward payable to the minter
         /// </summary>
-        decimal PosRewardMinterPercent { get; }
+        decimal PosRewardMinterPercentage { get; }
 
         /// <summary>
         /// Percentage of POS reward payable to the selected service node
         /// </summary>
-        decimal PosRewardServiceNodePercent { get; }
+        decimal PosRewardServiceNodePercentage { get; }
 
         /// <summary>
         /// Percentage of POS reward payable to the foundation
         /// </summary>
-        decimal PosRewardFoundationPercent { get; }
+        decimal PosRewardFoundationPercentage { get; }
 
         /// <summary>
-        /// Address to pay the reward foundation to
+        /// PubKey Hash for the reward foundation to
         /// </summary>
-        string PosRewardFoundationAddress { get; }
+        string PosRewardFoundationPubKeyHash { get; }
 
         /// <summary>
         /// The minimum amount in XRD required to remain in the service node service address in order for the service node to

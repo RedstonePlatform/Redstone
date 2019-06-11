@@ -6,7 +6,7 @@
     using NBitcoin.DataEncoders;
     using NBitcoin.Networks;
     using Networks;
-    using Redstone.Core.Networks.Deployments;
+    using Redstone.Core.Deployments;
     using Xunit;
 
     public class NetworkTests

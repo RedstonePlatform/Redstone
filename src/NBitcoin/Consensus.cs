@@ -29,16 +29,16 @@ namespace NBitcoin
         public int PosRewardReductionBlockInterval { get; }
 
         /// <inheritdoc />
-        public decimal PosRewardMinterPercent { get; }
+        public decimal PosRewardMinterPercentage { get; }
 
         /// <inheritdoc />
-        public decimal PosRewardServiceNodePercent { get; }
+        public decimal PosRewardServiceNodePercentage { get; }
 
         /// <inheritdoc />
-        public decimal PosRewardFoundationPercent { get; }
+        public decimal PosRewardFoundationPercentage { get; }
 
         /// <inheritdoc />
-        public string PosRewardFoundationAddress { get; }
+        public string PosRewardFoundationPubKeyHash { get; }
 
         /// <inheritdoc />
         public decimal PosRewardReductionPercentage { get; }
@@ -160,10 +160,10 @@ namespace NBitcoin
             Money proofOfStakeReward,
             bool posRewardReduction = false,
             int posRewardReductionBlockInterval = 0,
-            decimal posRewardMinter = 0,
-            decimal posRewardServiceNode = 0,
-            decimal posRewardFoundation = 0,
-            string posRewardFoundationAddress = null,
+            decimal posRewardMinterPercentage = 1m,
+            decimal posRewardServiceNodePercentage = 0m,
+            decimal posRewardFoundationPercentage = 0m,
+            string posRewardFoundationPubKeyHash = null,
             decimal posRewardReductionPercentage = 0m,
             int serviceNodeCollateralBlockPeriod = 0,
             int serviceNodeCollateralThreshold = 0)
@@ -179,10 +179,10 @@ namespace NBitcoin
             this.ProofOfStakeReward = proofOfStakeReward;
             this.PosRewardReduction = posRewardReduction;
             this.PosRewardReductionBlockInterval = posRewardReductionBlockInterval;
-            this.PosRewardMinterPercent = posRewardMinter;
-            this.PosRewardServiceNodePercent = posRewardServiceNode;
-            this.PosRewardFoundationPercent = posRewardFoundation;
-            this.PosRewardFoundationAddress = posRewardFoundationAddress;
+            this.PosRewardMinterPercentage = posRewardMinterPercentage;
+            this.PosRewardServiceNodePercentage = posRewardServiceNodePercentage;
+            this.PosRewardFoundationPercentage = posRewardFoundationPercentage;
+            this.PosRewardFoundationPubKeyHash = posRewardFoundationPubKeyHash;
             this.PosRewardReductionPercentage = posRewardReductionPercentage;
             this.ServiceNodeCollateralThreshold = serviceNodeCollateralThreshold;
             this.ServiceNodeCollateralBlockPeriod = serviceNodeCollateralBlockPeriod;

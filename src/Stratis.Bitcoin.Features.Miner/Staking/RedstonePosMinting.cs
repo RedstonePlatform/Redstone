@@ -699,9 +699,9 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
             }
 
             // Determine reward splits
-            long minterReward = (long) (reward * this.network.Consensus.PosRewardMinterPercent);
-            long serviceNodeReward = (long) (reward * this.network.Consensus.PosRewardServiceNodePercent);
-            long foundationReward = (long) (reward * this.network.Consensus.PosRewardFoundationPercent);
+            long minterReward = (long) (reward * this.network.Consensus.PosRewardMinterPercentage);
+            long serviceNodeReward = (long) (reward * this.network.Consensus.PosRewardServiceNodePercentage);
+            long foundationReward = (long) (reward * this.network.Consensus.PosRewardFoundationPercentage);
 
             if (minterReward + serviceNodeReward + foundationReward != reward)
             {
@@ -917,9 +917,10 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
             bool res = false;
             try
             {
-                // TODO SN address
-                transaction.AddOutput(new TxOut(serviceNodeReward, BitcoinAddress.Create(this.network.Consensus.PosRewardFoundationAddress)));
-                transaction.AddOutput(new TxOut(foundationReward, BitcoinAddress.Create(this.network.Consensus.PosRewardFoundationAddress)));
+                // TODO determine SN to reward
+                transaction.AddOutput(new TxOut(serviceNodeReward, new KeyId("4ede20ba5a43f333530f1cfccea06f51dcff8e3b")));
+
+                transaction.AddOutput(new TxOut(foundationReward, new KeyId(this.network.Consensus.PosRewardFoundationPubKeyHash)));
 
                 res = true;
             }

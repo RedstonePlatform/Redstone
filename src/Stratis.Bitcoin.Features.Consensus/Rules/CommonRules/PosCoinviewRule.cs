@@ -62,6 +62,16 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
                     this.Logger.LogTrace("(-)[BAD_COINSTAKE_AMOUNT]");
                     ConsensusErrors.BadCoinstakeAmount.Throw();
                 }
+
+                try
+                {
+                    CheckRewardSplit(block.Transactions[1], stakeReward);
+                }
+                catch
+                {
+                    this.Logger.LogTrace("(-)[BAD_COINSTAKE_SPLIT]");
+                    ConsensusErrors.BadCoinstakeAmount.Throw();
+                }
             }
             else
             {
@@ -73,6 +83,51 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
                     ConsensusErrors.BadCoinbaseAmount.Throw();
                 }
             }
+        }
+
+        private void CheckRewardSplit(Transaction transaction, Money expectedStakeReward)
+        {
+            if (this.consensus.PosRewardMinterPercentage == 1)
+                return;
+
+            var groupedOutputs = transaction.Outputs.Where(o => !o.IsEmpty).GroupBy(o => o.ScriptPubKey);
+
+            if (groupedOutputs.Count() != 3)
+            {
+                this.Logger.LogTrace("(-)[BAD_COINSTAKE_SPLIT_TOOMANY]");
+                ConsensusErrors.BadCoinbaseAmount.Throw();
+            }
+
+            var foundationOutput = groupedOutputs.Single(o => IsScriptPayToFoundation(o.Key));
+            long expectedFoundationReward = (long)(expectedStakeReward.Satoshi * this.consensus.PosRewardFoundationPercentage);
+            var foundationTotalOut = foundationOutput.Sum(txOut => txOut.Value.Satoshi);
+
+            if (foundationTotalOut < expectedFoundationReward)
+            {
+                this.Logger.LogTrace("(-)[BAD_COINSTAKE_FOUNDATION_AMOUNT]");
+                ConsensusErrors.BadCoinstakeAmount.Throw();
+            }
+
+            var otherOuts = groupedOutputs.Where(o => !IsScriptPayToFoundation(o.Key)).ToList();
+
+            var otherOut1Total = otherOuts[0].Sum(txOut => txOut.Value.Satoshi);
+            var otherOut2Total = otherOuts[1].Sum(txOut => txOut.Value.Satoshi);
+
+            long expectedServiceNodeReward = (long)(expectedStakeReward.Satoshi * this.consensus.PosRewardServiceNodePercentage);
+            long expectedMinterReward = (long)(expectedStakeReward.Satoshi * this.consensus.PosRewardMinterPercentage);
+
+            if ((otherOut1Total < expectedServiceNodeReward && otherOut2Total < expectedServiceNodeReward)
+                && (otherOut1Total < expectedMinterReward && otherOut2Total < expectedMinterReward))
+            {
+                this.Logger.LogTrace("(-)[BAD_COINSTAKE_OTHER_AMOUNT]");
+                ConsensusErrors.BadCoinstakeAmount.Throw();
+            }
+        }
+
+        private bool IsScriptPayToFoundation(Script script)
+        {
+            var dest = script.GetDestinationAddress(this.Parent.Network);
+            return dest == new KeyId(this.consensus.PosRewardFoundationPubKeyHash).GetAddress(this.Parent.Network);
         }
 
         protected override Money GetTransactionFee(UnspentOutputSet view, Transaction tx)
@@ -208,9 +263,9 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
             if (this.consensus.PosRewardReduction)
             {
                 int blockIntervals = height / this.consensus.PosRewardReductionBlockInterval;
-                double reductionRate = (double) ((100 - this.consensus.PosRewardReductionPercentage) / 100);
+                double reductionRate = (double)((100 - this.consensus.PosRewardReductionPercentage) / 100);
                 double reward = this.consensus.ProofOfStakeReward.Satoshi * Math.Pow(reductionRate, blockIntervals);
-                return new Money((long) reward);
+                return new Money((long)reward);
 
             }
             else

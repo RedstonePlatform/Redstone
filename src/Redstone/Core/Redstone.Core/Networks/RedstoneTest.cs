@@ -88,10 +88,10 @@ namespace Redstone.Core.Networks
                 posRewardReduction: true,
                 posRewardReductionBlockInterval: 2880,
                 posRewardReductionPercentage: 7.5m,
-                posRewardMinter: .45m,
-                posRewardServiceNode: .45m,
-                posRewardFoundation: .1m,
-                posRewardFoundationAddress: "TB34GJrZLSPk7cbBN25YVFCZHiPDdZy4Bx",
+                posRewardMinterPercentage: .45m,
+                posRewardServiceNodePercentage: .45m,
+                posRewardFoundationPercentage: .1m,
+                posRewardFoundationPubKeyHash: "1c271555001998be1ef9718a786f21ea500a1c2e",
                 serviceNodeCollateralThreshold: 100,
                 serviceNodeCollateralBlockPeriod: 5
             );
