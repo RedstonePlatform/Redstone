@@ -66,6 +66,7 @@ function setGeneralVars() {
 	COINSERVICELOC=/etc/systemd/system/
 	COINSERVICENAME=${COINDAEMON}@${NODE_USER}
 	SWAPSIZE="1024" ## =1GB
+	IPSTACK_APIKEY="3c31f4758711b7e40e5c115c390e8546"
 }
 
 function check_root() {
@@ -325,6 +326,7 @@ installExplorer() {
 	sudo sed -i -e 's/RPCPORTX/'"${COINRPCPORT}"'/g' settings.json
 	sudo sed -i -e 's/MONGOUSERX/'"iquidus"'/g' settings.json
 	sudo sed -i -e 's/MONGOPASSX/'"${MONGOPASS}"'/g' settings.json
+	sudo sed -i -e 's/IPSTACK_APIKEY/'"${IPSTACK_APIKEY}"'/g' settings.json
 
 	cd /home/${NODE_USER}
 	sudo echo -e "#!/bin/bash\ncd /home/${NODE_USER}/explorer/\nnpm start" > /home/${NODE_USER}/iquidus.sh 
