@@ -100,12 +100,12 @@ namespace Redstone.ServiceNode
 
             if (this.CurrentServiceNodeKey == null)
             {
-                this.Logger.LogTrace("(-)[NOT_FED_MEMBER]");
+                this.Logger.LogTrace("(-)[NOT_SERVICE_NODE]");
                 return;
             }
 
             // Loaded key has to be a key for current service node.
-            if (this.ServiceNodes.All(x => x.PubKey != this.CurrentServiceNodeKey.PubKey))
+            if (this.ServiceNodes.All(x => x.SigningPubKey != this.CurrentServiceNodeKey.PubKey))
             {
                 string message = "Key provided is not registered on the network!";
 
@@ -117,7 +117,7 @@ namespace Redstone.ServiceNode
 
         private void SetIsServiceNode()
         {
-            this.IsServiceNode = this.ServiceNodes.Any(x => x.PubKey == this.CurrentServiceNodeKey?.PubKey);
+            this.IsServiceNode = this.ServiceNodes.Any(x => x.SigningPubKey == this.CurrentServiceNodeKey?.PubKey);
         }
 
         /// <inheritdoc />
@@ -148,7 +148,7 @@ namespace Redstone.ServiceNode
                 }
 
                 // Remove any that have a matching pubkey
-                IEnumerable<IServiceNode> nodesWithMatchingPubKeys = this.ServiceNodes.Where(s => s.PubKey == serviceNode.PubKey).ToList();
+                IEnumerable<IServiceNode> nodesWithMatchingPubKeys = this.ServiceNodes.Where(s => s.SigningPubKey == serviceNode.SigningPubKey).ToList();
 
                 foreach (IServiceNode node in nodesWithMatchingPubKeys)
                 {

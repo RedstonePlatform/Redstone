@@ -57,10 +57,6 @@ namespace Redstone.Features.ServiceNode
         /// <summary>The node's user agent.</summary>
         public string Agent { get; private set; }
 
-        public string RpcUser { get; set; }
-        public string RpcPassword { get; set; }
-        public string RpcUrl { get; set; }
-
         public IPAddress Ipv4Address { get; set; }
         public IPAddress Ipv6Address { get; set; }
         public string OnionAddress { get; set; }
@@ -69,11 +65,13 @@ namespace Redstone.Features.ServiceNode
         public Money TxOutputValue { get; set; }
         public Money TxFeeValue { get; set; }
 
-        public string ServiceUrl { get; set; }
+        public string OasUrl { get; set; }
 
-        public string ServiceApiBaseUrl { get; set; }
-        public string ServiceRsaKeyFile { get; set; }
-        public string ServiceEcdsaKeyAddress { get; set; }
+        public string RsaKeyFile { get; set; }
+        public string EcdsaPubKey { get; set; }
+        
+        public string CollateralAddress { get; set; }
+        public string RewardAddress { get; set; }
 
         public ServiceNodeSettings(NodeSettings nodeSettings)
         {
@@ -83,9 +81,6 @@ namespace Redstone.Features.ServiceNode
 
             // Get values from config
             this.LoadSettingsFromConfig(nodeSettings);
-
-            // Check validity of settings
-            this.CheckConfigurationValidity(nodeSettings.Logger);
         }
 
         /// <summary>
@@ -120,15 +115,6 @@ namespace Redstone.Features.ServiceNode
 
                 this.Network = network;
 
-                this.RpcUser = config.GetOrDefault<string>("rpc.user", null);
-                this.RpcPassword = config.GetOrDefault<string>("rpc.password", null);
-                this.RpcUrl = config.GetOrDefault<string>("rpc.url", null);
-
-                //if (this.RpcUser == null || this.RpcPassword == null || this.RpcUrl == null)
-                //{
-                //    throw new Exception("ERROR: RPC information in config file is invalid");
-                //}
-
                 if (IPAddress.TryParse(config.GetOrDefault<string>("servicenode.ipv4", null), out var ipv4Address))
                 {
                     this.Ipv4Address = ipv4Address;
@@ -152,7 +138,7 @@ namespace Redstone.Features.ServiceNode
 
                 this.Port = config.GetOrDefault<int>("servicenode.port", 37123);
 
-                this.ServiceApiBaseUrl = config.GetOrDefault<string>("tumbler.url", null);
+                this.OasUrl = config.GetOrDefault<string>("servicenode.oasurl", null);
 
                 // Use user keyfile; default new key if invalid
                 //string bitcoinNetwork;
@@ -185,7 +171,9 @@ namespace Redstone.Features.ServiceNode
                 //    this.ServiceRsaKeyFile
                 //);
 
-                this.ServiceEcdsaKeyAddress = config.GetOrDefault<string>("service.ecdsakeyaddress", null);
+                this.EcdsaPubKey = config.GetOrDefault<string>("servicenode.ecdsapubkey", null);
+                this.CollateralAddress = config.GetOrDefault<string>("servicenode.collateraladdress", null);
+                this.RewardAddress = config.GetOrDefault<string>("servicenode.rewardeaddress", null);
 
                 this.TxOutputValue = new Money(config.GetOrDefault<int>("servicenode.txoutputvalue", 7000), MoneyUnit.Satoshi);
                 this.TxFeeValue = new Money(config.GetOrDefault<int>("servicenode.txfeevalue", 10000), MoneyUnit.Satoshi);
@@ -193,49 +181,6 @@ namespace Redstone.Features.ServiceNode
             catch (Exception e)
             {
                 throw new Exception("ERROR: Unable to read configuration. " + e);
-            }
-        }
-
-        /// <summary>
-        /// Checks the validity of the RPC settings or forces them to be valid.
-        /// </summary>
-        /// <param name="logger">Logger to use.</param>
-        private void CheckConfigurationValidity(ILogger logger)
-        {
-            // TODO: SN complete this - also do we need rpc any more?
-
-            // Check that the settings are valid or force them to be valid
-            // (Note that these values will not be set if server = false in the config)
-            if (this.RpcPassword == null && this.RpcUser != null)
-                throw new ConfigurationException("rpcpassword should be provided");
-            if (this.RpcUser == null && this.RpcPassword != null)
-                throw new ConfigurationException("rpcuser should be provided");
-
-            // We can now safely assume that server was set to true in the config or that the
-            // "AddRpc" callback provided a user and password implying that the Rpc feature will be used.
-            if (this.RpcPassword != null && this.RpcUser != null)
-            {
-                // this.Server = true;
-
-                // If the "Bind" list has not been specified via callback..
-                //if (this.Bind.Count == 0)
-                //    this.Bind = this.DefaultBindings;
-
-                //if (this.AllowIp.Count == 0)
-                //{
-                //    if (this.Bind.Count > 0)
-                //        logger.LogWarning("WARNING: RPC bind selection (-rpcbind) was ignored because allowed ip's (-rpcallowip) were not specified, refusing to allow everyone to connect");
-
-                //    this.Bind.Clear();
-                //    this.Bind.Add(new IPEndPoint(IPAddress.Parse("::1"), this.RPCPort));
-                //    this.Bind.Add(new IPEndPoint(IPAddress.Parse("127.0.0.1"), this.RPCPort));
-                //}
-
-                //if (this.Bind.Count == 0)
-                //{
-                //    this.Bind.Add(new IPEndPoint(IPAddress.Parse("::"), this.RPCPort));
-                //    this.Bind.Add(new IPEndPoint(IPAddress.Parse("0.0.0.0"), this.RPCPort));
-                //}
             }
         }
 
@@ -256,9 +201,11 @@ namespace Redstone.Features.ServiceNode
             builder.AppendLine($"-servicenode.port=<port>                   Port of servicenode. Default - 37123");
             builder.AppendLine($"-servicenode.regtxoutputvalue=<value>      Value of each registration transaction output (in satoshi) default = 1000");
             builder.AppendLine($"-servicenode.regtxfeevalue=<value>         Value of registration transaction fee (in satoshi) default = 10000");
-            builder.AppendLine($"-service.url=<url>");
-            builder.AppendLine($"-service.rsakeyfile=<rsakeyfile>");
-            builder.AppendLine($"-service.ecdsakeyaddress=<key address>");
+            builder.AppendLine($"-servicenode.oasurl=<url>                  OAS endpoint");
+            builder.AppendLine($"-servicenode.rsakeyfile=<rsakeyfile>       RSA keyfile for token signing");
+            builder.AppendLine($"-servicenode.ecdsapubkey=<pubkey>          PubKey for token signing");
+            builder.AppendLine($"-servicenode.collateraladdress=<address>   Address to collateral");
+            builder.AppendLine($"-servicenode.rewardaddress=<address>       Address for rewards");
 
             NodeSettings.Default(network).Logger.LogInformation(builder.ToString());
         }
@@ -280,9 +227,11 @@ namespace Redstone.Features.ServiceNode
             builder.AppendLine("#servicenode.regtxoutputvalue=");
             builder.AppendLine("# Value of registration transaction fee (in satoshi) default = 10000");
             builder.AppendLine("#servicenode.regtxfeevalue=");
-            builder.AppendLine("#service.url=");
-            builder.AppendLine("#service.rsakeyfile=");
-            builder.AppendLine("#service.ecdsakeyaddress=");
+            builder.AppendLine("#servicenode.oasurl=");
+            builder.AppendLine("#servicenode.rsakeyfile=");
+            builder.AppendLine("#servicenode.ecdsapubkey=");
+            builder.AppendLine("#servicenode.collateraladdress=");
+            builder.AppendLine("#servicenode.rewardaddress=");
         }
 
         /// <inheritdoc />

@@ -87,7 +87,7 @@ namespace Redstone.Features.ServiceNode
                     var merkleBlock = new MerkleBlock(block, new[] { tx.GetHash() });
                     var registrationRecord = new RegistrationRecord(DateTime.Now, Guid.NewGuid(), tx.GetHash().ToString(), tx.ToHex(), registrationToken, merkleBlock.PartialMerkleTree, height);
 
-                    string collateralAddress = BitcoinAddress.Create(registrationRecord.Token.ServerId, this.network).ScriptPubKey.ToString();
+                    string collateralAddress = new KeyId(registrationRecord.Token.CollateralPubKeyHash).GetAddress(this.network).ToString();
 
                     this.logger.LogTrace("New Service Node Registration");
                     var serviceNode = new Redstone.ServiceNode.Models.ServiceNode(registrationRecord, collateralAddress);
@@ -106,8 +106,8 @@ namespace Redstone.Features.ServiceNode
             {
                 try
                 {
-                    Money serverCollateralBalance =
-                        this.addressIndexer.GetAddressBalance(serviceNode.RegistrationRecord.Token.ServerId, 1) ?? 0;
+                    var collateralAddress = new KeyId(serviceNode.RegistrationRecord.Token.CollateralPubKeyHash).GetAddress(this.network).ToString();
+                    Money serverCollateralBalance = this.addressIndexer.GetAddressBalance(collateralAddress, 1) ?? 0;
 
                     this.logger.LogDebug("Collateral balance for server " + serviceNode.RegistrationRecord.Token.ServerId + " is " +
                                          serverCollateralBalance.ToString() + ", original registration height " +

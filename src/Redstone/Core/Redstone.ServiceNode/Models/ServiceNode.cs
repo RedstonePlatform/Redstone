@@ -15,7 +15,13 @@ namespace Redstone.ServiceNode.Models
         }
 
         /// <inheritdoc />
-        public PubKey PubKey => this.RegistrationRecord.Token.EcdsaPubKey;
+        public PubKey SigningPubKey => this.RegistrationRecord.Token.SigningPubKey;
+
+        /// <inheritdoc />
+        public string CollateralPubKeyHash => this.RegistrationRecord.Token.CollateralPubKeyHash;
+
+        /// <inheritdoc />
+        public string RewardPubKeyHash => this.RegistrationRecord.Token.RewardPubKeyHash;
 
         /// <inheritdoc />
         public RegistrationRecord RegistrationRecord { get; }
@@ -44,7 +50,7 @@ namespace Redstone.ServiceNode.Models
             if ((object)a == null || (object)b == null)
                 return false;
 
-            return a.RegistrationRecord == b.RegistrationRecord 
+            return a.RegistrationRecord == b.RegistrationRecord
                    && a.CollateralAddress == b.CollateralAddress;
         }
 

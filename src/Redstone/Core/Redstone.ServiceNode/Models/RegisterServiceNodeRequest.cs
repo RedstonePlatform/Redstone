@@ -5,13 +5,13 @@ namespace Redstone.ServiceNode.Models
 {
     public class RegisterServiceNodeRequest : RequestModel
     {
-        [Required(ErrorMessage = "The name of the wallet is required.")]
+        [Required(ErrorMessage = "The name of the wallet (required).")]
         public string WalletName { get; set; }
 
-        [Required(ErrorMessage = "The name of the wallet account is required.")]
+        [Required(ErrorMessage = "The name of the wallet account (required).")]
         public string AccountName { get; set; }
 
-        [Required(ErrorMessage = "The wallet password is required.")]
+        [Required(ErrorMessage = "The wallet password (required).")]
         public string Password { get; set; }
     }
 }

@@ -92,7 +92,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
 
             var groupedOutputs = transaction.Outputs.Where(o => !o.IsEmpty).GroupBy(o => o.ScriptPubKey);
 
-            if (groupedOutputs.Count() != 3)
+            if (groupedOutputs.Count() < 2 || groupedOutputs.Count() > 3)
             {
                 this.Logger.LogTrace("(-)[BAD_COINSTAKE_SPLIT_TOOMANY]");
                 ConsensusErrors.BadCoinbaseAmount.Throw();
@@ -110,17 +110,26 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
 
             var otherOuts = groupedOutputs.Where(o => !IsScriptPayToFoundation(o.Key)).ToList();
 
-            var otherOut1Total = otherOuts[0].Sum(txOut => txOut.Value.Satoshi);
-            var otherOut2Total = otherOuts[1].Sum(txOut => txOut.Value.Satoshi);
-
-            long expectedServiceNodeReward = (long)(expectedStakeReward.Satoshi * this.consensus.PosRewardServiceNodePercentage);
-            long expectedMinterReward = (long)(expectedStakeReward.Satoshi * this.consensus.PosRewardMinterPercentage);
-
-            if ((otherOut1Total < expectedServiceNodeReward && otherOut2Total < expectedServiceNodeReward)
-                && (otherOut1Total < expectedMinterReward && otherOut2Total < expectedMinterReward))
+            // TODO: check one of them is in the the top 10 service nodes
+            // TODO: need to prevent servicenode from minting in here and minting code
+            if (otherOuts.Count > 1) // Normal reward
             {
-                this.Logger.LogTrace("(-)[BAD_COINSTAKE_OTHER_AMOUNT]");
-                ConsensusErrors.BadCoinstakeAmount.Throw();
+                var otherOut1Total = otherOuts[0].Sum(txOut => txOut.Value.Satoshi);
+                var otherOut2Total = otherOuts[1].Sum(txOut => txOut.Value.Satoshi);
+
+                long expectedServiceNodeReward = (long)(expectedStakeReward.Satoshi * this.consensus.PosRewardServiceNodePercentage);
+                long expectedMinterReward = (long)(expectedStakeReward.Satoshi * this.consensus.PosRewardMinterPercentage);
+
+                if ((otherOut1Total < expectedServiceNodeReward && otherOut2Total < expectedServiceNodeReward)
+                    && (otherOut1Total < expectedMinterReward && otherOut2Total < expectedMinterReward))
+                {
+                    this.Logger.LogTrace("(-)[BAD_COINSTAKE_OTHER_AMOUNT]");
+                    ConsensusErrors.BadCoinstakeAmount.Throw();
+                }
+            }
+            else // No Services Nodes (Foundation receives reward)
+            {
+                // Already validated
             }
         }
 

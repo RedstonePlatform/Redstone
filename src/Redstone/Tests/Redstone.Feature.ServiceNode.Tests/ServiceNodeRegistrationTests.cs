@@ -216,10 +216,11 @@ namespace Redstone.Feature.ServiceNode.Tests
             var config = new ServiceNodeRegistrationConfig
             {
                 ProtocolVersion = (int)ServiceNodeProtocolVersion.INITIAL,
-                ServerId = this.serverSecret.GetAddress().ToString(),
                 Ipv4Address = IPAddress.Parse("127.0.0.1"),
                 Port = 37123,
                 ConfigurationHash = "0123456789012345678901234567890123456789", // TODO hash of config file
+                CollateralPubKeyHash = this.serverSecret.PubKeyHash.ToString(),
+                RewardPubKeyHash = this.serverSecret.PubKeyHash.ToString(),
                 EcdsaPrivateKey = this.serverSecret,
             };
 

@@ -6,7 +6,13 @@ namespace Redstone.ServiceNode.Models
     public interface IServiceNode
     {
         /// <summary>Public key of a service node member.</summary>
-        PubKey PubKey { get; }
+        PubKey SigningPubKey { get; }
+
+        /// <summary>Public key hash of a service node collateral.</summary>
+        string CollateralPubKeyHash { get; }
+
+        /// <summary>Public key hash for a service node reward.</summary>
+        string RewardPubKeyHash { get; }
 
         /// <summary> The service nodes registration token </summary>
         RegistrationRecord RegistrationRecord { get; }

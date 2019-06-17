@@ -18,42 +18,8 @@ namespace Redstone.Feature.ServiceNode.Tests
 {
     public class RedstonePosMintingTests
     {
-        private readonly ITestOutputHelper output;
         private readonly HashSet<uint256> transactionsBeforeStaking = new HashSet<uint256>();
         private readonly ConcurrentDictionary<uint256, TransactionData> transactionLookup = new ConcurrentDictionary<uint256, TransactionData>();
-
-
-        public RedstonePosMintingTests(ITestOutputHelper output)
-        {
-            this.output = output;
-        }
-
-
-        [Fact]
-        public void KeyTest()
-        {
-            Key privateKey = new Key();
-            PubKey publicKey = privateKey.PubKey;
-            this.output.WriteLine(publicKey.ToString());
-
-            this.output.WriteLine(string.Empty);
-            this.output.WriteLine(publicKey.GetAddress(RedstoneNetworks.Main).ToString());
-            this.output.WriteLine(publicKey.GetAddress(RedstoneNetworks.TestNet).ToString());
-
-            this.output.WriteLine(string.Empty);
-            this.output.WriteLine(publicKey.Hash.ToString());
-            this.output.WriteLine(publicKey.Hash.GetAddress(RedstoneNetworks.Main).ToString());
-            this.output.WriteLine(publicKey.Hash.GetAddress(RedstoneNetworks.TestNet).ToString());
-
-            this.output.WriteLine(string.Empty);
-            this.output.WriteLine(publicKey.Hash.GetAddress(RedstoneNetworks.Main).ScriptPubKey.ToString());
-            this.output.WriteLine(publicKey.Hash.GetAddress(RedstoneNetworks.TestNet).ScriptPubKey.ToString());
-
-            this.output.WriteLine(string.Empty);
-            this.output.WriteLine(publicKey.Hash.GetAddress(RedstoneNetworks.Main).ScriptPubKey.GetDestinationAddress(RedstoneNetworks.Main).ToString());
-            this.output.WriteLine(publicKey.Hash.GetAddress(RedstoneNetworks.TestNet).ScriptPubKey.GetDestinationAddress(RedstoneNetworks.TestNet).ToString());
-        }
-
 
         [Fact]
         public void MintingTest()

@@ -217,6 +217,9 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
         /// <summary>State of time synchronization feature that stores collected data samples.</summary>
         private readonly ITimeSyncBehaviorState timeSyncBehaviorState;
 
+        // TODO: have to use new impl of minter, but should think about how we can use main PosMinting class
+        // this would mean injecting a service to handle service node payments, not sure serviceNodeManager
+        // is the right one, as we would need a base implementation of stratis
         public RedstonePosMinting(
             IBlockProvider blockProvider,
             IConsensusManager consensusManager,
@@ -699,9 +702,9 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
             }
 
             // Determine reward splits
-            long minterReward = (long) (reward * this.network.Consensus.PosRewardMinterPercentage);
-            long serviceNodeReward = (long) (reward * this.network.Consensus.PosRewardServiceNodePercentage);
-            long foundationReward = (long) (reward * this.network.Consensus.PosRewardFoundationPercentage);
+            long minterReward = (long)(reward * this.network.Consensus.PosRewardMinterPercentage);
+            long serviceNodeReward = (long)(reward * this.network.Consensus.PosRewardServiceNodePercentage);
+            long foundationReward = (long)(reward * this.network.Consensus.PosRewardFoundationPercentage);
 
             if (minterReward + serviceNodeReward + foundationReward != reward)
             {
@@ -917,10 +920,19 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
             bool res = false;
             try
             {
-                // TODO determine SN to reward
-                transaction.AddOutput(new TxOut(serviceNodeReward, new KeyId("4ede20ba5a43f333530f1cfccea06f51dcff8e3b")));
+                var foundationRewardDest = new KeyId(this.network.Consensus.PosRewardFoundationPubKeyHash);
+                transaction.AddOutput(new TxOut(foundationReward, foundationRewardDest));
 
-                transaction.AddOutput(new TxOut(foundationReward, new KeyId(this.network.Consensus.PosRewardFoundationPubKeyHash)));
+                // TODO: need an injected service to find top 10 sn and pick one at random
+                // for now just pick one at random from all sn
+                var selectedServiceNode = this.serviceNodeManager.GetServiceNodes().OrderBy(sn => RandomUtils.GetInt32()).FirstOrDefault();
+
+                // If no service node is found then reward goes to foundation
+                var serviceNodeRewardDest = (selectedServiceNode != null)
+                    ? new KeyId(selectedServiceNode.RewardPubKeyHash)
+                    : foundationRewardDest;
+                
+                transaction.AddOutput(new TxOut(serviceNodeReward, serviceNodeRewardDest));
 
                 res = true;
             }

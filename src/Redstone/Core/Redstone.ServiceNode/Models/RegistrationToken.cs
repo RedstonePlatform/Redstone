@@ -35,7 +35,8 @@ namespace Redstone.ServiceNode.Models
         - Encoded public key transaction outputs
         -> 1 byte - Protocol version byte (255 = test registration to be ignored by mainnet wallets)
         -> 2 bytes - Length of registration header
-        -> 34 bytes - Server ID of the service node (base58 representation of the collateral address, right padded with spaces)
+        -> 40 bytes - Hash of collateral pub key (also used as the server id)
+        -> 40 bytes - Hash of reward pub key 
         -> 4 bytes - IPV4 address of service node server; 00000000 indicates non-IPV4
         -> 16 bytes - IPV6address of service node server; 00000000000000000000000000000000 indicates non-IPV6
         -> 16 bytes - Onion (Tor) address of service node server; 00000000000000000000000000000000 indicates non-Tor
@@ -63,7 +64,11 @@ namespace Redstone.ServiceNode.Models
 
         public int ProtocolVersion { get; set; }
 
-        public string ServerId { get; set; }
+        public string ServerId => this.CollateralPubKeyHash;
+
+        public string CollateralPubKeyHash { get; set; }
+
+        public string RewardPubKeyHash { get; set; }
 
         [JsonConverter(typeof(IPAddressConverter))]
         public IPAddress Ipv4Addr { get; set; }
@@ -72,26 +77,39 @@ namespace Redstone.ServiceNode.Models
         public IPAddress Ipv6Addr { get; set; }
 
         public string OnionAddress { get; set; }
+
         public int Port { get; set; }
 
         public byte[] RsaSignature { get; set; }
+
         public byte[] EcdsaSignature { get; set; }
 
         public string ConfigurationHash { get; set; }
 
         [JsonConverter(typeof(PubKeyConverter))]
-        public PubKey EcdsaPubKey { get; set; }
+        public PubKey SigningPubKey { get; set; }
 
-        public RegistrationToken(int protocolVersion, string serverId, IPAddress ipv4Addr, IPAddress ipv6Addr, string onionAddress, string configurationHash, int port, PubKey ecdsaPubKey)
+
+        public RegistrationToken(
+            int protocolVersion,
+            IPAddress ipv4Addr,
+            IPAddress ipv6Addr,
+            string onionAddress,
+            string configurationHash,
+            int port,
+            string collateralPubKeyHash,
+            string rewardPubKeyHash,
+            PubKey ecdsaPubKey)
         {
             this.ProtocolVersion = protocolVersion;
-            this.ServerId = serverId;
             this.Ipv4Addr = ipv4Addr;
             this.Ipv6Addr = ipv6Addr;
             this.OnionAddress = onionAddress;
             this.Port = port;
             this.ConfigurationHash = configurationHash;
-            this.EcdsaPubKey = ecdsaPubKey;
+            this.CollateralPubKeyHash = collateralPubKeyHash;
+            this.RewardPubKeyHash = rewardPubKeyHash;
+            this.SigningPubKey = ecdsaPubKey;
         }
 
         public RegistrationToken()
@@ -103,7 +121,8 @@ namespace Redstone.ServiceNode.Models
         {
             var token = new List<byte>();
 
-            token.AddRange(Encoding.ASCII.GetBytes(this.ServerId.PadRight(34)));
+            token.AddRange(Encoding.ASCII.GetBytes(this.CollateralPubKeyHash));
+            token.AddRange(Encoding.ASCII.GetBytes(this.RewardPubKeyHash));
 
             if (this.Ipv4Addr != null)
             {
@@ -147,11 +166,11 @@ namespace Redstone.ServiceNode.Models
             return token;
         }
 
-        public byte[] GetRegistrationTokenBytes(RsaKey rsaKey, BitcoinSecret privateKeyEcdsa)
+        public byte[] GetRegistrationTokenBytes(RsaKey rsaKey, BitcoinSecret ecsdaPrivateKey)
         {
             var token = GetHeaderBytes();
 
-            var cryptoUtils = new CryptoUtils(rsaKey, privateKeyEcdsa);
+            var cryptoUtils = new CryptoUtils(rsaKey, ecsdaPrivateKey);
 
             // Sign header (excluding preliminary length marker bytes) with RSA
             this.RsaSignature = cryptoUtils.SignDataRSA(token.ToArray());
@@ -174,10 +193,10 @@ namespace Redstone.ServiceNode.Models
             // Server configuration hash
             token.AddRange(Encoding.ASCII.GetBytes(this.ConfigurationHash));
 
-            byte[] ecdsaPubKeyLength = BitConverter.GetBytes(this.EcdsaPubKey.ToBytes().Length);
-            token.Add(ecdsaPubKeyLength[0]);
-            token.Add(ecdsaPubKeyLength[1]);
-            token.AddRange(this.EcdsaPubKey.ToBytes());
+            byte[] pubKeyLength = BitConverter.GetBytes(this.SigningPubKey.ToBytes().Length);
+            token.Add(pubKeyLength[0]);
+            token.Add(pubKeyLength[1]);
+            token.AddRange(this.SigningPubKey.ToBytes());
 
             // Finally add protocol byte and computed length to beginning of header
             byte[] protocolVersionByte = BitConverter.GetBytes(this.ProtocolVersion);
@@ -272,11 +291,13 @@ namespace Redstone.ServiceNode.Models
             int position = 3;
             this.ProtocolVersion = protocolVersion;
 
-            byte[] serverIdTemp = GetSubArray(bitstream, position, 34);
+            byte[] collateralPubKeyHashTemp = GetSubArray(bitstream, position, 40);
+            this.CollateralPubKeyHash = Encoding.ASCII.GetString(collateralPubKeyHashTemp);
+            position += 40;
 
-            this.ServerId = Encoding.ASCII.GetString(serverIdTemp);
-
-            position += 34;
+            byte[] rewaredPubKeyHashTemp = GetSubArray(bitstream, position, 40);
+            this.RewardPubKeyHash = Encoding.ASCII.GetString(rewaredPubKeyHashTemp);
+            position += 40;
 
             // Either a valid IPv4 address, or all zero bytes
             bool allZeroes = true;
@@ -367,7 +388,7 @@ namespace Redstone.ServiceNode.Models
             var ecdsaPubKeyLength = (temp[1] << 8) + temp[0];
             position += 2;
 
-            this.EcdsaPubKey = new PubKey(GetSubArray(bitstream, position, ecdsaPubKeyLength));
+            this.SigningPubKey = new PubKey(GetSubArray(bitstream, position, ecdsaPubKeyLength));
             position += ecdsaPubKeyLength;
 
             // TODO: Validate signatures
@@ -375,22 +396,26 @@ namespace Redstone.ServiceNode.Models
 
         public bool VerifySignatures()
         {
-            if (this.EcdsaPubKey != null && this.EcdsaSignature != null)
-                return this.EcdsaPubKey.VerifyMessage(GetHeaderBytes().ToArray(), Encoding.UTF8.GetString(this.EcdsaSignature));
+            if (this.SigningPubKey != null && this.EcdsaSignature != null)
+                return this.SigningPubKey.VerifyMessage(GetHeaderBytes().ToArray(), Encoding.UTF8.GetString(this.EcdsaSignature));
             else
                 return false;
         }
 
         public bool Validate(Network network)
         {
-            if (this.EcdsaPubKey == null)
+            if (this.SigningPubKey == null)
                 return false;
 
-            if (this.ServerId == null)
+            if (this.CollateralPubKeyHash == null)
                 return false;
 
-            if (this.EcdsaPubKey.GetAddress(network).ToString() != this.ServerId)
+            if (this.RewardPubKeyHash == null)
                 return false;
+
+            // Can we validate the ecdsapubkey - the pub key hashes are different 
+            //if (this.EcdsaPubKey.GetAddress(network) != new KeyId(this.CollateralPubKeyHash).GetAddress(network))
+            //return false;
 
             if (this.Ipv4Addr == null && this.Ipv6Addr == null && this.OnionAddress == null)
                 return false;
@@ -417,7 +442,8 @@ namespace Redstone.ServiceNode.Models
         {
             return obj is RegistrationToken token &&
                    this.ProtocolVersion == token.ProtocolVersion &&
-                   this.ServerId == token.ServerId &&
+                   this.CollateralPubKeyHash == token.CollateralPubKeyHash &&
+                   this.RewardPubKeyHash == token.RewardPubKeyHash &&
                    EqualityComparer<IPAddress>.Default.Equals(this.Ipv4Addr, token.Ipv4Addr) &&
                    EqualityComparer<IPAddress>.Default.Equals(this.Ipv6Addr, token.Ipv6Addr) &&
                    this.OnionAddress == token.OnionAddress &&
@@ -425,14 +451,15 @@ namespace Redstone.ServiceNode.Models
                    EqualityComparer<byte[]>.Default.Equals(this.RsaSignature, token.RsaSignature) &&
                    EqualityComparer<byte[]>.Default.Equals(this.EcdsaSignature, token.EcdsaSignature) &&
                    this.ConfigurationHash == token.ConfigurationHash &&
-                   EqualityComparer<PubKey>.Default.Equals(this.EcdsaPubKey, token.EcdsaPubKey);
+                   EqualityComparer<PubKey>.Default.Equals(this.SigningPubKey, token.SigningPubKey);
         }
 
         public override int GetHashCode()
         {
             var hashCode = -77319232;
             hashCode = hashCode * -1521134295 + this.ProtocolVersion.GetHashCode();
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(this.ServerId);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(this.CollateralPubKeyHash);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(this.RewardPubKeyHash);
             hashCode = hashCode * -1521134295 + EqualityComparer<IPAddress>.Default.GetHashCode(this.Ipv4Addr);
             hashCode = hashCode * -1521134295 + EqualityComparer<IPAddress>.Default.GetHashCode(this.Ipv6Addr);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(this.OnionAddress);
@@ -440,7 +467,7 @@ namespace Redstone.ServiceNode.Models
             hashCode = hashCode * -1521134295 + EqualityComparer<byte[]>.Default.GetHashCode(this.RsaSignature);
             hashCode = hashCode * -1521134295 + EqualityComparer<byte[]>.Default.GetHashCode(this.EcdsaSignature);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(this.ConfigurationHash);
-            hashCode = hashCode * -1521134295 + EqualityComparer<PubKey>.Default.GetHashCode(this.EcdsaPubKey);
+            hashCode = hashCode * -1521134295 + EqualityComparer<PubKey>.Default.GetHashCode(this.SigningPubKey);
             return hashCode;
         }
     }

@@ -9,23 +9,36 @@ namespace Redstone.ServiceNode.Models
         {
             return new RegistrationToken(
                 this.ProtocolVersion,
-                this.EcdsaPrivateKey.GetAddress().ToString(),
                 this.Ipv4Address,
                 this.Ipv6Address,
                 this.OnionAddress,
                 this.ConfigurationHash,
                 this.Port,
+                this.CollateralPubKeyHash,
+                this.RewardPubKeyHash,
                 this.EcdsaPrivateKey.PubKey);
         }
+
         public int ProtocolVersion { get; set; }
-        public string ServerId { get; set; }
+
         public IPAddress Ipv4Address { get; set; } = IPAddress.None;
+
         public IPAddress Ipv6Address { get; set; } = IPAddress.IPv6None;
+
         public string OnionAddress { get; set; }
+
         public int Port { get; set; }
+
         public Money TxOutputValue { get; set; } = new Money(1000);
+
         public Money TxFeeValue { get; set; } = new Money(10000);
-        public string ConfigurationHash { get; set; }
+
+        public string CollateralPubKeyHash { get; set; }
+
+        public string RewardPubKeyHash { get; set; }
+
         public BitcoinSecret EcdsaPrivateKey { get; set; }
+
+        public string ConfigurationHash { get; set; }
     }
 }

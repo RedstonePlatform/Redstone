@@ -26,12 +26,13 @@ namespace Redstone.Feature.ServiceNode.Tests
             var ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.Main);
             
             var token = new RegistrationToken(255,
-                                              "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
                                               IPAddress.Parse("127.0.0.1"),
                                               IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
                                               "0123456789ABCDEF",
                                               "",
                                               37123,
+                                              "dbb476190a81120928763ee8ce97e4c0bcfd6624",
+                                              "dbb476190a81120928763ee8ce97e4c0bcfd6624",
                                               ecdsa.PubKey);
             
             var cryptoUtils = new CryptoUtils(rsa, ecdsa);
@@ -54,12 +55,13 @@ namespace Redstone.Feature.ServiceNode.Tests
         {
             var ecdsaPub = new Key().PubKey;
             var token = new RegistrationToken(255,
-                                              "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
                                               IPAddress.Parse("127.0.0.1"),
                                               IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
                                               "0123456789ABCDEF",
                                               "",
                                               37123,
+                                              "dbb476190a81120928763ee8ce97e4c0bcfd6624",
+                                              "dbb476190a81120928763ee8ce97e4c0bcfd6624",
                                               ecdsaPub);
 
             token.RsaSignature = Encoding.ASCII.GetBytes("xyz");
@@ -82,24 +84,25 @@ namespace Redstone.Feature.ServiceNode.Tests
             var retrievedRecord = retrievedRecords[0].Token;
 
             Assert.Equal(255, retrievedRecord.ProtocolVersion);
-            Assert.Equal("1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2", retrievedRecord.ServerId);
+            Assert.Equal("dbb476190a81120928763ee8ce97e4c0bcfd6624", retrievedRecord.CollateralPubKeyHash);
             Assert.Equal(retrievedRecord.Ipv4Addr, IPAddress.Parse("127.0.0.1"));
             Assert.Equal(retrievedRecord.Ipv6Addr, IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"));
             Assert.Equal("0123456789ABCDEF", retrievedRecord.OnionAddress);
             Assert.Equal(37123, retrievedRecord.Port);
-            Assert.Equal(retrievedRecord.EcdsaPubKey, ecdsaPub);
+            Assert.Equal(retrievedRecord.SigningPubKey, ecdsaPub);
         }
 
         [Fact]
         public void RegistrationStoreGetServerIdTest()
         {
             var token = new RegistrationToken(1,
-                                              "175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W",
                                               IPAddress.Parse("172.16.1.10"),
                                               IPAddress.Parse("2001:0db8:85a3:0000:1234:8a2e:0370:7334"),
                                               "5678901234ABCDEF",
                                               "",
                                               16174,
+                                              "3dca17804b85bd2998e8fafec17a00f1a8c2d84b",
+                                              "3dca17804b85bd2998e8fafec17a00f1a8c2d84b",
                                               null);
 
             token.RsaSignature = Encoding.ASCII.GetBytes("def");
@@ -116,12 +119,13 @@ namespace Redstone.Feature.ServiceNode.Tests
             store.Add(record);
 
             var token2 = new RegistrationToken(255,
-                                               "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
                                                IPAddress.Parse("127.0.0.1"),
                                                IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
                                                "0123456789ABCDEF",
                                                "",
                                                37123,
+                                               "dbb476190a81120928763ee8ce97e4c0bcfd6624",
+                                               "dbb476190a81120928763ee8ce97e4c0bcfd6624",
                                                null);
 
             token2.RsaSignature = Encoding.ASCII.GetBytes("xyz");
@@ -136,14 +140,14 @@ namespace Redstone.Feature.ServiceNode.Tests
 
             store.Add(record2);
 
-            var retrievedRecords = store.GetByServerId("1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2");
+            var retrievedRecords = store.GetByServerId("dbb476190a81120928763ee8ce97e4c0bcfd6624");
 
             Assert.Single(retrievedRecords);
 
             var retrievedRecord = retrievedRecords[0].Token;
 
             Assert.Equal(255, retrievedRecord.ProtocolVersion);
-            Assert.Equal("1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2", retrievedRecord.ServerId);
+            Assert.Equal("dbb476190a81120928763ee8ce97e4c0bcfd6624", retrievedRecord.CollateralPubKeyHash);
             Assert.Equal(retrievedRecord.Ipv4Addr, IPAddress.Parse("127.0.0.1"));
             Assert.Equal(retrievedRecord.Ipv6Addr, IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"));
             Assert.Equal("0123456789ABCDEF", retrievedRecord.OnionAddress);

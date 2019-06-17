@@ -88,13 +88,14 @@ namespace Redstone.Features.ServiceNode
 
         [Route("register")]
         [HttpPost]
+        [ProducesResponseType(typeof(RegisterServiceNodeResponse), 200)]
         public async Task<IActionResult> RegisterAsync(RegisterServiceNodeRequest request)
         {
             Key key;
 
             try
             {
-                key = this.GetPrivateKey(request.WalletName, request.Password, this.serviceNodeSettings.ServiceEcdsaKeyAddress);
+                key = this.GetPrivateKey(request.WalletName, request.Password);
             }
             catch (FileNotFoundException e)
             {
@@ -122,6 +123,8 @@ namespace Redstone.Features.ServiceNode
                     this.walletTransactionHandler,
                     this.walletManager);
 
+                (string collateralPubKeyHash, string rewardPubKeyHash) = GetPubKeyHashes(this.serviceNodeSettings, request.WalletName, request.AccountName);
+
                 var config = new ServiceNodeRegistrationConfig
                 {
                     ProtocolVersion = (int)ServiceNodeProtocolVersion.INITIAL,
@@ -131,6 +134,8 @@ namespace Redstone.Features.ServiceNode
                     Port = this.serviceNodeSettings.Port,
                     ConfigurationHash = "0123456789012345678901234567890123456789", // TODO hash of config file
                     EcdsaPrivateKey = key.GetBitcoinSecret(this.network),
+                    CollateralPubKeyHash = collateralPubKeyHash,
+                    RewardPubKeyHash = rewardPubKeyHash,
                     TxFeeValue = this.serviceNodeSettings.TxFeeValue,
                     TxOutputValue = this.serviceNodeSettings.TxOutputValue
                 };
@@ -152,7 +157,12 @@ namespace Redstone.Features.ServiceNode
                         Environment.Exit(0);
                     }
 
-                    return Ok(new { txHash = regTx.GetHash() });
+                    return Ok(new RegisterServiceNodeResponse
+                    {
+                        CollateralPubKeyHash = collateralPubKeyHash,
+                        RewardPubKeyHash = rewardPubKeyHash,
+                        RegistrationTxHash = regTx.GetHash().ToString()
+                    });
                 }
                 else
                 {
@@ -167,14 +177,24 @@ namespace Redstone.Features.ServiceNode
             }
         }
 
-        private Key GetPrivateKey(string walletName, string walletPassword, string address)
+        private Key GetPrivateKey(string walletName, string walletPassword)
         {
             Wallet wallet = this.walletManager.LoadWallet(walletPassword, walletName);
-            HdAddress hdAddress = wallet.GetAllAddresses().FirstOrDefault(hda => hda.Address == address);
+            HdAddress hdAddress = wallet.GetAllAddresses().FirstOrDefault();
             if (hdAddress == null)
-                throw new InvalidOperationException("Could not find service.ecdsakeyaddress in specified wallet");
+                throw new InvalidOperationException("Could not find adreess in specified wallet");
             ISecret extendedPrivateKey = wallet.GetExtendedPrivateKeyForAddress(walletPassword, hdAddress);
             return extendedPrivateKey.PrivateKey;
+        }
+
+        private (string collateralPubKeyHash, string rewardPubKeyHash) GetPubKeyHashes(ServiceNodeSettings serviceNodeSettings, string walletName, string accountName)
+        {
+            var unusedAddresses = this.walletManager.GetUnusedAddresses(new WalletAccountReference(walletName, accountName), 2).ToList();
+            var collateralAddress = serviceNodeSettings.CollateralAddress ?? unusedAddresses[0].ToString();
+            var rewardAddress = serviceNodeSettings.RewardAddress ?? unusedAddresses[1].ToString();
+
+            return (BitcoinAddress.Create(collateralAddress, this.network).ScriptPubKey.GetDestination(this.network).ToString(),
+                BitcoinAddress.Create(rewardAddress, this.network).ScriptPubKey.GetDestination(this.network).ToString());
         }
     }
 }
