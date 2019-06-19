@@ -21,6 +21,7 @@ namespace Redstone.RedstoneFullNodeD
     using Stratis.Bitcoin.Features.Wallet;
     using static System.String;
     using Stratis.Bitcoin.Features.ColdStaking;
+    using Redstone.ServiceNode.Consensus;
 
     public class Program
     {
@@ -79,11 +80,11 @@ namespace Redstone.RedstoneFullNodeD
                 {
                     builder = builder
                        .UseBlockStore()
-                       .UsePosConsensus()
+                       .UsePosServiceNodeConsensus()
                        .UseMempool()
                        .UseWallet()
                        .UseColdStakingWallet()
-                       .AddRedstoneMining()
+                       .AddServiceNodeMining()
                        .UseApi()
                        .UseApps()
                        .AddRPC();

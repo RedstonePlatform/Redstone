@@ -28,6 +28,8 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules
         /// <summary>Provides functionality for checking validity of PoS blocks.</summary>
         public IStakeValidator StakeValidator { get; }
 
+        public IRewardValidator RewardValidator { get; }
+
         public IRewindDataIndexCache RewindDataIndexCache { get; }
 
         /// <summary>
@@ -35,12 +37,13 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules
         /// </summary>
         public PosConsensusRuleEngine(Network network, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, ChainIndexer chainIndexer, NodeDeployments nodeDeployments,
             ConsensusSettings consensusSettings, ICheckpoints checkpoints, ICoinView utxoSet, IStakeChain stakeChain, IStakeValidator stakeValidator, IChainState chainState,
-            IInvalidBlockHashStore invalidBlockHashStore, INodeStats nodeStats, IRewindDataIndexCache rewindDataIndexCache, IAsyncProvider asyncProvider)
+            IInvalidBlockHashStore invalidBlockHashStore, INodeStats nodeStats, IRewindDataIndexCache rewindDataIndexCache, IAsyncProvider asyncProvider, IRewardValidator rewardValidator)
             : base(network, loggerFactory, dateTimeProvider, chainIndexer, nodeDeployments, consensusSettings, checkpoints, utxoSet, chainState, invalidBlockHashStore, nodeStats, asyncProvider)
         {
             this.StakeChain = stakeChain;
             this.StakeValidator = stakeValidator;
             this.RewindDataIndexCache = rewindDataIndexCache;
+            this.RewardValidator = rewardValidator;
         }
 
         /// <inheritdoc />

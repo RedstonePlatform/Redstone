@@ -66,6 +66,7 @@ namespace Redstone.Features.ServiceNode
             this.logger.LogTrace("(-)");
         }
 
+        // TODO: how do we deal with re-orgs?
         private void ScanForServiceNodeRegistrations(int height, Block block)
         {
             foreach (Transaction tx in block.Transactions.Where(RegistrationToken.HasMarker))

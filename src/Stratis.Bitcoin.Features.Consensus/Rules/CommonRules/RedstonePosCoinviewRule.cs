@@ -13,13 +13,10 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
     /// <summary>
     /// Proof of stake override for the coinview rules - BIP68, MaxSigOps and BlockReward checks.
     /// </summary>
-    public sealed class PosCoinviewRule : CoinViewRule
+    public sealed class ServiceNodePosCoinviewRule : CoinViewRule
     {
         /// <summary>Provides functionality for checking validity of PoS blocks.</summary>
         private IStakeValidator stakeValidator;
-
-        /// <summary> Provides functionality for checking the reward </summary>
-        private IRewardValidator rewardValidator;
 
         /// <summary>Database of stake related data for the current blockchain.</summary>
         private IStakeChain stakeChain;
@@ -66,8 +63,15 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
                     ConsensusErrors.BadCoinstakeAmount.Throw();
                 }
 
-                // TODO: consider moving all reward checks into here.
-                this.rewardValidator.CheckReward(block.Transactions[1], stakeReward);
+                try
+                {
+                    CheckRewardSplit(block.Transactions[1], stakeReward);
+                }
+                catch
+                {
+                    this.Logger.LogTrace("(-)[BAD_COINSTAKE_SPLIT]");
+                    ConsensusErrors.BadCoinstakeAmount.Throw();
+                }
             }
             else
             {
@@ -79,6 +83,60 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
                     ConsensusErrors.BadCoinbaseAmount.Throw();
                 }
             }
+        }
+
+        private void CheckRewardSplit(Transaction transaction, Money expectedStakeReward)
+        {
+            if (this.consensus.PosRewardMinterPercentage == 1)
+                return;
+
+            var groupedOutputs = transaction.Outputs.Where(o => !o.IsEmpty).GroupBy(o => o.ScriptPubKey);
+
+            if (groupedOutputs.Count() < 2 || groupedOutputs.Count() > 3)
+            {
+                this.Logger.LogTrace("(-)[BAD_COINSTAKE_SPLIT_TOOMANY]");
+                ConsensusErrors.BadCoinbaseAmount.Throw();
+            }
+
+            var foundationOutput = groupedOutputs.Single(o => IsScriptPayToFoundation(o.Key));
+            long expectedFoundationReward = (long)(expectedStakeReward.Satoshi * this.consensus.PosRewardFoundationPercentage);
+            var foundationTotalOut = foundationOutput.Sum(txOut => txOut.Value.Satoshi);
+
+            if (foundationTotalOut < expectedFoundationReward)
+            {
+                this.Logger.LogTrace("(-)[BAD_COINSTAKE_FOUNDATION_AMOUNT]");
+                ConsensusErrors.BadCoinstakeAmount.Throw();
+            }
+
+            var otherOuts = groupedOutputs.Where(o => !IsScriptPayToFoundation(o.Key)).ToList();
+
+            // TODO: check one of them is in the the top 10 service nodes
+            // TODO: need to prevent servicenode from minting in here and minting code
+            if (otherOuts.Count > 1) // Normal reward
+            {
+                var otherOut1Total = otherOuts[0].Sum(txOut => txOut.Value.Satoshi);
+                var otherOut2Total = otherOuts[1].Sum(txOut => txOut.Value.Satoshi);
+
+                long expectedServiceNodeReward = (long)(expectedStakeReward.Satoshi * this.consensus.PosRewardServiceNodePercentage);
+                long expectedMinterReward = (long)(expectedStakeReward.Satoshi * this.consensus.PosRewardMinterPercentage);
+
+                if ((otherOut1Total < expectedServiceNodeReward && otherOut2Total < expectedServiceNodeReward)
+                    && (otherOut1Total < expectedMinterReward && otherOut2Total < expectedMinterReward))
+                {
+                    this.Logger.LogTrace("(-)[BAD_COINSTAKE_OTHER_AMOUNT]");
+                    ConsensusErrors.BadCoinstakeAmount.Throw();
+                }
+            }
+            else // No Services Nodes (Foundation receives reward)
+            {
+                // Already validated
+            }
+        }
+
+        private bool IsScriptPayToFoundation(Script script)
+        {
+            var dest = script.GetDestinationAddress(this.Parent.Network);
+            return dest == new KeyId(this.consensus.PosRewardFoundationPubKeyHash).GetAddress(this.Parent.Network);
         }
 
         protected override Money GetTransactionFee(UnspentOutputSet view, Transaction tx)

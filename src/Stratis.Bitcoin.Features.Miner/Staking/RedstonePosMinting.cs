@@ -28,7 +28,7 @@ using Stratis.Bitcoin.Utilities;
 namespace Stratis.Bitcoin.Features.Miner.Staking
 {
     /// <summary>
-    /// <see cref="RedstonePosMinting"/> is used in order to generate new blocks. It involves a sort of lottery, similar to proof-of-work,
+    /// <see cref="ServiceNodePosMinting"/> is used in order to generate new blocks. It involves a sort of lottery, similar to proof-of-work,
     /// but the chances of winning this lottery is proportional to how many coins you are staking, not on hashing power.
     /// </summary>
     /// <remarks>
@@ -64,7 +64,7 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
     /// and the new value depends on the kernel, it is hard to predict its value in the future.
     /// </para>
     /// </remarks>
-    public class RedstonePosMinting : IPosMinting
+    public class ServiceNodePosMinting : IPosMinting
     {
 
         /// <summary>
@@ -220,7 +220,7 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
         // TODO: have to use new impl of minter, but should think about how we can use main PosMinting class
         // this would mean injecting a service to handle service node payments, not sure serviceNodeManager
         // is the right one, as we would need a base implementation of stratis
-        public RedstonePosMinting(
+        public ServiceNodePosMinting(
             IBlockProvider blockProvider,
             IConsensusManager consensusManager,
             ChainIndexer chainIndexer,

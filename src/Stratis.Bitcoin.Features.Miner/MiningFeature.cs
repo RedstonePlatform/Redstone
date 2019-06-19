@@ -268,42 +268,5 @@ namespace Stratis.Bitcoin.Features.Miner
 
             return fullNodeBuilder;
         }
-
-          /// <summary>
-        /// Adds POW and POS miner components to the node, so that it can mine or stake.
-        /// </summary>
-        /// <param name="fullNodeBuilder">The object used to build the current node.</param>
-        /// <returns>The full node builder, enriched with the new component.</returns>
-        public static IFullNodeBuilder AddRedstoneMining(this IFullNodeBuilder fullNodeBuilder)
-        {
-            LoggingConfiguration.RegisterFeatureNamespace<MiningFeature>("mining");
-
-            fullNodeBuilder.ConfigureFeature(features =>
-            {
-                features
-                    .AddFeature<MiningFeature>()
-                    .DependOn<MempoolFeature>()
-                    .DependOn<RPCFeature>()
-                    // TODO: Need a better way to check dependencies. This is really just dependent on IWalletManager...
-                    // Alternatively "DependsOn" should take a list of features that will satisfy the dependency.
-                    //.DependOn<WalletFeature>()
-                    .FeatureServices(services =>
-                    {
-                        services.AddSingleton<IPowMining, PowMining>();
-                        services.AddSingleton<IPosMinting, RedstonePosMinting>();
-                        services.AddSingleton<IBlockProvider, BlockProvider>();
-                        services.AddSingleton<BlockDefinition, PowBlockDefinition>();
-                        services.AddSingleton<BlockDefinition, PosBlockDefinition>();
-                        services.AddSingleton<BlockDefinition, PosPowBlockDefinition>();
-                        services.AddSingleton<StakingRpcController>();
-                        services.AddSingleton<StakingController>();
-                        services.AddSingleton<MiningRpcController>();
-                        services.AddSingleton<MiningController>();
-                        services.AddSingleton<MinerSettings>();
-                    });
-            });
-
-            return fullNodeBuilder;
-        }
     }
 }

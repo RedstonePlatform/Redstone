@@ -22,6 +22,7 @@ using Stratis.Bitcoin.Features.WatchOnlyWallet;
 using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Utilities;
+using Redstone.ServiceNode.Consensus;
 
 namespace Redstone.RedstoneServiceNodeD
 {
@@ -77,10 +78,10 @@ namespace Redstone.RedstoneServiceNodeD
                 {
                     builder = builder
                        .UseBlockStore()
-                       .UsePosConsensus()
+                       .UsePosServiceNodeConsensus()
                        .UseMempool()
                        .UseColdStakingWallet()
-                       .AddRedstoneMining()
+                       .AddServiceNodeMining()
                        .UseApi()
                        .UseWatchOnlyWallet()
                        .UseBlockNotification()
