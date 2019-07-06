@@ -28,7 +28,7 @@ using Stratis.Bitcoin.Utilities;
 namespace Stratis.Bitcoin.Features.Miner.Staking
 {
     /// <summary>
-    /// <see cref="ServiceNodePosMinting"/> is used in order to generate new blocks. It involves a sort of lottery, similar to proof-of-work,
+    /// <see cref="RedstonePosMinting"/> is used in order to generate new blocks. It involves a sort of lottery, similar to proof-of-work,
     /// but the chances of winning this lottery is proportional to how many coins you are staking, not on hashing power.
     /// </summary>
     /// <remarks>
@@ -64,7 +64,7 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
     /// and the new value depends on the kernel, it is hard to predict its value in the future.
     /// </para>
     /// </remarks>
-    public class ServiceNodePosMinting : IPosMinting
+    public class RedstonePosMinting : IPosMinting
     {
 
         /// <summary>
@@ -220,7 +220,7 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
         // TODO: have to use new impl of minter, but should think about how we can use main PosMinting class
         // this would mean injecting a service to handle service node payments, not sure serviceNodeManager
         // is the right one, as we would need a base implementation of stratis
-        public ServiceNodePosMinting(
+        public RedstonePosMinting(
             IBlockProvider blockProvider,
             IConsensusManager consensusManager,
             ChainIndexer chainIndexer,
@@ -703,10 +703,9 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
 
             // Determine reward splits
             long minterReward = (long)(reward * this.network.Consensus.PosRewardMinterPercentage);
-            long serviceNodeReward = (long)(reward * this.network.Consensus.PosRewardServiceNodePercentage);
-            long foundationReward = (long)(reward * this.network.Consensus.PosRewardFoundationPercentage);
+            long foundationOutputValue = (long)(reward * this.network.Consensus.PosRewardFoundationPercentage);
 
-            if (minterReward + serviceNodeReward + foundationReward != reward)
+            if (minterReward + foundationOutputValue != reward)
             {
                 this.logger.LogTrace("(-)[REWARD_SPLIT_CALC_FAILED]:false");
                 return false;
@@ -721,7 +720,7 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
             int eventuallyStakableUtxosCount = utxoStakeDescriptions.Count;
             Transaction coinstakeTx = this.PrepareCoinStakeTransactions(chainTip.Height, coinstakeContext, coinstakeMinterOutputValue, eventuallyStakableUtxosCount, ourWeight);
 
-            if (!this.AddFoundationAndServiceNodeReward(coinstakeTx, serviceNodeReward, foundationReward))
+            if (!this.AddFoundationOutput(coinstakeTx, foundationOutputValue))
             {
                 this.logger.LogTrace("(-)[FOUNDATION_SN_REWARD_FAILED]:false");
                 return false;
@@ -911,29 +910,18 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
         }
 
         /// <summary>
-        /// Adds foundation and service node reward to transaction
+        /// Adds foundation output to transaction
         /// </summary>
         /// <param name="transaction">Transaction being built.</param>
+        /// <param name="foundationOutputValue">Foundation output value.</param>
         /// <returns><c>true</c> if the function succeeds, <c>false</c> otherwise.</returns>
-        private bool AddFoundationAndServiceNodeReward(Transaction transaction, long serviceNodeReward, long foundationReward)
+        private bool AddFoundationOutput(Transaction transaction, long foundationOutputValue)
         {
             bool res = false;
             try
             {
-                var foundationRewardDest = new KeyId(this.network.Consensus.PosRewardFoundationPubKeyHash);
-                transaction.AddOutput(new TxOut(foundationReward, foundationRewardDest));
-
-                // TODO: need an injected service to find top 10 sn and pick one at random
-                // for now just pick one at random from all sn
-                var selectedServiceNode = this.serviceNodeManager.GetServiceNodes().OrderBy(sn => RandomUtils.GetInt32()).FirstOrDefault();
-
-                // If no service node is found then reward goes to foundation
-                var serviceNodeRewardDest = (selectedServiceNode != null)
-                    ? new KeyId(selectedServiceNode.RewardPubKeyHash)
-                    : foundationRewardDest;
-                
-                transaction.AddOutput(new TxOut(serviceNodeReward, serviceNodeRewardDest));
-
+                var foundationDest = new KeyId(this.network.Consensus.PosRewardFoundationPubKeyHash);
+                transaction.AddOutput(new TxOut(foundationOutputValue, foundationDest));
                 res = true;
             }
             catch (Exception e)

@@ -1,6 +1,7 @@
 ﻿using NBitcoin;
 using NBitcoin.Protocol;
 using Redstone.Features.ServiceNode;
+using Redstone.ServiceNode.Consensus;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
@@ -36,7 +37,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.Runners
             var builder = new FullNodeBuilder()
                 .UseNodeSettings(settings)
                 .UseBlockStore()
-                .UsePosConsensus()
+                .UseRedstonePosConsensus()
                 .UseMempool()
                 .UseBlockNotification()
                 .UseTransactionNotification()

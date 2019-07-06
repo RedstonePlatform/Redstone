@@ -161,7 +161,6 @@ namespace NBitcoin
             bool posRewardReduction = false,
             int posRewardReductionBlockInterval = 0,
             decimal posRewardMinterPercentage = 1m,
-            decimal posRewardServiceNodePercentage = 0m,
             decimal posRewardFoundationPercentage = 0m,
             string posRewardFoundationPubKeyHash = null,
             decimal posRewardReductionPercentage = 0m,
@@ -180,7 +179,6 @@ namespace NBitcoin
             this.PosRewardReduction = posRewardReduction;
             this.PosRewardReductionBlockInterval = posRewardReductionBlockInterval;
             this.PosRewardMinterPercentage = posRewardMinterPercentage;
-            this.PosRewardServiceNodePercentage = posRewardServiceNodePercentage;
             this.PosRewardFoundationPercentage = posRewardFoundationPercentage;
             this.PosRewardFoundationPubKeyHash = posRewardFoundationPubKeyHash;
             this.PosRewardReductionPercentage = posRewardReductionPercentage;

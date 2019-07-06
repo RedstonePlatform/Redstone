@@ -55,11 +55,6 @@ namespace NBitcoin
         decimal PosRewardMinterPercentage { get; }
 
         /// <summary>
-        /// Percentage of POS reward payable to the selected service node
-        /// </summary>
-        decimal PosRewardServiceNodePercentage { get; }
-
-        /// <summary>
         /// Percentage of POS reward payable to the foundation
         /// </summary>
         decimal PosRewardFoundationPercentage { get; }

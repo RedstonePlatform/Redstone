@@ -37,6 +37,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
 
             this.stakeValidator = consensusRules.StakeValidator;
             this.stakeChain = consensusRules.StakeChain;
+            this.rewardValidator = consensusRules.RewardValidator;
         }
 
         /// <inheritdoc />

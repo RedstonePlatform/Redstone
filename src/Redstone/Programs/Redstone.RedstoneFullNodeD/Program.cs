@@ -80,11 +80,11 @@ namespace Redstone.RedstoneFullNodeD
                 {
                     builder = builder
                        .UseBlockStore()
-                       .UsePosServiceNodeConsensus()
+                       .UseRedstonePosConsensus()
                        .UseMempool()
                        .UseWallet()
                        .UseColdStakingWallet()
-                       .AddServiceNodeMining()
+                       .AddRedstoneMining()
                        .UseApi()
                        .UseApps()
                        .AddRPC();

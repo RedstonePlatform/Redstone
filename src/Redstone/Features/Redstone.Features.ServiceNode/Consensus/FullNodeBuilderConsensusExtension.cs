@@ -29,13 +29,12 @@ namespace Redstone.ServiceNode.Consensus
 {
     public static class FullNodeBuilderConsensusExtension
     {
-        
-          /// <summary>
+        /// <summary>
         /// Adds POW and POS miner components to the node, so that it can mine or stake.
         /// </summary>
         /// <param name="fullNodeBuilder">The object used to build the current node.</param>
         /// <returns>The full node builder, enriched with the new component.</returns>
-        public static IFullNodeBuilder AddServiceNodeMining(this IFullNodeBuilder fullNodeBuilder)
+        public static IFullNodeBuilder AddRedstoneMining(this IFullNodeBuilder fullNodeBuilder)
         {
             LoggingConfiguration.RegisterFeatureNamespace<MiningFeature>("mining");
 
@@ -51,7 +50,7 @@ namespace Redstone.ServiceNode.Consensus
                     .FeatureServices(services =>
                     {
                         services.AddSingleton<IPowMining, PowMining>();
-                        services.AddSingleton<IPosMinting, ServiceNodePosMinting>();
+                        services.AddSingleton<IPosMinting, RedstonePosMinting>();
                         services.AddSingleton<IBlockProvider, BlockProvider>();
                         services.AddSingleton<BlockDefinition, PowBlockDefinition>();
                         services.AddSingleton<BlockDefinition, PosBlockDefinition>();
@@ -67,7 +66,7 @@ namespace Redstone.ServiceNode.Consensus
             return fullNodeBuilder;
         }
 
-        public static IFullNodeBuilder UsePosServiceNodeConsensus(this IFullNodeBuilder fullNodeBuilder)
+        public static IFullNodeBuilder UseRedstonePosConsensus(this IFullNodeBuilder fullNodeBuilder)
         {
             LoggingConfiguration.RegisterFeatureNamespace<PosConsensusFeature>("posconsensus");
 
@@ -81,7 +80,7 @@ namespace Redstone.ServiceNode.Consensus
                         services.AddSingleton<ICoinView, CachedCoinView>();
                         services.AddSingleton<StakeChainStore>().AddSingleton<IStakeChain, StakeChainStore>(provider => provider.GetService<StakeChainStore>());
                         services.AddSingleton<IStakeValidator, StakeValidator>();
-                        services.AddSingleton<IRewardValidator, ServiceNodeRewardValidator>();
+                        services.AddSingleton<IRewardValidator, FoundationRewardValidator>();
                         services.AddSingleton<ConsensusController>();
                         services.AddSingleton<IRewindDataIndexCache, RewindDataIndexCache>();
                         services.AddSingleton<IConsensusRuleEngine, PosConsensusRuleEngine>();
@@ -148,7 +147,7 @@ namespace Redstone.ServiceNode.Consensus
                     // rules that require the store to be loaded (coinview)
                     new LoadCoinviewRule(),
                     new TransactionDuplicationActivationRule(), // implements BIP30
-                    new ServiceNodePosCoinviewRule(), // implements BIP68, MaxSigOps and BlockReward calculation
+                    new PosCoinviewRule(), // implements BIP68, MaxSigOps and BlockReward calculation
                     // Place the PosColdStakingRule after the PosCoinviewRule to ensure that all input scripts have been evaluated
                     // and that the "IsColdCoinStake" flag would have been set by the OP_CHECKCOLDSTAKEVERIFY opcode if applicable.
                     new PosColdStakingRule(),
