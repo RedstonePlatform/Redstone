@@ -2,15 +2,15 @@
 
 **What you will need** 
 
- - **Hot wallet** - this will be used for staking online, you can skip this step if you are using **www.trustaking.com**
+ - **Hot wallet** - this will be used for staking online, you can skip this if you are using _www.trustaking.com_
  - **Cold wallet** - this will hold your funds offline
- 
-    _NB. It's important that both wallets are running on separate full nodes._
+   
+_Please note. It's important that both wallets are running on separate full nodes._
 
 ---
 ****Hot Wallet****
 
-_If you are using www.trustaking.com, the coldstakinghotaddress will be provided for you on the website and you can skip this section._
+_If you are using www.trustaking.com, your **coldstakinghotaddress** will be provided for you on the website and you can skip this section._
 
 1. Convert your Hot wallet to be enable cold staking by using the the `cold-staking-account` API method with isColdWalletAccount set to "false"
 2. Get your Hot wallets coldstakinghotaddress using by using the `cold-staking-address` API method with "IsColdWalletAddress" set to "false"
@@ -61,3 +61,5 @@ _If you are using www.trustaking.com, we provide a command to simplify this proc
 2. Then simply use the "send-transaction" API to broadcast the transaction hex from step #1.
 
 ---
+
+_The Trustaking service is being provided free of charge to end users as are trialling a donation/tips based business model. We will rely on these tips and donations as long as possible, giving everyone the opportunity to use cold staking. Hopefully, people will appreciate the service and donate on a regular basis so that we can keep the service running. We have opened a crowdfunding page [here](https://btcpay.trustaking.com/apps/3ZLoV6ywKzV1JTBdx6DXEBWHXSxe/crowdfund) if you want to help._
