@@ -65,13 +65,12 @@ namespace Redstone.Features.ServiceNode
         public Money TxOutputValue { get; set; }
         public Money TxFeeValue { get; set; }
 
-        public string OasUrl { get; set; }
-
-        public string RsaKeyFile { get; set; }
-        public string EcdsaPubKey { get; set; }
-        
         public string CollateralAddress { get; set; }
         public string RewardAddress { get; set; }
+
+        public string ServiceEndpoint { get; set; }
+
+        public string RsaKeyFile { get; set; }
 
         public ServiceNodeSettings(NodeSettings nodeSettings)
         {
@@ -138,8 +137,6 @@ namespace Redstone.Features.ServiceNode
 
                 this.Port = config.GetOrDefault<int>("servicenode.port", 37123);
 
-                this.OasUrl = config.GetOrDefault<string>("servicenode.oasurl", null);
-
                 // Use user keyfile; default new key if invalid
                 //string bitcoinNetwork;
 
@@ -171,9 +168,49 @@ namespace Redstone.Features.ServiceNode
                 //    this.ServiceRsaKeyFile
                 //);
 
-                this.EcdsaPubKey = config.GetOrDefault<string>("servicenode.ecdsapubkey", null);
-                this.CollateralAddress = config.GetOrDefault<string>("servicenode.collateraladdress", null);
-                this.RewardAddress = config.GetOrDefault<string>("servicenode.rewardeaddress", null);
+                var collateralAddress = config.GetOrDefault<string>("servicenode.collateraladdress", null);
+
+                if (!string.IsNullOrWhiteSpace(collateralAddress))
+                {
+                    try
+                    {
+                        new KeyId(collateralAddress);
+                        this.CollateralAddress = collateralAddress;
+                    }
+                    catch (Exception e)
+                    {
+                        throw new Exception("ERROR: Collateral address not valid", e);
+                    }
+                }
+
+                var rewardAddress = config.GetOrDefault<string>("servicenode.rewardeaddress", null);
+                if (!string.IsNullOrWhiteSpace(rewardAddress))
+                {
+                    try
+                    {
+                        new KeyId(rewardAddress);
+                        this.RewardAddress = rewardAddress;
+                    }
+                    catch (Exception e)
+                    {
+                        throw new Exception("ERROR: Reward address not valid", e);
+                    }
+                }
+
+                var serviceEndpoint = config.GetOrDefault<string>("servicenode.serviceendpoint", null);
+                if (!string.IsNullOrWhiteSpace(serviceEndpoint))
+                {
+                    try
+                    {
+                        new Uri(serviceEndpoint);
+                        this.ServiceEndpoint = serviceEndpoint;
+                    }
+                    catch (Exception e)
+                    {
+                        throw new Exception("ERROR: Service endpoint not valid", e);
+                    }
+                }
+
 
                 this.TxOutputValue = new Money(config.GetOrDefault<int>("servicenode.txoutputvalue", 7000), MoneyUnit.Satoshi);
                 this.TxFeeValue = new Money(config.GetOrDefault<int>("servicenode.txfeevalue", 10000), MoneyUnit.Satoshi);
@@ -194,18 +231,18 @@ namespace Redstone.Features.ServiceNode
 
             var builder = new StringBuilder();
 
-            builder.AppendLine($"-network=<network>                         Network - e.g. testnet or mainnet");
-            builder.AppendLine($"-servicenode.ipv4=<ipv4 address>           IPv4 address of servicenode");
-            builder.AppendLine($"-servicenode.ipv6=<ipv6 address>           IPv6 address of servicenode");
-            builder.AppendLine($"-servicenode.onion=<onion address>         Onion address of servicenode");
-            builder.AppendLine($"-servicenode.port=<port>                   Port of servicenode. Default - 37123");
-            builder.AppendLine($"-servicenode.regtxoutputvalue=<value>      Value of each registration transaction output (in satoshi) default = 1000");
-            builder.AppendLine($"-servicenode.regtxfeevalue=<value>         Value of registration transaction fee (in satoshi) default = 10000");
-            builder.AppendLine($"-servicenode.oasurl=<url>                  OAS endpoint");
-            builder.AppendLine($"-servicenode.rsakeyfile=<rsakeyfile>       RSA keyfile for token signing");
-            builder.AppendLine($"-servicenode.ecdsapubkey=<pubkey>          PubKey for token signing");
-            builder.AppendLine($"-servicenode.collateraladdress=<address>   Address to collateral");
-            builder.AppendLine($"-servicenode.rewardaddress=<address>       Address for rewards");
+            builder.AppendLine($"-network=<network>                             Network - e.g. testnet or mainnet");
+            builder.AppendLine($"-servicenode.ipv4=<ipv4 address>               IPv4 address of servicenode");
+            builder.AppendLine($"-servicenode.ipv6=<ipv6 address>               IPv6 address of servicenode");
+            builder.AppendLine($"-servicenode.onion=<onion address>             Onion address of servicenode");
+            builder.AppendLine($"-servicenode.port=<port>                       Port of servicenode. Default - 37123");
+            builder.AppendLine($"-servicenode.regtxoutputvalue=<value>          Value of each registration transaction output (in satoshi) default = 1000");
+            builder.AppendLine($"-servicenode.regtxfeevalue=<value>             Value of registration transaction fee (in satoshi) default = 10000");
+            builder.AppendLine($"-servicenode.rsakeyfile=<rsakeyfile>           RSA keyfile for token signing");
+            builder.AppendLine($"-servicenode.ecdsapubkey=<pubkey>              PubKey for token signing");
+            builder.AppendLine($"-servicenode.collateraladdress=<pubkeyhash>    PubKeyHash to collateral");
+            builder.AppendLine($"-servicenode.rewardaddress=<pubkeyhash>        PubKeyHash for rewards");
+            builder.AppendLine($"-servicenode.serviceendpoint=<url>     Url to Redstone Endpoint for service");
 
             NodeSettings.Default(network).Logger.LogInformation(builder.ToString());
         }
@@ -232,6 +269,7 @@ namespace Redstone.Features.ServiceNode
             builder.AppendLine("#servicenode.ecdsapubkey=");
             builder.AppendLine("#servicenode.collateraladdress=");
             builder.AppendLine("#servicenode.rewardaddress=");
+            builder.AppendLine("#servicenode.serviceendpoint=");
         }
 
         /// <inheritdoc />

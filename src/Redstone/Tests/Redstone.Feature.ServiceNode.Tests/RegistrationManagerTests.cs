@@ -30,9 +30,10 @@ namespace Redstone.Feature.ServiceNode.Tests
                                                   "0123456789ABCDEF",
                                                   "",
                                                   37123,
-                                                  "dbb476190a81120928763ee8ce97e4c0bcfd6624",
-                                                  "dbb476190a81120928763ee8ce97e4c0bcfd6624",
-                                                  ecdsa.PubKey);
+                                                  new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
+                                                  new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
+                                                  ecdsa.PubKey,
+                                                  new Uri("https://redstone.com/test"));
 
                 var cryptoUtils = new CryptoUtils(rsa, ecdsa);
                 token.RsaSignature = cryptoUtils.SignDataRSA(token.GetHeaderBytes().ToArray());

@@ -10,11 +10,7 @@ namespace Redstone.ServiceNode.Utils
 {
     public class IPAddressConverter : JsonConverter
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="objectType"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public override bool CanConvert(Type objectType)
         {
             if (objectType == typeof(IPAddress)) return true;
@@ -23,14 +19,7 @@ namespace Redstone.ServiceNode.Utils
             return false;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="reader"></param>
-        /// <param name="objectType"></param>
-        /// <param name="existingValue"></param>
-        /// <param name="serializer"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             // convert an ipaddress represented as a string into an IPAddress object and return it to the caller
@@ -62,12 +51,7 @@ namespace Redstone.ServiceNode.Utils
             throw new NotImplementedException();
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="writer"></param>
-        /// <param name="value"></param>
-        /// <param name="serializer"></param>
+        /// <inheritdoc />
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             // convert an IPAddress object to a string representation of itself and Write it to the serialiser
@@ -112,6 +96,60 @@ namespace Redstone.ServiceNode.Utils
                 writer.WriteNull();
 
             writer.WriteValue(Convert.ToBase64String(((PubKey)value).ToBytes()));
+        }
+    }
+
+    public class PubKeyHashConverter : JsonConverter
+    {
+        /// <inheritdoc />
+        public override bool CanConvert(Type objectType)
+        {
+            return objectType == typeof(KeyId);
+        }
+
+        /// <inheritdoc />
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            if (reader.Value == null)
+                return null;
+
+            return new KeyId(Convert.FromBase64String((string)reader.Value));
+        }
+
+        /// <inheritdoc />
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            if ((KeyId)value == null)
+                writer.WriteNull();
+
+            writer.WriteValue(Convert.ToBase64String(((KeyId)value).ToBytes()));
+        }
+    }
+
+    public class UriConverter : JsonConverter
+    {
+        /// <inheritdoc />
+        public override bool CanConvert(Type objectType)
+        {
+            return objectType == typeof(Uri);
+        }
+
+        /// <inheritdoc />
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            if (reader.Value == null)
+                return null;
+
+            return new Uri((string)reader.Value);
+        }
+
+        /// <inheritdoc />
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            if ((Uri)value == null)
+                writer.WriteNull();
+
+            writer.WriteValue(((Uri)value).ToString());
         }
     }
 }

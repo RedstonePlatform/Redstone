@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using NBitcoin;
@@ -219,9 +220,10 @@ namespace Redstone.Feature.ServiceNode.Tests
                 Ipv4Address = IPAddress.Parse("127.0.0.1"),
                 Port = 37123,
                 ConfigurationHash = "0123456789012345678901234567890123456789", // TODO hash of config file
-                CollateralPubKeyHash = this.serverSecret.PubKeyHash.ToString(),
-                RewardPubKeyHash = this.serverSecret.PubKeyHash.ToString(),
+                CollateralPubKeyHash = this.serverSecret.PubKeyHash,
+                RewardPubKeyHash = this.serverSecret.PubKeyHash,
                 EcdsaPrivateKey = this.serverSecret,
+                ServiceEndpoint = new Uri("https://redstone.com/test")
             };
 
             RegistrationToken registrationToken = config.CreateRegistrationToken(this.network);

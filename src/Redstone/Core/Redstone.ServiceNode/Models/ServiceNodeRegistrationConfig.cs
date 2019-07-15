@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using NBitcoin;
 
 namespace Redstone.ServiceNode.Models
@@ -16,7 +17,8 @@ namespace Redstone.ServiceNode.Models
                 this.Port,
                 this.CollateralPubKeyHash,
                 this.RewardPubKeyHash,
-                this.EcdsaPrivateKey.PubKey);
+                this.EcdsaPrivateKey.PubKey,
+                this.ServiceEndpoint);
         }
 
         public int ProtocolVersion { get; set; }
@@ -33,11 +35,13 @@ namespace Redstone.ServiceNode.Models
 
         public Money TxFeeValue { get; set; } = new Money(10000);
 
-        public string CollateralPubKeyHash { get; set; }
+        public KeyId CollateralPubKeyHash { get; set; }
 
-        public string RewardPubKeyHash { get; set; }
+        public KeyId RewardPubKeyHash { get; set; }
 
         public BitcoinSecret EcdsaPrivateKey { get; set; }
+
+        public Uri ServiceEndpoint { get; set; }
 
         public string ConfigurationHash { get; set; }
     }

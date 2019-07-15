@@ -28,9 +28,9 @@ namespace Redstone.Features.ServiceNode
 
         private readonly string regStorePath;
 
-        public ServiceNodeRegistration(Network network, 
+        public ServiceNodeRegistration(Network network,
             NodeSettings nodeSettings,
-            IBroadcasterManager broadcasterManager, 
+            IBroadcasterManager broadcasterManager,
             IWalletTransactionHandler walletTransactionHandler,
             IWalletManager walletManager)
         {
@@ -40,10 +40,6 @@ namespace Redstone.Features.ServiceNode
             this.walletManager = walletManager;
             this.regStorePath = Path.Combine(nodeSettings.DataDir, "registrationHistory.json");
         }
-
-        // 254 = potentially nonsensical data from internal tests. 253 will be the public testnet version
-        // 1 = mainnet protocol version incorporating signature check
-        private int PROTOCOL_VERSION_TO_USE = (int)ServiceNodeProtocolVersion.INITIAL;
 
         public bool IsRegistrationValid(IServiceNodeRegistrationConfig registrationConfig)
         {
@@ -118,6 +114,15 @@ namespace Redstone.Features.ServiceNode
             if (registrationConfig.Port != registrationToken.Port)
                 return false;
 
+            if (registrationConfig.CollateralPubKeyHash != registrationToken.CollateralPubKeyHash)
+                return false;
+
+            if (registrationConfig.RewardPubKeyHash != registrationToken.RewardPubKeyHash)
+                return false;
+
+            if (registrationConfig.ServiceEndpoint != registrationToken.ServiceEndpoint)
+                return false;
+
             // This verifies that the parameters are unchanged
             if (registrationConfig.ConfigurationHash != registrationToken.ConfigurationHash)
                 return false;
@@ -135,14 +140,14 @@ namespace Redstone.Features.ServiceNode
             {
                 RegistrationToken registrationToken = registrationConfig.CreateRegistrationToken(this.network);
 
-                transaction = TransactionUtils.BuildTransaction(this.network, 
-                    this.walletTransactionHandler, 
+                transaction = TransactionUtils.BuildTransaction(this.network,
+                    this.walletTransactionHandler,
                     this.walletManager,
-                    registrationConfig, 
-                    registrationToken, 
-                    walletName, 
-                    accountName, 
-                    walletPassword, 
+                    registrationConfig,
+                    registrationToken,
+                    walletName,
+                    accountName,
+                    walletPassword,
                     serviceRsaKey);
 
                 await this.broadcasterManager.BroadcastTransactionAsync(transaction).ConfigureAwait(false);

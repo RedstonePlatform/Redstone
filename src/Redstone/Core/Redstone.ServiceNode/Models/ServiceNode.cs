@@ -18,10 +18,10 @@ namespace Redstone.ServiceNode.Models
         public PubKey SigningPubKey => this.RegistrationRecord.Token.SigningPubKey;
 
         /// <inheritdoc />
-        public string CollateralPubKeyHash => this.RegistrationRecord.Token.CollateralPubKeyHash;
+        public KeyId CollateralPubKeyHash => this.RegistrationRecord.Token.CollateralPubKeyHash;
 
         /// <inheritdoc />
-        public string RewardPubKeyHash => this.RegistrationRecord.Token.RewardPubKeyHash;
+        public KeyId RewardPubKeyHash => this.RegistrationRecord.Token.RewardPubKeyHash;
 
         /// <inheritdoc />
         public RegistrationRecord RegistrationRecord { get; }

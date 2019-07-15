@@ -123,7 +123,7 @@ namespace Redstone.Features.ServiceNode
                     this.walletTransactionHandler,
                     this.walletManager);
 
-                (string collateralPubKeyHash, string rewardPubKeyHash) = GetPubKeyHashes(this.serviceNodeSettings, request.WalletName, request.AccountName);
+                (KeyId collateralPubKeyHash, KeyId rewardPubKeyHash) = GetPubKeyHashes(this.serviceNodeSettings, request.WalletName, request.AccountName);
 
                 var config = new ServiceNodeRegistrationConfig
                 {
@@ -159,8 +159,8 @@ namespace Redstone.Features.ServiceNode
 
                     return Ok(new RegisterServiceNodeResponse
                     {
-                        CollateralPubKeyHash = collateralPubKeyHash,
-                        RewardPubKeyHash = rewardPubKeyHash,
+                        CollateralPubKeyHash = collateralPubKeyHash.ToString(),
+                        RewardPubKeyHash = rewardPubKeyHash.ToString(),
                         RegistrationTxHash = regTx.GetHash().ToString()
                     });
                 }
@@ -187,14 +187,15 @@ namespace Redstone.Features.ServiceNode
             return extendedPrivateKey.PrivateKey;
         }
 
-        private (string collateralPubKeyHash, string rewardPubKeyHash) GetPubKeyHashes(ServiceNodeSettings serviceNodeSettings, string walletName, string accountName)
+        private (KeyId collateralPubKeyHash, KeyId rewardPubKeyHash) GetPubKeyHashes(ServiceNodeSettings serviceNodeSettings, string walletName, string accountName)
         {
             var unusedAddresses = this.walletManager.GetUnusedAddresses(new WalletAccountReference(walletName, accountName), 2).ToList();
             var collateralAddress = serviceNodeSettings.CollateralAddress ?? unusedAddresses[0].ToString();
             var rewardAddress = serviceNodeSettings.RewardAddress ?? unusedAddresses[1].ToString();
 
-            return (BitcoinAddress.Create(collateralAddress, this.network).ScriptPubKey.GetDestination(this.network).ToString(),
-                BitcoinAddress.Create(rewardAddress, this.network).ScriptPubKey.GetDestination(this.network).ToString());
+            KeyId collateralPubKeyHash = PayToPubkeyHashTemplate.Instance.ExtractScriptPubKeyParameters(BitcoinAddress.Create(collateralAddress, this.network).ScriptPubKey);
+            KeyId rewardPubKeyHash = PayToPubkeyHashTemplate.Instance.ExtractScriptPubKeyParameters(BitcoinAddress.Create(rewardAddress, this.network).ScriptPubKey);
+            return (collateralPubKeyHash, rewardPubKeyHash);
         }
     }
 }

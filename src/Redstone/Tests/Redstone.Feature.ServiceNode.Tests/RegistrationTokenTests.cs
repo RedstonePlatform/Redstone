@@ -1,3 +1,4 @@
+using System;
 using System.Net;
 using System.Text;
 using NBitcoin;
@@ -26,9 +27,10 @@ namespace Redstone.Feature.ServiceNode.Tests
                 "0123456789ABCDEF",
                 "",
                 37123,
-                "dbb476190a81120928763ee8ce97e4c0bcfd6624",
-                "dbb476190a81120928763ee8ce97e4c0bcfd6624",
-                ecdsa.PubKey);
+                new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
+                new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
+                ecdsa.PubKey,
+                new Uri("https://restone.com/servicetest"));
 
             var cryptoUtils = new CryptoUtils(rsa, ecdsa);
             token.RsaSignature = cryptoUtils.SignDataRSA(token.GetHeaderBytes().ToArray());
@@ -50,9 +52,10 @@ namespace Redstone.Feature.ServiceNode.Tests
                 "5678901234ABCDEF",
                 "",
                 16174,
-                "dbb476190a81120928763ee8ce97e4c0bcfd6624",
-                "dbb476190a81120928763ee8ce97e4c0bcfd6624",
-                ecdsa.PubKey);
+                new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
+                new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
+                ecdsa.PubKey,
+                new Uri("https://redstone.com/test"));
 
             // Only the 'header' portion of the registration token gets signed, minus the length bytes
             var message = token.GetHeaderBytes();
@@ -78,9 +81,10 @@ namespace Redstone.Feature.ServiceNode.Tests
                 "5678901234ABCDEF",
                 "",
                 16174,
-                "dbb476190a81120928763ee8ce97e4c0bcfd6624",
-                "dbb476190a81120928763ee8ce97e4c0bcfd6624",
-                ecdsa.PubKey);
+                new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
+                new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
+                ecdsa.PubKey,
+                new Uri("https://redstone.com.test"));
 
             var cryptoUtils = new CryptoUtils(rsa, ecdsa);
             token.EcdsaSignature = cryptoUtils.SignDataECDSA(token.GetHeaderBytes().ToArray());

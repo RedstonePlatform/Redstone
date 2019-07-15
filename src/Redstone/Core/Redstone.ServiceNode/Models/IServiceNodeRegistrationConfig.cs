@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using NBitcoin;
 
 namespace Redstone.ServiceNode.Models
@@ -6,7 +7,7 @@ namespace Redstone.ServiceNode.Models
     public interface IServiceNodeRegistrationConfig
     {
         int ProtocolVersion { get; set; }
-        
+
         IPAddress Ipv4Address { get; set; }
         
         IPAddress Ipv6Address { get; set; }
@@ -19,11 +20,13 @@ namespace Redstone.ServiceNode.Models
 
         Money TxFeeValue { get; set; }
 
-        string CollateralPubKeyHash { get; set; }
+        KeyId CollateralPubKeyHash { get; set; }
 
-        string RewardPubKeyHash { get; set; }
+        KeyId RewardPubKeyHash { get; set; }
 
         BitcoinSecret EcdsaPrivateKey { get; set; }
+
+        Uri ServiceEndpoint { get; set; }
 
         // Not sure how this works? Is ConfigurationHash is obtained after registration for checks (null for first reg)
         string ConfigurationHash { get; }

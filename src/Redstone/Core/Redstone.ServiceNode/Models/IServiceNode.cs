@@ -9,10 +9,10 @@ namespace Redstone.ServiceNode.Models
         PubKey SigningPubKey { get; }
 
         /// <summary>Public key hash of a service node collateral.</summary>
-        string CollateralPubKeyHash { get; }
+        KeyId CollateralPubKeyHash { get; }
 
         /// <summary>Public key hash for a service node reward.</summary>
-        string RewardPubKeyHash { get; }
+        KeyId RewardPubKeyHash { get; }
 
         /// <summary> The service nodes registration token </summary>
         RegistrationRecord RegistrationRecord { get; }
