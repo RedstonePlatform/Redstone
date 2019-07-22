@@ -285,7 +285,7 @@ installMongodDB() {
 	echo "mongodb-org-mongos hold" | sudo dpkg --set-selections &>> ${SCRIPT_LOGFILE}
 	echo "mongodb-org-tools hold" | sudo dpkg --set-selections &>> ${SCRIPT_LOGFILE}
 	sudo service mongod start &>> ${SCRIPT_LOGFILE}
-	sleep 2
+	sleep 10
 	echo -e "${NONE}${GREEN}* Done${NONE}";
 	
 	MONGOPASS=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
@@ -302,7 +302,7 @@ installNginx() {
 	sudo echo -e "server {\n    listen        80;\n    location / {\n        proxy_pass         http://localhost:3001;\n        proxy_http_version 1.1;\n        proxy_set_header   Upgrade \$http_upgrade;\n        proxy_set_header   Connection keep-alive;\n        proxy_set_header   Host \$host;\n        proxy_cache_bypass \$http_upgrade;\n        proxy_set_header   X-Forwarded-For \$proxy_add_x_forwarded_for;\n        proxy_set_header   X-Forwarded-Proto \$scheme;\n    }\n}" > /etc/nginx/sites-available/default
 	sudo ufw allow 80 &>> ${SCRIPT_LOGFILE}
 	sudo nginx -s reload
-	sleep 2
+	sleep 5
 	echo -e "${NONE}${GREEN}* Done${NONE}";
 }
 
