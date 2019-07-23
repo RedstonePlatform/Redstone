@@ -290,7 +290,7 @@ installMongodDB() {
 	
 	MONGOPASS=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
 	echo "Mongo password used: ${MONGOPASS}" &>> ${SCRIPT_LOGFILE}
-	mongo explorerdb --eval 'db.createUser( { user: "iquidus", pwd: "'${MONGOPASS}'", roles: [ "readWrite" ] } );'
+	mongo explorerdb --eval 'db.createUser( { user: "iquidus", pwd: "${MONGOPASS}", roles: [ "readWrite" ] } );'
 }
 
 installNginx() {
