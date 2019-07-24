@@ -109,7 +109,7 @@ namespace Redstone.Features.ServiceNode
 
                 if (this.Network != null && this.Network != network)
                 {
-                    throw new Exception("ERROR: Network information in config file is invalid or incompatible with switch");
+                    throw new Exception("ERROR: Network information in config file is invalid or incompatible with node");
                 }
 
                 this.Network = network;
@@ -140,13 +140,6 @@ namespace Redstone.Features.ServiceNode
                 // Use user keyfile; default new key if invalid
                 //string bitcoinNetwork;
 
-                //if (this.Network == NBitcoin.Network.Main)
-                //    bitcoinNetwork = "MainNet";
-                //else if (this.Network == NBitcoin.Network.RegTest)
-                //    bitcoinNetwork = "RegTest";
-                //else // Network == Network.TestNet
-                //    bitcoinNetwork = "TestNet";
-
                 //if (datadir == null)
                 //{
                 //    // Create default directory for key files if it does not already exist
@@ -174,7 +167,7 @@ namespace Redstone.Features.ServiceNode
                 {
                     try
                     {
-                        new KeyId(collateralAddress);
+                        BitcoinAddress.Create(collateralAddress, this.Network);
                         this.CollateralAddress = collateralAddress;
                     }
                     catch (Exception e)
@@ -188,7 +181,7 @@ namespace Redstone.Features.ServiceNode
                 {
                     try
                     {
-                        new KeyId(rewardAddress);
+                        BitcoinAddress.Create(rewardAddress, this.Network);
                         this.RewardAddress = rewardAddress;
                     }
                     catch (Exception e)
@@ -231,18 +224,17 @@ namespace Redstone.Features.ServiceNode
 
             var builder = new StringBuilder();
 
-            builder.AppendLine($"-network=<network>                             Network - e.g. testnet or mainnet");
-            builder.AppendLine($"-servicenode.ipv4=<ipv4 address>               IPv4 address of servicenode");
-            builder.AppendLine($"-servicenode.ipv6=<ipv6 address>               IPv6 address of servicenode");
-            builder.AppendLine($"-servicenode.onion=<onion address>             Onion address of servicenode");
-            builder.AppendLine($"-servicenode.port=<port>                       Port of servicenode. Default - 37123");
-            builder.AppendLine($"-servicenode.regtxoutputvalue=<value>          Value of each registration transaction output (in satoshi) default = 1000");
-            builder.AppendLine($"-servicenode.regtxfeevalue=<value>             Value of registration transaction fee (in satoshi) default = 10000");
-            builder.AppendLine($"-servicenode.rsakeyfile=<rsakeyfile>           RSA keyfile for token signing");
-            builder.AppendLine($"-servicenode.ecdsapubkey=<pubkey>              PubKey for token signing");
-            builder.AppendLine($"-servicenode.collateraladdress=<pubkeyhash>    PubKeyHash to collateral");
-            builder.AppendLine($"-servicenode.rewardaddress=<pubkeyhash>        PubKeyHash for rewards");
-            builder.AppendLine($"-servicenode.serviceendpoint=<url>     Url to Redstone Endpoint for service");
+            builder.AppendLine($"-network=<network>                                 Network - e.g. testnet or mainnet");
+            builder.AppendLine($"-servicenode.ipv4=<ipv4 address>                   IPv4 address of servicenode");
+            builder.AppendLine($"-servicenode.ipv6=<ipv6 address>                   IPv6 address of servicenode");
+            builder.AppendLine($"-servicenode.onion=<onion address>                 Onion address of servicenode");
+            builder.AppendLine($"-servicenode.port=<port>                           Port of servicenode. Default - 37123");
+            builder.AppendLine($"-servicenode.regtxoutputvalue=<value>              Value of each registration transaction output (in satoshi) default = 1000");
+            builder.AppendLine($"-servicenode.regtxfeevalue=<value>                 Value of registration transaction fee (in satoshi) default = 10000");
+            builder.AppendLine($"-servicenode.rsakeyfile=<rsakeyfile>               RSA keyfile for token signing");
+            builder.AppendLine($"-servicenode.collateraladdress=<wallet address>    Wallet address for collateral - an unused one will be picked if not set");
+            builder.AppendLine($"-servicenode.rewardaddress=<wallet address>        Wallet address for rewards - an unused one will be picked if not set");
+            builder.AppendLine($"-servicenode.serviceendpoint=<url>                 Url to Redstone Endpoint for service");
 
             NodeSettings.Default(network).Logger.LogInformation(builder.ToString());
         }
@@ -264,11 +256,11 @@ namespace Redstone.Features.ServiceNode
             builder.AppendLine("#servicenode.regtxoutputvalue=");
             builder.AppendLine("# Value of registration transaction fee (in satoshi) default = 10000");
             builder.AppendLine("#servicenode.regtxfeevalue=");
-            builder.AppendLine("#servicenode.oasurl=");
             builder.AppendLine("#servicenode.rsakeyfile=");
-            builder.AppendLine("#servicenode.ecdsapubkey=");
             builder.AppendLine("#servicenode.collateraladdress=");
+            builder.AppendLine("# Wallet address for collateral - an unused one will be picked if not set");
             builder.AppendLine("#servicenode.rewardaddress=");
+            builder.AppendLine("# Wallet address for rewards - an unused one will be picked if not set");
             builder.AppendLine("#servicenode.serviceendpoint=");
         }
 

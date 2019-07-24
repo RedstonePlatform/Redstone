@@ -219,7 +219,6 @@ namespace Redstone.Feature.ServiceNode.Tests
                 ProtocolVersion = (int)ServiceNodeProtocolVersion.INITIAL,
                 Ipv4Address = IPAddress.Parse("127.0.0.1"),
                 Port = 37123,
-                ConfigurationHash = "0123456789012345678901234567890123456789", // TODO hash of config file
                 CollateralPubKeyHash = this.serverSecret.PubKeyHash,
                 RewardPubKeyHash = this.serverSecret.PubKeyHash,
                 EcdsaPrivateKey = this.serverSecret,

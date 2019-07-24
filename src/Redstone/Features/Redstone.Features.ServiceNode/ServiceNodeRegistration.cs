@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 using NBitcoin;
 using Redstone.ServiceNode;
@@ -26,62 +24,31 @@ namespace Redstone.Features.ServiceNode
 
         private readonly IBroadcasterManager broadcasterManager;
 
-        private readonly string regStorePath;
+        private readonly IServiceNodeManager serviceNodeManager;
 
         public ServiceNodeRegistration(Network network,
             NodeSettings nodeSettings,
             IBroadcasterManager broadcasterManager,
             IWalletTransactionHandler walletTransactionHandler,
-            IWalletManager walletManager)
+            IWalletManager walletManager,
+            IServiceNodeManager serviceNodeManager)
         {
             this.network = network;
             this.broadcasterManager = broadcasterManager;
             this.walletTransactionHandler = walletTransactionHandler;
             this.walletManager = walletManager;
-            this.regStorePath = Path.Combine(nodeSettings.DataDir, "registrationHistory.json");
+            this.serviceNodeManager = serviceNodeManager;
         }
 
         public bool IsRegistrationValid(IServiceNodeRegistrationConfig registrationConfig)
         {
-            // In order to determine if the registration sequence has been performed
-            // before, and to see if a previous performance is still valid, interrogate
-            // the database to see if any transactions have been recorded.
-
-            RegistrationStore regStore = new RegistrationStore(regStorePath);
-
-            var ecsdaPubKeyAddress = registrationConfig.EcdsaPrivateKey.GetAddress().ToString();
-            List<RegistrationRecord> transactions = regStore.GetByServerId(ecsdaPubKeyAddress);
+            IServiceNode serviceNode = this.serviceNodeManager.GetByServerId(registrationConfig.CollateralPubKeyHash.ToString());
 
             // If no transactions exist, the registration definitely needs to be done
-            if (transactions == null || transactions.Count == 0)
-            {
+            if (serviceNode == null)
                 return false;
-            }
 
-            RegistrationRecord mostRecent = null;
-            foreach (RegistrationRecord record in transactions)
-            {
-                // Find most recent transaction
-                if (mostRecent == null)
-                {
-                    mostRecent = record;
-                }
-
-                if (record.RecordTimestamp > mostRecent.RecordTimestamp)
-                    mostRecent = record;
-            }
-
-            // Check if the stored record matches the current configuration
-            RegistrationToken registrationToken;
-            try
-            {
-                registrationToken = mostRecent.Token;
-            }
-            catch (NullReferenceException e)
-            {
-                Console.WriteLine(e);
-                return false;
-            }
+            RegistrationToken registrationToken = serviceNode.RegistrationRecord.Token;
 
             // IPv4
             if (registrationConfig.Ipv4Address == null && registrationToken.Ipv4Addr != null)
@@ -123,10 +90,6 @@ namespace Redstone.Features.ServiceNode
             if (registrationConfig.ServiceEndpoint != registrationToken.ServiceEndpoint)
                 return false;
 
-            // This verifies that the parameters are unchanged
-            if (registrationConfig.ConfigurationHash != registrationToken.ConfigurationHash)
-                return false;
-
             // TODO: Check if transaction is actually confirmed on the blockchain?
 
             return true;
@@ -151,15 +114,6 @@ namespace Redstone.Features.ServiceNode
                     serviceRsaKey);
 
                 await this.broadcasterManager.BroadcastTransactionAsync(transaction).ConfigureAwait(false);
-
-                var regStore = new RegistrationStore(this.regStorePath);
-                regStore.Add(new RegistrationRecord(
-                    DateTime.Now,
-                    Guid.NewGuid(),
-                    transaction.GetHash().ToString(),
-                    transaction.ToHex(),
-                    registrationToken,
-                    null));
             }
             catch (Exception e)
             {

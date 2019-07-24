@@ -28,9 +28,6 @@ namespace Redstone.ServiceNode.Models
 
         Uri ServiceEndpoint { get; set; }
 
-        // Not sure how this works? Is ConfigurationHash is obtained after registration for checks (null for first reg)
-        string ConfigurationHash { get; }
-
         RegistrationToken CreateRegistrationToken(Network network);
     }
 }

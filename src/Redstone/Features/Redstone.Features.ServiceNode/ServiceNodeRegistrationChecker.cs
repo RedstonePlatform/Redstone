@@ -91,7 +91,7 @@ namespace Redstone.Features.ServiceNode
                     string collateralAddress = registrationRecord.Token.CollateralPubKeyHash.GetAddress(this.network).ToString();
 
                     this.logger.LogTrace("New Service Node Registration");
-                    var serviceNode = new Redstone.ServiceNode.Models.ServiceNode(registrationRecord, collateralAddress);
+                    var serviceNode = new Redstone.ServiceNode.Models.ServiceNode(registrationRecord);
                     this.serviceNodeManager.AddServiceNode(serviceNode);
                 }
                 catch (Exception e)
@@ -99,6 +99,9 @@ namespace Redstone.Features.ServiceNode
                     this.logger.LogDebug("Failed to parse registration transaction, exception: " + e);
                 }
             }
+
+            this.serviceNodeManager.SyncedHeight = height;
+            this.serviceNodeManager.SyncedBlockHash = block.GetHash();
         }
 
         private void CheckCollateral(int height)

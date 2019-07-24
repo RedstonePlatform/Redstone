@@ -6,13 +6,15 @@ namespace Redstone.ServiceNode.Models
     /// <summary>Representation of a service node.</summary>
     public class ServiceNode : IServiceNode
     {
-        public ServiceNode(RegistrationRecord registrationRecord, string collateralAddress)
+        public ServiceNode(RegistrationRecord registrationRecord)
         {
             Guard.NotNull(registrationRecord, nameof(registrationRecord));
 
             this.RegistrationRecord = registrationRecord;
-            this.CollateralAddress = collateralAddress;
         }
+
+        /// <inheritdoc />
+        public string ServerId => this.CollateralPubKeyHash.ToString();
 
         /// <inheritdoc />
         public PubKey SigningPubKey => this.RegistrationRecord.Token.SigningPubKey;
@@ -25,9 +27,6 @@ namespace Redstone.ServiceNode.Models
 
         /// <inheritdoc />
         public RegistrationRecord RegistrationRecord { get; }
-
-        /// <inheritdoc />
-        public string CollateralAddress { get; set; }
 
         /// <inheritdoc />
         public override bool Equals(object obj)
@@ -50,8 +49,7 @@ namespace Redstone.ServiceNode.Models
             if ((object)a == null || (object)b == null)
                 return false;
 
-            return a.RegistrationRecord == b.RegistrationRecord
-                   && a.CollateralAddress == b.CollateralAddress;
+            return a.RegistrationRecord == b.RegistrationRecord;
         }
 
         public static bool operator !=(ServiceNode a, ServiceNode b)
@@ -62,7 +60,7 @@ namespace Redstone.ServiceNode.Models
         /// <inheritdoc />
         public override string ToString()
         {
-            return base.ToString() + $"{nameof(this.CollateralAddress)}:{this.CollateralAddress ?? "null"}";
+            return base.ToString() + $"{nameof(this.ServerId)}:{this.ServerId ?? "null"}";
         }
     }
 }

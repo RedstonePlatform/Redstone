@@ -116,12 +116,12 @@ namespace Redstone.Features.ServiceNode
 
             try
             {
-                // TODO: SN inject?
                 var registration = new ServiceNodeRegistration(this.network,
                     this.nodeSettings,
                     this.broadcasterManager,
                     this.walletTransactionHandler,
-                    this.walletManager);
+                    this.walletManager,
+                    this.serviceNodeManager);
 
                 (KeyId collateralPubKeyHash, KeyId rewardPubKeyHash) = GetPubKeyHashes(this.serviceNodeSettings, request.WalletName, request.AccountName);
 
@@ -132,7 +132,6 @@ namespace Redstone.Features.ServiceNode
                     Ipv6Address = this.serviceNodeSettings.Ipv6Address ?? IPAddress.IPv6None,
                     OnionAddress = null,
                     Port = this.serviceNodeSettings.Port,
-                    ConfigurationHash = "0123456789012345678901234567890123456789", // TODO hash of config file
                     EcdsaPrivateKey = key.GetBitcoinSecret(this.network),
                     CollateralPubKeyHash = collateralPubKeyHash,
                     RewardPubKeyHash = rewardPubKeyHash,
@@ -145,15 +144,15 @@ namespace Redstone.Features.ServiceNode
 
                 if (!registration.IsRegistrationValid(config))
                 {
-                    logger.LogInformation("{Time} Creating or updating node registration", DateTime.Now);
+                    this.logger.LogInformation("{Time} Creating or updating node registration", DateTime.Now);
                     Transaction regTx = await registration.PerformRegistrationAsync(config, request.WalletName, request.Password, request.AccountName, rsa);
                     if (regTx != null)
                     {
-                        logger.LogInformation("{Time} Submitted node registration transaction {TxId} for broadcast", DateTime.Now, regTx.GetHash().ToString());
+                        this.logger.LogInformation("{Time} Submitted node registration transaction {TxId} for broadcast", DateTime.Now, regTx.GetHash().ToString());
                     }
                     else
                     {
-                        logger.LogInformation("{Time} Unable to broadcast transaction", DateTime.Now);
+                        this.logger.LogInformation("{Time} Unable to broadcast transaction", DateTime.Now);
                         Environment.Exit(0);
                     }
 
@@ -190,8 +189,8 @@ namespace Redstone.Features.ServiceNode
         private (KeyId collateralPubKeyHash, KeyId rewardPubKeyHash) GetPubKeyHashes(ServiceNodeSettings serviceNodeSettings, string walletName, string accountName)
         {
             var unusedAddresses = this.walletManager.GetUnusedAddresses(new WalletAccountReference(walletName, accountName), 2).ToList();
-            var collateralAddress = serviceNodeSettings.CollateralAddress ?? unusedAddresses[0].ToString();
-            var rewardAddress = serviceNodeSettings.RewardAddress ?? unusedAddresses[1].ToString();
+            var collateralAddress = serviceNodeSettings.CollateralAddress ?? unusedAddresses[0].Address;
+            var rewardAddress = serviceNodeSettings.RewardAddress ?? unusedAddresses[1].Address;
 
             KeyId collateralPubKeyHash = PayToPubkeyHashTemplate.Instance.ExtractScriptPubKeyParameters(BitcoinAddress.Create(collateralAddress, this.network).ScriptPubKey);
             KeyId rewardPubKeyHash = PayToPubkeyHashTemplate.Instance.ExtractScriptPubKeyParameters(BitcoinAddress.Create(rewardAddress, this.network).ScriptPubKey);

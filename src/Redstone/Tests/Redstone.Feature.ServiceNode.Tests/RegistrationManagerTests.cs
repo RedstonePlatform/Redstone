@@ -27,7 +27,6 @@ namespace Redstone.Feature.ServiceNode.Tests
                 var token = new RegistrationToken(255,
                                                   IPAddress.Parse("127.0.0.1"),
                                                   IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
-                                                  "0123456789ABCDEF",
                                                   "",
                                                   37123,
                                                   new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
@@ -52,7 +51,7 @@ namespace Redstone.Feature.ServiceNode.Tests
                 signals.Subscribe<ServiceNodeAdded>(a => { signalsCount++; });
                 signals.Subscribe<ServiceNodeRemoved>(r => { signalsCount--; });
 
-                var serviceNode = new Redstone.ServiceNode.Models.ServiceNode(record, "dbb476190a81120928763ee8ce97e4c0bcfd6624");
+                var serviceNode = new Redstone.ServiceNode.Models.ServiceNode(record);
                 serviceNodeManager.AddServiceNode(serviceNode);
 
                 Assert.Equal(1, signalsCount);

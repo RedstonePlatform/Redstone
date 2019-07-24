@@ -13,7 +13,6 @@ namespace Redstone.ServiceNode.Models
                 this.Ipv4Address,
                 this.Ipv6Address,
                 this.OnionAddress,
-                this.ConfigurationHash,
                 this.Port,
                 this.CollateralPubKeyHash,
                 this.RewardPubKeyHash,
@@ -42,7 +41,5 @@ namespace Redstone.ServiceNode.Models
         public BitcoinSecret EcdsaPrivateKey { get; set; }
 
         public Uri ServiceEndpoint { get; set; }
-
-        public string ConfigurationHash { get; set; }
     }
 }

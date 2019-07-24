@@ -48,7 +48,6 @@ namespace Redstone.ServiceNode.Models
         -> n bytes - RSA signature proving ownership of the Redstone ServiceNode server's private key (to prevent spoofing)
         -> 4 bytes - ECDSA signature length
         -> n bytes - ECDSA signature proving ownership of the Redstone ServiceNode server's private key
-        -> 40 bytes - Hash of the service node server's configuration file
         <...>
         -> Protocol does not preclude additional data being appended in future without breaking compatibility
 
@@ -92,8 +91,6 @@ namespace Redstone.ServiceNode.Models
 
         public byte[] EcdsaSignature { get; set; }
 
-        public string ConfigurationHash { get; set; }
-
         [JsonConverter(typeof(PubKeyConverter))]
         public PubKey SigningPubKey { get; set; }
 
@@ -103,7 +100,6 @@ namespace Redstone.ServiceNode.Models
             IPAddress ipv4Addr,
             IPAddress ipv6Addr,
             string onionAddress,
-            string configurationHash,
             int port,
             KeyId collateralPubKeyHash,
             KeyId rewardPubKeyHash,
@@ -115,7 +111,6 @@ namespace Redstone.ServiceNode.Models
             this.Ipv6Addr = ipv6Addr;
             this.OnionAddress = onionAddress;
             this.Port = port;
-            this.ConfigurationHash = configurationHash;
             this.CollateralPubKeyHash = collateralPubKeyHash;
             this.RewardPubKeyHash = rewardPubKeyHash;
             this.SigningPubKey = ecdsaPubKey;
@@ -217,9 +212,6 @@ namespace Redstone.ServiceNode.Models
             token.AddRange(this.RsaSignature);
             token.AddRange(ecdsaLength);
             token.AddRange(this.EcdsaSignature);
-
-            // Server configuration hash
-            token.AddRange(Encoding.ASCII.GetBytes(this.ConfigurationHash));
 
             byte[] pubKeyLength = BitConverter.GetBytes(this.SigningPubKey.ToBytes().Length);
             token.Add(pubKeyLength[0]);
@@ -416,10 +408,6 @@ namespace Redstone.ServiceNode.Models
             this.EcdsaSignature = GetSubArray(bitstream, position, ecdsaLength);
             position += ecdsaLength;
 
-            byte[] configurationHashTemp = GetSubArray(bitstream, position, 40);
-            this.ConfigurationHash = Encoding.ASCII.GetString(configurationHashTemp);
-            position += 40;
-
             temp = GetSubArray(bitstream, position, 2);
             var ecdsaPubKeyLength = (temp[1] << 8) + temp[0];
             position += 2;
@@ -487,7 +475,6 @@ namespace Redstone.ServiceNode.Models
                    EqualityComparer<Uri>.Default.Equals(this.ServiceEndpoint, token.ServiceEndpoint) &&
                    EqualityComparer<byte[]>.Default.Equals(this.RsaSignature, token.RsaSignature) &&
                    EqualityComparer<byte[]>.Default.Equals(this.EcdsaSignature, token.EcdsaSignature) &&
-                   this.ConfigurationHash == token.ConfigurationHash &&
                    EqualityComparer<PubKey>.Default.Equals(this.SigningPubKey, token.SigningPubKey);
         }
 
@@ -504,7 +491,6 @@ namespace Redstone.ServiceNode.Models
             hashCode = hashCode * -1521134295 + EqualityComparer<Uri>.Default.GetHashCode(this.ServiceEndpoint);
             hashCode = hashCode * -1521134295 + EqualityComparer<byte[]>.Default.GetHashCode(this.RsaSignature);
             hashCode = hashCode * -1521134295 + EqualityComparer<byte[]>.Default.GetHashCode(this.EcdsaSignature);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(this.ConfigurationHash);
             hashCode = hashCode * -1521134295 + EqualityComparer<PubKey>.Default.GetHashCode(this.SigningPubKey);
             return hashCode;
         }

@@ -17,10 +17,16 @@ namespace Redstone.ServiceNode
         /// <summary><c>true</c> in case current node is a registered service node.</summary>
         bool IsServiceNode { get; }
 
-        /// <summary>Current service node's private key. <c>null</c> if <see cref="IsServiceNode"/> is <c>false</c>.</summary>
-        Key CurrentServiceNodeKey { get; }
+        /// <summary>
+        /// Starts the service node manager.
+        /// </summary>
+        void Start();
 
-        void Initialize();
+        /// <summary>
+        /// Stops the service node manager.
+        /// <para>Internally it waits for async loops to complete before saving the wallets to disk.</para>
+        /// </summary>
+        void Stop();
 
         /// <summary>Provides up to date list of service nodes.</summary>
         /// <remarks>
@@ -29,9 +35,15 @@ namespace Redstone.ServiceNode
         /// </remarks>
         List<IServiceNode> GetServiceNodes();
 
+        IServiceNode GetByServerId(string serverId);
+
         void AddServiceNode(IServiceNode serviceNodeMember);
 
         void RemoveServiceNode(IServiceNode serviceNodeMember);
+
+        int SyncedHeight { get; set; }
+
+        uint256 SyncedBlockHash { get; set; }
     }
 
     public abstract class ServiceNodeManagerBase : IServiceNodeManager
@@ -52,8 +64,6 @@ namespace Redstone.ServiceNode
 
         private readonly ISignals signals;
 
-        /// <summary>Key for accessing list of nodes from <see cref="IKeyValueRepository"/>.</summary>
-        protected const string ServiceNodesKey = "servicenodes";
 
         /// <summary>Collection of all active service nodes.</summary>
         /// <remarks>All access should be protected by <see cref="locker"/>.</remarks>
@@ -73,15 +83,11 @@ namespace Redstone.ServiceNode
             this.locker = new object();
         }
 
-        public virtual void Initialize()
+        public virtual void Start()
         {
             LoadServiceNodes();
 
-            // If there are no registrations then revert back to the block height of when the service nodes were set-up.
-            //if (registrationRecords.Count == 0)
-            //    this.RevertRegistrations();
-            //else
-            //    this.VerifyRegistrationStore(registrationRecords);
+            // TODO: what if load fails? Shouldn't we sync again
 
             if (this.ServiceNodes == null)
             {
@@ -114,6 +120,10 @@ namespace Redstone.ServiceNode
 
             this.Logger.LogInformation("Federation key pair was successfully loaded. Your public key is: '{0}'.", this.CurrentServiceNodeKey.PubKey);
         }
+        public virtual void Stop()
+        {
+            this.SaveServiceNodes();
+        }
 
         private void SetIsServiceNode()
         {
@@ -128,6 +138,15 @@ namespace Redstone.ServiceNode
                 return new List<IServiceNode>(this.ServiceNodes);
             }
         }
+
+        public IServiceNode GetByServerId(string serverId)
+        {
+            lock (this.locker)
+            {
+                return this.ServiceNodes.FirstOrDefault(sn => sn.ServerId == serverId);
+            }
+        }
+
 
         protected void SetServiceNodes(List<IServiceNode> serviceNodesToSet)
         {
@@ -185,56 +204,22 @@ namespace Redstone.ServiceNode
             }
         }
 
+        public int SyncedHeight { get; set; }
+
+        public uint256 SyncedBlockHash { get; set; }
+
         protected abstract void SaveServiceNodes();
 
         /// <summary>Loads saved collection of service nodes from the database.</summary>
         protected abstract void LoadServiceNodes();
-
-        // Default initial sysc height
-        //private const int SyncHeightMain = 0;
-        //private const int SyncHeightTest = 0;
-        //private const int SyncHeightRegTest = 0;
-
-        //private void RevertRegistrations()
-        //{
-        //    this.logger.LogTrace("()");
-
-        //    // For RegTest, it is not clear that re-issuing a sync command will be beneficial. Generally you want to sync from genesis in that case.
-        //    int syncHeight = this.network.Name == "RedstoneMain"
-        //        ? SyncHeightMain
-        //        : this.network.Name == "RedstoneTest"
-        //            ? SyncHeightTest
-        //            : SyncHeightRegTest;
-
-        //    this.logger.LogInformation("No registrations have been found; Syncing from height {0} in order to get service node registrations", syncHeight);
-
-        //    this.walletSyncManager.SyncFromHeight(syncHeight);
-
-        //    this.logger.LogTrace("(-)");
-        //}
-
-        //private void VerifyRegistrationStore(IEnumerable<RegistrationRecord> list)
-        //{
-        //    this.logger.LogTrace("()");
-
-        //    this.logger.LogTrace("VerifyRegistrationStore");
-
-        //    // Verify that the registration store is in a consistent state on start-up. The signatures of all the records need to be validated.
-        //    foreach (RegistrationRecord registrationRecord in list)
-        //    {
-        //        if (registrationRecord.Token.Validate(this.network)) continue;
-
-        //        this.logger.LogTrace("Deleting invalid registration : {0}", registrationRecord.RecordGuid);
-
-        //        this.registrationStore.Delete(registrationRecord.RecordGuid);
-        //    }
-
-        //    this.logger.LogTrace("(-)");
-        //}
     }
 
     public class ServiceNodeManager : ServiceNodeManagerBase
     {
+        private const string SyncedHeightKey = "syncedheight";
+        private const string SyncedBlockHashKey = "syncedblockhash";
+        private const string ServiceNodesKey = "servicenodes";
+
         public ServiceNodeManager(NodeSettings nodeSettings, Network network, ILoggerFactory loggerFactory, IKeyValueRepository keyValueRepo, ISignals signals)
             : base(nodeSettings, network, loggerFactory, keyValueRepo, signals)
         {
@@ -242,12 +227,16 @@ namespace Redstone.ServiceNode
 
         protected override void SaveServiceNodes()
         {
+            this.KeyValueRepo.SaveValueJson(SyncedHeightKey, this.SyncedHeight);
+            this.KeyValueRepo.SaveValueJson(SyncedBlockHashKey, this.SyncedBlockHash);
             this.KeyValueRepo.SaveValueJson(ServiceNodesKey, GetServiceNodes());
         }
 
         /// <inheritdoc />
         protected override void LoadServiceNodes()
         {
+            this.SyncedHeight = this.KeyValueRepo.LoadValueJson<int>(SyncedHeightKey);
+            this.SyncedBlockHash = this.KeyValueRepo.LoadValueJson<uint256>(SyncedBlockHashKey);
             SetServiceNodes(this.KeyValueRepo.LoadValueJson<List<IServiceNode>>(ServiceNodesKey));
 
             if (this.ServiceNodes == null)

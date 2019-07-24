@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,35 +10,69 @@ using Redstone.ServiceNode.Models;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.Notifications;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
+using Stratis.Bitcoin.Utilities;
 
 namespace Redstone.Features.ServiceNode
 {
     public class ServiceNodeFeature : FullNodeFeature
     {
         private readonly ILogger logger;
-        private readonly IWalletSyncManager walletSyncManager;
         private readonly IServiceNodeManager serviceNodeManager;
         private readonly IServiceNodeRegistrationChecker serviceNodeRegistrationChecker;
         private readonly IServiceNodeCollateralChecker serviceNodeCollateralChecker;
 
-        private readonly Network network;
-
         public ServiceNodeFeature(ILoggerFactory loggerFactory,
             NodeSettings nodeSettings,
-            IWalletSyncManager walletSyncManager,
-            IServiceNodeManager registrationManager,
+            IServiceNodeManager serviceNodeManager,
             IServiceNodeRegistrationChecker serviceNodeRegistrationChecker,
-            IServiceNodeCollateralChecker serviceNodeCollateralChecker)
+            IServiceNodeCollateralChecker serviceNodeCollateralChecker,
+            INodeStats nodeStats)
         {
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
-            this.serviceNodeManager = registrationManager;
+            this.serviceNodeManager = serviceNodeManager;
             this.serviceNodeRegistrationChecker = serviceNodeRegistrationChecker;
             this.serviceNodeCollateralChecker = serviceNodeCollateralChecker;
-            this.network = nodeSettings.Network;
-            this.walletSyncManager = walletSyncManager;
+
+            nodeStats.RegisterStats(this.AddComponentStats, StatsType.Component);
+            nodeStats.RegisterStats(this.AddInlineStats, StatsType.Inline, 800);
+        }
+
+        public override void Dispose()
+        {
+            this.serviceNodeManager.Stop();
+        }
+
+        private void AddInlineStats(StringBuilder benchLog)
+        {
+            if (this.serviceNodeManager != null)
+            {
+                int height = this.serviceNodeManager.SyncedHeight;
+                uint256 hash = this.serviceNodeManager.SyncedBlockHash;
+
+                benchLog.AppendLine("ServiceNode.Height: ".PadRight(LoggingConfiguration.ColumnLength + 1) +
+                               height.ToString().PadRight(8) +
+                               " ServiceNode.Hash: ".PadRight(LoggingConfiguration.ColumnLength - 1) + hash);
+            }
+        }
+
+        private void AddComponentStats(StringBuilder benchLog)
+        {
+            if (this.serviceNodeManager != null)
+            {
+                benchLog.AppendLine();
+                benchLog.AppendLine("======Service Nodes======");
+
+                foreach (IServiceNode serviceNode in this.serviceNodeManager.GetServiceNodes())
+                {
+                    benchLog.AppendLine(($"{serviceNode.CollateralPubKeyHash}" + ",").PadRight(LoggingConfiguration.ColumnLength + 20)
+                                   + (" Block Registered : " + serviceNode.RegistrationRecord.BlockReceived).PadRight(LoggingConfiguration.ColumnLength + 20)
+                                   + " Endpoint: " + serviceNode.RegistrationRecord.Token.ServiceEndpoint);
+                }
+            }
         }
 
         /// <inheritdoc />
@@ -46,9 +81,7 @@ namespace Redstone.Features.ServiceNode
             this.logger.LogTrace("()");
 
             this.serviceNodeRegistrationChecker.Initialize();
-            this.serviceNodeManager.Initialize();
-
-            //await this.serviceNodeCollateralChecker.InitializeAsync().ConfigureAwait(false);
+            this.serviceNodeManager.Start();
 
             this.logger.LogTrace("(-)");
         }

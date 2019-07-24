@@ -14,7 +14,11 @@ using Stratis.Bitcoin.Signals;
 
 namespace Redstone.Features.ServiceNode
 {
-    /// <summary>Class that checks if service nodes fulfill the collateral requirement.</summary>
+    // TODO: this is in progress - currently does nothing but potential replacement for collateral check in registration checker
+
+    /// <summary>
+    /// Class that checks if service nodes fulfill the collateral requirement.
+    /// </summary>
     public class ServiceNodeCollateralChecker : IServiceNodeCollateralChecker, IDisposable
     {
         private readonly IAddressIndexer addressIndexer;
@@ -24,7 +28,7 @@ namespace Redstone.Features.ServiceNode
 
         private readonly ILogger logger;
 
-        /// <summary>Protects access to <see cref="depositsByAddress"/>.</summary>
+        /// <summary>Protects access to <see cref="depositsByServerId"/>.</summary>
         private readonly object locker = new object();
 
         private readonly CancellationTokenSource cancellationSource = new CancellationTokenSource();
@@ -43,7 +47,7 @@ namespace Redstone.Features.ServiceNode
         /// Deposits are not updated if service node doesn't have collateral requirement enabled.
         /// All access should be protected by <see cref="locker"/>.
         /// </remarks>
-        private readonly Dictionary<string, Money> depositsByAddress;
+        private readonly Dictionary<string, Money> depositsByServerId;
 
         private Task updateCollateralContinuouslyTask;
 
@@ -58,7 +62,7 @@ namespace Redstone.Features.ServiceNode
             this.serviceNodeManager = serviceNodeManager;
             this.signals = signals;
             this.addressIndexer = addressIndexer;
-            this.depositsByAddress = new Dictionary<string, Money>();
+            this.depositsByServerId = new Dictionary<string, Money>();
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
@@ -73,7 +77,7 @@ namespace Redstone.Features.ServiceNode
             {
                 lock (this.locker)
                 {
-                    this.depositsByAddress.Add(serviceNode.CollateralAddress, null);
+                    this.depositsByServerId.Add(serviceNode.ServerId, null);
                 }
             }
 
@@ -132,7 +136,7 @@ namespace Redstone.Features.ServiceNode
 
             lock (this.locker)
             {
-                addressesToCheck = this.depositsByAddress.Keys.ToList();
+                addressesToCheck = this.depositsByServerId.Keys.ToList();
             }
 
             if (addressesToCheck.Count == 0)
@@ -165,7 +169,7 @@ namespace Redstone.Features.ServiceNode
             {
                 foreach ((string key, Money value) in collateral)
                 {
-                    this.depositsByAddress[key] = value;
+                    this.depositsByServerId[key] = value;
                 }
             }
 
@@ -214,7 +218,7 @@ namespace Redstone.Features.ServiceNode
         {
             lock (this.locker)
             {
-                return this.depositsByAddress[serviceNode.CollateralAddress] >= this.network.Consensus.ServiceNodeCollateralThreshold;
+                return this.depositsByServerId[serviceNode.ServerId] >= this.network.Consensus.ServiceNodeCollateralThreshold;
             }
         }
 
@@ -222,7 +226,7 @@ namespace Redstone.Features.ServiceNode
         {
             lock (this.locker)
             {
-                this.depositsByAddress.Remove(serviceNodeRemoved.RemovedNode.CollateralAddress);
+                this.depositsByServerId.Remove(serviceNodeRemoved.RemovedNode.ServerId);
             }
         }
 
@@ -230,7 +234,7 @@ namespace Redstone.Features.ServiceNode
         {
             lock (this.locker)
             {
-                this.depositsByAddress.Add(serviceNodeAdded.AddedNode.CollateralAddress, null);
+                this.depositsByServerId.Add(serviceNodeAdded.AddedNode.ServerId, null);
             }
         }
 
