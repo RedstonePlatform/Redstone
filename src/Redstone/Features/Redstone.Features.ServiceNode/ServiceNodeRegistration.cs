@@ -95,8 +95,11 @@ namespace Redstone.Features.ServiceNode
             return true;
         }
 
-        public async Task<Transaction> PerformRegistrationAsync(IServiceNodeRegistrationConfig registrationConfig,
-            string walletName, string walletPassword, string accountName, RsaKey serviceRsaKey)
+        public async Task<Transaction> PerformRegistrationAsync(
+            IServiceNodeRegistrationConfig registrationConfig,
+            string walletName, 
+            string walletPassword, 
+            string accountName)
         {
             Transaction transaction = null;
             try
@@ -110,8 +113,7 @@ namespace Redstone.Features.ServiceNode
                     registrationToken,
                     walletName,
                     accountName,
-                    walletPassword,
-                    serviceRsaKey);
+                    walletPassword);
 
                 await this.broadcasterManager.BroadcastTransactionAsync(transaction).ConfigureAwait(false);
             }

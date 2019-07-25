@@ -236,8 +236,7 @@ namespace Redstone.Feature.ServiceNode.Tests
                 registrationToken,
                 WalletName,
                 Account,
-                Password,
-                new RsaKey());
+                Password);
 
             return transaction;
         }

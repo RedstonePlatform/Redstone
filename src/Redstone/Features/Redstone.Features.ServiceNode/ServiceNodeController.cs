@@ -139,13 +139,10 @@ namespace Redstone.Features.ServiceNode
                     TxOutputValue = this.serviceNodeSettings.TxOutputValue
                 };
 
-                // TODO: SN this needs to be loaded from pem file
-                var rsa = new RsaKey();
-
                 if (!registration.IsRegistrationValid(config))
                 {
                     this.logger.LogInformation("{Time} Creating or updating node registration", DateTime.Now);
-                    Transaction regTx = await registration.PerformRegistrationAsync(config, request.WalletName, request.Password, request.AccountName, rsa);
+                    Transaction regTx = await registration.PerformRegistrationAsync(config, request.WalletName, request.Password, request.AccountName);
                     if (regTx != null)
                     {
                         this.logger.LogInformation("{Time} Submitted node registration transaction {TxId} for broadcast", DateTime.Now, regTx.GetHash().ToString());

@@ -20,8 +20,7 @@ namespace Redstone.Features.ServiceNode
             RegistrationToken registrationToken,
             string walletName,
             string accountName,
-            string password,
-            RsaKey serviceRsaKey)
+            string password)
         {
             var accountReference = new WalletAccountReference()
             {
@@ -35,12 +34,11 @@ namespace Redstone.Features.ServiceNode
             var context = new TransactionBuildContext(network)
             {
                 AccountReference = accountReference,
-                Recipients = GetRecipients(registrationConfig, registrationToken, serviceRsaKey),
+                Recipients = GetRecipients(registrationConfig, registrationToken),
                 Shuffle = false,
                 Sign = true,
                 OverrideFeeRate = new FeeRate(registrationConfig.TxFeeValue),
-                WalletPassword = password,
-                //ChangeAddress = hdAddress
+                WalletPassword = password
             };
             context.TransactionBuilder.CoinSelector = new DefaultCoinSelector
             {
@@ -51,9 +49,9 @@ namespace Redstone.Features.ServiceNode
             return transaction;
         }
 
-        private static List<Recipient> GetRecipients(IServiceNodeRegistrationConfig registrationConfig, RegistrationToken registrationToken, RsaKey serviceRsaKey)
+        private static List<Recipient> GetRecipients(IServiceNodeRegistrationConfig registrationConfig, RegistrationToken registrationToken)
         {
-            byte[] tokenBytes = registrationToken.GetRegistrationTokenBytes(serviceRsaKey, registrationConfig.EcdsaPrivateKey);
+            byte[] tokenBytes = registrationToken.GetRegistrationTokenBytes(registrationConfig.EcdsaPrivateKey);
             byte[] markerBytes = Encoding.UTF8.GetBytes(RegistrationToken.Marker);
 
             var recipients = new List<Recipient>

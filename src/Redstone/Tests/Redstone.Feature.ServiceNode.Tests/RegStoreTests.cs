@@ -22,7 +22,6 @@ namespace Redstone.Feature.ServiceNode.Tests
         [Fact]
         public void RegistrationStoreAddTest()
         {
-            var rsa = new RsaKey();
             var ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.Main);
             
             var token = new RegistrationToken(255,
@@ -35,9 +34,7 @@ namespace Redstone.Feature.ServiceNode.Tests
                                               ecdsa.PubKey,
                                               new Uri("https://redstone.com/test"));
             
-            var cryptoUtils = new CryptoUtils(rsa, ecdsa);
-            token.RsaSignature = cryptoUtils.SignDataRSA(token.GetHeaderBytes().ToArray());
-            token.EcdsaSignature = cryptoUtils.SignDataECDSA(token.GetHeaderBytes().ToArray());
+            token.EcdsaSignature = CryptoUtils.SignDataECDSA(token.GetHeaderBytes().ToArray(), ecdsa);
 
             RegistrationRecord record = new RegistrationRecord(DateTime.Now,
                                                                Guid.NewGuid(),
@@ -57,14 +54,13 @@ namespace Redstone.Feature.ServiceNode.Tests
             var token = new RegistrationToken(255,
                                               IPAddress.Parse("127.0.0.1"),
                                               IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
-                                              "",
+                                              "0123456789ABCDEF",
                                               37123,
                                               new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
                                               new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
                                               ecdsaPub,
                                               new Uri("https://redstone.com/test"));
 
-            token.RsaSignature = Encoding.ASCII.GetBytes("xyz");
             token.EcdsaSignature = Encoding.ASCII.GetBytes("abc");
 
             RegistrationRecord record = new RegistrationRecord(DateTime.Now,
@@ -89,7 +85,7 @@ namespace Redstone.Feature.ServiceNode.Tests
             Assert.Equal(retrievedRecord.Ipv6Addr, IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"));
             Assert.Equal("0123456789ABCDEF", retrievedRecord.OnionAddress);
             Assert.Equal(37123, retrievedRecord.Port);
-            Assert.Equal(retrievedRecord.SigningPubKey, ecdsaPub);
+            Assert.Equal(retrievedRecord.EcdsaPubKey, ecdsaPub);
         }
 
         [Fact]
@@ -98,14 +94,13 @@ namespace Redstone.Feature.ServiceNode.Tests
             var token = new RegistrationToken(1,
                                               IPAddress.Parse("172.16.1.10"),
                                               IPAddress.Parse("2001:0db8:85a3:0000:1234:8a2e:0370:7334"),
-                                              "",
+                                              "0123456789ABCDEF",
                                               16174,
                                               new KeyId("3dca17804b85bd2998e8fafec17a00f1a8c2d84b"),
                                               new KeyId("3dca17804b85bd2998e8fafec17a00f1a8c2d84b"),
                                               null,
                                               new Uri("https://redstone.com/test"));
 
-            token.RsaSignature = Encoding.ASCII.GetBytes("def");
             token.EcdsaSignature = Encoding.ASCII.GetBytes("ghi");
 
             RegistrationRecord record = new RegistrationRecord(DateTime.Now,
@@ -121,14 +116,13 @@ namespace Redstone.Feature.ServiceNode.Tests
             var token2 = new RegistrationToken(255,
                                                IPAddress.Parse("127.0.0.1"),
                                                IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
-                                               "",
+                                               "0123456789ABCDEF",
                                                37123,
                                                new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
                                                new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
                                                null,
                                                new Uri("https://redstone.com/test"));
 
-            token2.RsaSignature = Encoding.ASCII.GetBytes("xyz");
             token2.EcdsaSignature = Encoding.ASCII.GetBytes("abc");
 
             RegistrationRecord record2 = new RegistrationRecord(DateTime.Now,

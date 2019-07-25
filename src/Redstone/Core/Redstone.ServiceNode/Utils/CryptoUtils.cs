@@ -5,28 +5,9 @@ namespace Redstone.ServiceNode.Utils
 {
     public class CryptoUtils
     {
-        RsaKey TumblerRsaKey;
-        BitcoinSecret EcdsaKey;
-
-        public CryptoUtils(RsaKey rsaKey, BitcoinSecret privateKeyEcdsa)
+        public static byte[] SignDataECDSA(byte[] message, BitcoinSecret privateEcdsaKey)
         {
-            this.TumblerRsaKey = rsaKey;
-            this.EcdsaKey = privateKeyEcdsa;
-        }
-
-        public byte[] SignDataRSA(byte[] message)
-        {
-            byte[] signedBytes;
-            uint160 temp1;
-
-            signedBytes = this.TumblerRsaKey.Sign(message, out temp1);
-
-            return signedBytes;
-        }
-
-        public byte[] SignDataECDSA(byte[] message)
-        {
-            var signature = this.EcdsaKey.PrivateKey.SignMessage(message);
+            var signature = privateEcdsaKey.PrivateKey.SignMessage(message);
             var signedBytes = Encoding.UTF8.GetBytes(signature);
 
             return signedBytes;

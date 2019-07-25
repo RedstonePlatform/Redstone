@@ -31,9 +31,7 @@ namespace Redstone.Feature.ServiceNode.Tests
                 ecdsa.PubKey,
                 new Uri("https://restone.com/servicetest"));
 
-            var cryptoUtils = new CryptoUtils(rsa, ecdsa);
-            token.RsaSignature = cryptoUtils.SignDataRSA(token.GetHeaderBytes().ToArray());
-            token.EcdsaSignature = cryptoUtils.SignDataECDSA(token.GetHeaderBytes().ToArray());
+            token.EcdsaSignature = CryptoUtils.SignDataECDSA(token.GetHeaderBytes().ToArray(), ecdsa);
 
             Assert.True(token.Validate(RedstoneNetworks.Main));
         }
@@ -42,7 +40,6 @@ namespace Redstone.Feature.ServiceNode.Tests
         [Fact]
         public void CheckSignatureOfRegistrationToken()
         {
-            var rsa = new RsaKey();
             var ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.Main);
 
             var token = new RegistrationToken(1,
@@ -58,11 +55,9 @@ namespace Redstone.Feature.ServiceNode.Tests
             // Only the 'header' portion of the registration token gets signed, minus the length bytes
             var message = token.GetHeaderBytes();
 
-            var cryptoUtils = new CryptoUtils(rsa, ecdsa);
-            token.RsaSignature = cryptoUtils.SignDataRSA(message.ToArray());
-            token.EcdsaSignature = cryptoUtils.SignDataECDSA(message.ToArray());
+            token.EcdsaSignature = CryptoUtils.SignDataECDSA(message.ToArray(), ecdsa);
 
-            var signature = cryptoUtils.SignDataECDSA(message.ToArray());
+            var signature = CryptoUtils.SignDataECDSA(message.ToArray(), ecdsa);
             Assert.True(CryptoUtils.VerifySignatureECDSA(message.ToArray(), ecdsa.PubKey, Encoding.UTF8.GetString(signature)));
             Assert.True(token.VerifySignatures());
         }
@@ -70,7 +65,6 @@ namespace Redstone.Feature.ServiceNode.Tests
         [Fact]
         public void CanVerifySignature()
         {
-            var rsa = new RsaKey();
             var ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.Main);
 
             var token = new RegistrationToken(1,
@@ -83,8 +77,7 @@ namespace Redstone.Feature.ServiceNode.Tests
                 ecdsa.PubKey,
                 new Uri("https://redstone.com.test"));
 
-            var cryptoUtils = new CryptoUtils(rsa, ecdsa);
-            token.EcdsaSignature = cryptoUtils.SignDataECDSA(token.GetHeaderBytes().ToArray());
+            token.EcdsaSignature = CryptoUtils.SignDataECDSA(token.GetHeaderBytes().ToArray(), ecdsa);
 
             Assert.True(token.VerifySignatures());
         }
