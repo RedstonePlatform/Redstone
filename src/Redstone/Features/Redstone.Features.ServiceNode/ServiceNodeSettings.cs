@@ -68,7 +68,7 @@ namespace Redstone.Features.ServiceNode
         public string CollateralAddress { get; set; }
         public string RewardAddress { get; set; }
 
-        public string ServiceEndpoint { get; set; }
+        public Uri ServiceEndpoint { get; set; }
 
         public string RsaKeyFile { get; set; }
 
@@ -195,8 +195,7 @@ namespace Redstone.Features.ServiceNode
                 {
                     try
                     {
-                        new Uri(serviceEndpoint);
-                        this.ServiceEndpoint = serviceEndpoint;
+                        this.ServiceEndpoint = new Uri(serviceEndpoint);
                     }
                     catch (Exception e)
                     {

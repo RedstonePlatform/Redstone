@@ -237,7 +237,9 @@ namespace Redstone.ServiceNode
         {
             this.SyncedHeight = this.KeyValueRepo.LoadValueJson<int>(SyncedHeightKey);
             this.SyncedBlockHash = this.KeyValueRepo.LoadValueJson<uint256>(SyncedBlockHashKey);
-            SetServiceNodes(this.KeyValueRepo.LoadValueJson<List<IServiceNode>>(ServiceNodesKey));
+            var serviceNodes = new List<IServiceNode>();
+            serviceNodes.AddRange(this.KeyValueRepo.LoadValueJson<List<Models.ServiceNode>>(ServiceNodesKey));
+            SetServiceNodes(serviceNodes);
 
             if (this.ServiceNodes == null)
             {

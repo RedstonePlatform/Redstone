@@ -11,10 +11,8 @@ using NBitcoin;
 using Redstone.ServiceNode;
 using Redstone.ServiceNode.Models;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Utilities.JsonErrors;
 
 namespace Redstone.Features.ServiceNode
@@ -136,7 +134,8 @@ namespace Redstone.Features.ServiceNode
                     CollateralPubKeyHash = collateralPubKeyHash,
                     RewardPubKeyHash = rewardPubKeyHash,
                     TxFeeValue = this.serviceNodeSettings.TxFeeValue,
-                    TxOutputValue = this.serviceNodeSettings.TxOutputValue
+                    TxOutputValue = this.serviceNodeSettings.TxOutputValue,
+                    ServiceEndpoint = this.serviceNodeSettings.ServiceEndpoint
                 };
 
                 if (!registration.IsRegistrationValid(config))
