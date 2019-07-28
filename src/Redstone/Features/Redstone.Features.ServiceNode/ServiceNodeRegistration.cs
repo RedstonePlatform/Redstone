@@ -40,14 +40,19 @@ namespace Redstone.Features.ServiceNode
             this.serviceNodeManager = serviceNodeManager;
         }
 
-        public bool IsRegistrationValid(IServiceNodeRegistrationConfig registrationConfig)
+        public bool CheckExistingRegistration(IServiceNodeRegistrationConfig registrationConfig)
         {
+            // In order to determine if the registration sequence has been performed
+            // before, and to see if a previous performance is still valid, interrogate 
+            // the service node manager 
+
             IServiceNode serviceNode = this.serviceNodeManager.GetByServerId(registrationConfig.CollateralPubKeyHash.ToString());
 
-            // If no transactions exist, the registration definitely needs to be done
+            // If no service matching node then registration definitely needs to be done
             if (serviceNode == null)
                 return false;
 
+            // Now check config against existing service node
             RegistrationToken registrationToken = serviceNode.RegistrationRecord.Token;
 
             // IPv4
@@ -97,8 +102,8 @@ namespace Redstone.Features.ServiceNode
 
         public async Task<Transaction> PerformRegistrationAsync(
             IServiceNodeRegistrationConfig registrationConfig,
-            string walletName, 
-            string walletPassword, 
+            string walletName,
+            string walletPassword,
             string accountName)
         {
             Transaction transaction = null;

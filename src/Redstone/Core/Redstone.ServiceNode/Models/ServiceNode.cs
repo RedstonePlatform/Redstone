@@ -17,10 +17,15 @@ namespace Redstone.ServiceNode.Models
         public string ServerId => this.CollateralPubKeyHash.ToString();
 
         /// <inheritdoc />
-        public PubKey SigningPubKey => this.RegistrationRecord.Token.EcdsaPubKey;
+        public PubKey EcdsaPubKey => this.RegistrationRecord.Token.EcdsaPubKey;
 
         /// <inheritdoc />
         public KeyId CollateralPubKeyHash => this.RegistrationRecord.Token.CollateralPubKeyHash;
+
+        public BitcoinAddress GetCollateralAddress(Network network)
+        {
+            return this.CollateralPubKeyHash.GetAddress(network);
+        }
 
         /// <inheritdoc />
         public KeyId RewardPubKeyHash => this.RegistrationRecord.Token.RewardPubKeyHash;

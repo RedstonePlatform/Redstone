@@ -138,7 +138,7 @@ namespace Redstone.Features.ServiceNode
                     ServiceEndpoint = this.serviceNodeSettings.ServiceEndpoint
                 };
 
-                if (!registration.IsRegistrationValid(config))
+                if (!registration.CheckExistingRegistration(config))
                 {
                     this.logger.LogInformation("{Time} Creating or updating node registration", DateTime.Now);
                     Transaction regTx = await registration.PerformRegistrationAsync(config, request.WalletName, request.Password, request.AccountName);

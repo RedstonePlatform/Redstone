@@ -111,14 +111,14 @@ namespace Redstone.ServiceNode
             }
 
             // Loaded key has to be a key for current service node.
-            if (this.ServiceNodes.All(x => x.SigningPubKey != this.CurrentServiceNodeKey.PubKey))
+            if (this.ServiceNodes.All(x => x.EcdsaPubKey != this.CurrentServiceNodeKey.PubKey))
             {
                 string message = "Key provided is not registered on the network!";
 
                 this.Logger.LogWarning(message);
             }
 
-            this.Logger.LogInformation("Federation key pair was successfully loaded. Your public key is: '{0}'.", this.CurrentServiceNodeKey.PubKey);
+            this.Logger.LogInformation("ServiceNode key pair was successfully loaded. Your public key is: '{0}'.", this.CurrentServiceNodeKey.PubKey);
         }
         public virtual void Stop()
         {
@@ -127,7 +127,7 @@ namespace Redstone.ServiceNode
 
         private void SetIsServiceNode()
         {
-            this.IsServiceNode = this.ServiceNodes.Any(x => x.SigningPubKey == this.CurrentServiceNodeKey?.PubKey);
+            this.IsServiceNode = this.ServiceNodes.Any(x => x.EcdsaPubKey == this.CurrentServiceNodeKey?.PubKey);
         }
 
         /// <inheritdoc />
@@ -147,7 +147,6 @@ namespace Redstone.ServiceNode
             }
         }
 
-
         protected void SetServiceNodes(List<IServiceNode> serviceNodesToSet)
         {
             lock (this.locker)
@@ -166,14 +165,15 @@ namespace Redstone.ServiceNode
                     return;
                 }
 
-                // Remove any that have a matching pubkey
-                IEnumerable<IServiceNode> nodesWithMatchingPubKeys = this.ServiceNodes.Where(s => s.SigningPubKey == serviceNode.SigningPubKey).ToList();
-
-                foreach (IServiceNode node in nodesWithMatchingPubKeys)
+                // Remove any that have a matching collateral address
+                BitcoinAddress serviceNodeCollateralAddress = serviceNode.GetCollateralAddress(this.network);
+                var nodesWithMatchingPubKeys = this.ServiceNodes.Where(sn => sn.GetCollateralAddress(this.network) == serviceNodeCollateralAddress).ToList();
+                foreach (IServiceNode matchingNode in nodesWithMatchingPubKeys)
                 {
-                    this.ServiceNodes.Remove(serviceNode);
+                    this.ServiceNodes.Remove(matchingNode);
                 }
 
+                // Add new one
                 this.ServiceNodes.Add(serviceNode);
 
                 SaveServiceNodes();
@@ -181,6 +181,7 @@ namespace Redstone.ServiceNode
 
                 this.Logger.LogInformation("Federation member '{0}' was added!", serviceNode);
 
+                // Publish events
                 foreach (IServiceNode node in nodesWithMatchingPubKeys)
                 {
                     this.signals.Publish(new ServiceNodeRemoved(serviceNode));
