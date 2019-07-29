@@ -72,7 +72,7 @@ echo -e "*Creating your Service Node wallet ... please wait."
 WalletSecretWords=$(sed -e 's/^"//' -e 's/"$//' <<<$(curl -sX GET "http://localhost:$apiport/api/Wallet/mnemonic?language=english&wordCount=12" -H "accept: application/json")) 
 
 ### create the wallet
-curl -sX POST "http://localhost:$apiport/api/Wallet/recover" -H  "accept: application/json" -H  "Content-Type: application/json-patch+json" -d "{  \"mnemonic\": \"$WalletSecretWords\",  \"password\": \"$WalletPassword\",  \"passphrase\": \"$WalletPassphrase\",  \"name\": \"$WalletName\",  \"creationDate\": \"2019-01-01T07:33:09.051Z\"}" &>> ${logfile}
+curl -sX POST "http://localhost:$apiport/api/Wallet/create" -H  "accept: application/json" -H  "Content-Type: application/json-patch+json" -d "{  \"mnemonic\": \"$WalletSecretWords\",  \"password\": \"$WalletPassword\",  \"passphrase\": \"$WalletPassphrase\",  \"name\": \"$WalletName\",  \"creationDate\": \"2019-01-01T07:33:09.051Z\"}" &>> ${logfile}
 
 ### Get the address
 ServiceNodeAddress=$(sed -e 's/^"//' -e 's/"$//' <<<$(curl -sX GET "http://localhost:$apiport/api/Wallet/unusedaddress?WalletName=$WalletName&AccountName=account%200" -H  "accept: application/json"))
