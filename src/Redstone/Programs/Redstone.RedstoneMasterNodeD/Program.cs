@@ -59,10 +59,10 @@ namespace Redstone.RedstoneServiceNodeD
                     {
                         builder = builder
                             .UseBlockStore()
-                            .UsePosConsensus()
+                            .UseRedstonePosConsensus()
                             .UseMempool()
                             .UseWallet()
-                            .AddPowPosMining();
+                            .AddRedstoneMining();
                     }
                     else
                     {

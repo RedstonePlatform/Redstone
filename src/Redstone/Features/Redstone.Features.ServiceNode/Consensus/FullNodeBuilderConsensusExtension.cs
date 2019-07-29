@@ -24,6 +24,7 @@ using Stratis.Bitcoin.Features.Miner.Staking;
 using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
+using static Stratis.Bitcoin.Features.Consensus.FullNodeBuilderConsensusExtension;
 
 namespace Redstone.ServiceNode.Consensus
 {
@@ -90,70 +91,11 @@ namespace Redstone.ServiceNode.Consensus
                             .AddSingleton<IGetUnspentTransaction, ConsensusQuery>(provider => provider.GetService<ConsensusQuery>());
                         services.AddSingleton<IProvenBlockHeaderStore, ProvenBlockHeaderStore>();
                         services.AddSingleton<IProvenBlockHeaderRepository, ProvenBlockHeaderRepository>();
-                        new PosServiceNodeConsensusRulesRegistration().RegisterRules(fullNodeBuilder.Network.Consensus);
+                        new PosConsensusRulesRegistration().RegisterRules(fullNodeBuilder.Network.Consensus);
                     });
             });
 
             return fullNodeBuilder;
-        }
-        public class PosServiceNodeConsensusRulesRegistration : IRuleRegistration
-        {
-            public void RegisterRules(IConsensus consensus)
-            {
-                consensus.HeaderValidationRules = new List<IHeaderValidationConsensusRule>()
-                {
-                    new HeaderTimeChecksRule(),
-                    new HeaderTimeChecksPosRule(),
-                    new StratisBugFixPosFutureDriftRule(),
-                    new CheckDifficultyPosRule(),
-                    new StratisHeaderVersionRule(),
-                    new ProvenHeaderSizeRule(),
-                    new ProvenHeaderCoinstakeRule()
-                };
-
-                consensus.IntegrityValidationRules = new List<IIntegrityValidationConsensusRule>()
-                {
-                    new BlockMerkleRootRule(),
-                    new PosBlockSignatureRepresentationRule(),
-                    new PosBlockSignatureRule(),
-                };
-
-                consensus.PartialValidationRules = new List<IPartialValidationConsensusRule>()
-                {
-                    new SetActivationDeploymentsPartialValidationRule(),
-
-                    new PosTimeMaskRule(),
-
-                    // rules that are inside the method ContextualCheckBlock
-                    new TransactionLocktimeActivationRule(), // implements BIP113
-                    new CoinbaseHeightActivationRule(), // implements BIP34
-                    new WitnessCommitmentsRule(), // BIP141, BIP144
-                    new BlockSizeRule(),
-
-                    // rules that are inside the method CheckBlock
-                    new EnsureCoinbaseRule(),
-                    new CheckPowTransactionRule(),
-                    new CheckPosTransactionRule(),
-                    new CheckSigOpsRule(),
-                    new PosCoinstakeRule(),
-                };
-
-                consensus.FullValidationRules = new List<IFullValidationConsensusRule>()
-                {
-                    new SetActivationDeploymentsFullValidationRule(),
-
-                    new CheckDifficultyHybridRule(),
-
-                    // rules that require the store to be loaded (coinview)
-                    new LoadCoinviewRule(),
-                    new TransactionDuplicationActivationRule(), // implements BIP30
-                    new PosCoinviewRule(), // implements BIP68, MaxSigOps and BlockReward calculation
-                    // Place the PosColdStakingRule after the PosCoinviewRule to ensure that all input scripts have been evaluated
-                    // and that the "IsColdCoinStake" flag would have been set by the OP_CHECKCOLDSTAKEVERIFY opcode if applicable.
-                    new PosColdStakingRule(),
-                    new SaveCoinviewRule()
-                };
-            }
         }
     }
 }

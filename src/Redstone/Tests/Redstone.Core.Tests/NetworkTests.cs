@@ -309,7 +309,7 @@
                     .ToBytes(false)), network.Consensus.ProofOfStakeLimitV2);
             Assert.Null(network.Consensus.DefaultAssumeValid);
             Assert.Equal(10, network.Consensus.CoinbaseMaturity);
-            Assert.Equal(Money.Coins(30000), network.Consensus.PremineReward);
+            Assert.Equal(Money.Coins(98000000), network.Consensus.PremineReward);
             Assert.Equal(2, network.Consensus.PremineHeight);
             Assert.Equal(Money.Coins(30), network.Consensus.ProofOfWorkReward);
             Assert.Equal(Money.Coins(15), network.Consensus.ProofOfStakeReward);
@@ -320,9 +320,9 @@
             Assert.Equal(long.MaxValue, network.Consensus.MaxMoney);
 
             Block genesis = network.GetGenesis();
-            Assert.Equal(uint256.Parse("0x73adc2f9728610254f81586493df43fd9f0b97b933c6dd1795c53cf52e5d4739"),
+            Assert.Equal(uint256.Parse("0x04a37c7826c24797ad84f24f557e08e33a64fa57c97211a4c6faa1559c20b34b"),
                 genesis.GetHash());
-            Assert.Equal(uint256.Parse("98e05f87db00cc2aa055a927525d3d40b60313405774ae39d2aa0b3617ba5c7e"),
+            Assert.Equal(uint256.Parse("0ad80b454d4060b0f9bc821d94ec14da59ea7194a9fd3875b31c14873d202b7d"),
                 genesis.Header.HashMerkleRoot);
         }
     }

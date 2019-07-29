@@ -61,10 +61,10 @@ namespace Redstone.RedstoneFullNodeD
                     {
                         builder = builder
                             .UseBlockStore()
-                            .UsePosConsensus()
+                            .UseRedstonePosConsensus()
                             .UseMempool()
                             .UseWallet()
-                            .AddPowPosMining();
+                            .AddRedstoneMining();
                     }
                     else
                     {
