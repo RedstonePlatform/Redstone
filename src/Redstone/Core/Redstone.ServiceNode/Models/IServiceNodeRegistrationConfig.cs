@@ -24,7 +24,7 @@ namespace Redstone.ServiceNode.Models
 
         KeyId RewardPubKeyHash { get; set; }
 
-        BitcoinSecret EcdsaPrivateKey { get; set; }
+        Key PrivateKey { get; set; }
 
         Uri ServiceEndpoint { get; set; }
 

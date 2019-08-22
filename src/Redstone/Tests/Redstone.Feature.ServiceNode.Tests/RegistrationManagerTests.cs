@@ -21,7 +21,7 @@ namespace Redstone.Feature.ServiceNode.Tests
             {
                 var node = builder.CreateRedstonePosNode(RedstoneNetworks.RegTest).Start();
 
-                BitcoinSecret ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.Main);
+                Key privateKey = new Key();
 
                 var token = new RegistrationToken(255,
                                                   IPAddress.Parse("127.0.0.1"),
@@ -30,10 +30,10 @@ namespace Redstone.Feature.ServiceNode.Tests
                                                   37123,
                                                   new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
                                                   new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
-                                                  ecdsa.PubKey,
+                                                  privateKey.PubKey,
                                                   new Uri("https://redstone.com/test"));
 
-                token.EcdsaSignature = CryptoUtils.SignDataECDSA(token.GetHeaderBytes().ToArray(), ecdsa);
+                token.Signature = CryptoUtils.SignData(token.GetHeaderBytes().ToArray(), privateKey);
 
                 RegistrationRecord record = new RegistrationRecord(DateTime.Now,
                                                                    Guid.NewGuid(),

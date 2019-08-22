@@ -113,7 +113,6 @@ namespace Redstone.Features.ServiceNode
 
                 transaction = TransactionUtils.BuildTransaction(this.network,
                     this.walletTransactionHandler,
-                    this.walletManager,
                     registrationConfig,
                     registrationToken,
                     walletName,

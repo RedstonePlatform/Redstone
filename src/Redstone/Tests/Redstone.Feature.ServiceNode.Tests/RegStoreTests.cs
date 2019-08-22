@@ -22,8 +22,7 @@ namespace Redstone.Feature.ServiceNode.Tests
         [Fact]
         public void RegistrationStoreAddTest()
         {
-            var ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.Main);
-            
+            var privateKey = new Key();
             var token = new RegistrationToken(255,
                                               IPAddress.Parse("127.0.0.1"),
                                               IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
@@ -31,10 +30,10 @@ namespace Redstone.Feature.ServiceNode.Tests
                                               37123,
                                               new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
                                               new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
-                                              ecdsa.PubKey,
+                                              privateKey.PubKey,
                                               new Uri("https://redstone.com/test"));
             
-            token.EcdsaSignature = CryptoUtils.SignDataECDSA(token.GetHeaderBytes().ToArray(), ecdsa);
+            token.Signature = CryptoUtils.SignData(token.GetHeaderBytes().ToArray(), privateKey);
 
             RegistrationRecord record = new RegistrationRecord(DateTime.Now,
                                                                Guid.NewGuid(),
@@ -50,7 +49,7 @@ namespace Redstone.Feature.ServiceNode.Tests
         [Fact]
         public void RegistrationStoreGetOneTest()
         {
-            var ecdsaPub = new Key().PubKey;
+            var pubKey = new Key().PubKey;
             var token = new RegistrationToken(255,
                                               IPAddress.Parse("127.0.0.1"),
                                               IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
@@ -58,10 +57,10 @@ namespace Redstone.Feature.ServiceNode.Tests
                                               37123,
                                               new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
                                               new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
-                                              ecdsaPub,
+                                              pubKey,
                                               new Uri("https://redstone.com/test"));
 
-            token.EcdsaSignature = Encoding.ASCII.GetBytes("abc");
+            token.Signature = Encoding.ASCII.GetBytes("abc");
 
             RegistrationRecord record = new RegistrationRecord(DateTime.Now,
                                                                Guid.NewGuid(),
@@ -85,7 +84,7 @@ namespace Redstone.Feature.ServiceNode.Tests
             Assert.Equal(retrievedRecord.Ipv6Addr, IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"));
             Assert.Equal("0123456789ABCDEF", retrievedRecord.OnionAddress);
             Assert.Equal(37123, retrievedRecord.Port);
-            Assert.Equal(retrievedRecord.EcdsaPubKey, ecdsaPub);
+            Assert.Equal(retrievedRecord.PubKey, pubKey);
         }
 
         [Fact]
@@ -101,7 +100,7 @@ namespace Redstone.Feature.ServiceNode.Tests
                                               null,
                                               new Uri("https://redstone.com/test"));
 
-            token.EcdsaSignature = Encoding.ASCII.GetBytes("ghi");
+            token.Signature = Encoding.ASCII.GetBytes("ghi");
 
             RegistrationRecord record = new RegistrationRecord(DateTime.Now,
                                                                Guid.NewGuid(),
@@ -123,7 +122,7 @@ namespace Redstone.Feature.ServiceNode.Tests
                                                null,
                                                new Uri("https://redstone.com/test"));
 
-            token2.EcdsaSignature = Encoding.ASCII.GetBytes("abc");
+            token2.Signature = Encoding.ASCII.GetBytes("abc");
 
             RegistrationRecord record2 = new RegistrationRecord(DateTime.Now,
                                                                 Guid.NewGuid(),

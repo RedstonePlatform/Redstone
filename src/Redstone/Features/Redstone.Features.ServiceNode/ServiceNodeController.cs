@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Security;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Redstone.ServiceNode;
 using Redstone.ServiceNode.Models;
+using Redstone.ServiceNode.Utils;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
@@ -89,29 +88,6 @@ namespace Redstone.Features.ServiceNode
         [ProducesResponseType(typeof(RegisterServiceNodeResponse), 200)]
         public async Task<IActionResult> RegisterAsync(RegisterServiceNodeRequest request)
         {
-            Key key;
-
-            try
-            {
-                key = this.GetPrivateKey(request.WalletName, request.Password);
-            }
-            catch (FileNotFoundException e)
-            {
-                this.logger.LogError("Exception occurred: {0}", e.ToString());
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.NotFound, "This wallet was not found at the specified location.", e.ToString());
-            }
-            catch (SecurityException e)
-            {
-                // indicates that the password is wrong
-                this.logger.LogError("Exception occurred: {0}", e.ToString());
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.Forbidden, "Wrong password, please try again.", e.ToString());
-            }
-            catch (Exception e)
-            {
-                this.logger.LogError("Exception occurred: {0}", e.ToString());
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
-            }
-
             try
             {
                 var registration = new ServiceNodeRegistration(this.network,
@@ -120,6 +96,8 @@ namespace Redstone.Features.ServiceNode
                     this.walletTransactionHandler,
                     this.walletManager,
                     this.serviceNodeManager);
+
+                Key key = new KeyTool(this.nodeSettings.DataFolder).LoadPrivateKey();
 
                 (KeyId collateralPubKeyHash, KeyId rewardPubKeyHash) = GetPubKeyHashes(this.serviceNodeSettings, request.WalletName, request.AccountName);
 
@@ -130,7 +108,7 @@ namespace Redstone.Features.ServiceNode
                     Ipv6Address = this.serviceNodeSettings.Ipv6Address ?? IPAddress.IPv6None,
                     OnionAddress = null,
                     Port = this.serviceNodeSettings.Port,
-                    EcdsaPrivateKey = key.GetBitcoinSecret(this.network),
+                    PrivateKey = key,
                     CollateralPubKeyHash = collateralPubKeyHash,
                     RewardPubKeyHash = rewardPubKeyHash,
                     TxFeeValue = this.serviceNodeSettings.TxFeeValue,
@@ -170,16 +148,6 @@ namespace Redstone.Features.ServiceNode
                 Console.WriteLine(e);
                 throw;
             }
-        }
-
-        private Key GetPrivateKey(string walletName, string walletPassword)
-        {
-            Wallet wallet = this.walletManager.LoadWallet(walletPassword, walletName);
-            HdAddress hdAddress = wallet.GetAllAddresses().FirstOrDefault();
-            if (hdAddress == null)
-                throw new InvalidOperationException("Could not find adreess in specified wallet");
-            ISecret extendedPrivateKey = wallet.GetExtendedPrivateKeyForAddress(walletPassword, hdAddress);
-            return extendedPrivateKey.PrivateKey;
         }
 
         private (KeyId collateralPubKeyHash, KeyId rewardPubKeyHash) GetPubKeyHashes(ServiceNodeSettings serviceNodeSettings, string walletName, string accountName)

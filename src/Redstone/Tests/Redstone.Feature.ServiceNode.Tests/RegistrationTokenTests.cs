@@ -15,11 +15,8 @@ namespace Redstone.Feature.ServiceNode.Tests
         [Fact]
          public void CanValidateRegistrationToken()
         {
-            var rsa = new RsaKey();
-            var ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.Main);
+            var privateKey = new Key();
 
-            var serverAddress = ecdsa.GetAddress().ToString();
-            
             var token = new RegistrationToken(
                 (int)ServiceNodeProtocolVersion.INITIAL,
                 IPAddress.Parse("127.0.0.1"),
@@ -28,10 +25,10 @@ namespace Redstone.Feature.ServiceNode.Tests
                 37123,
                 new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
                 new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
-                ecdsa.PubKey,
+                privateKey.PubKey,
                 new Uri("https://restone.com/servicetest"));
 
-            token.EcdsaSignature = CryptoUtils.SignDataECDSA(token.GetHeaderBytes().ToArray(), ecdsa);
+            token.Signature = CryptoUtils.SignData(token.GetHeaderBytes().ToArray(), privateKey);
 
             Assert.True(token.Validate(RedstoneNetworks.Main));
         }
@@ -40,7 +37,7 @@ namespace Redstone.Feature.ServiceNode.Tests
         [Fact]
         public void CheckSignatureOfRegistrationToken()
         {
-            var ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.Main);
+            var privateKey = new Key();
 
             var token = new RegistrationToken(1,
                 IPAddress.Parse("172.16.1.10"),
@@ -49,23 +46,23 @@ namespace Redstone.Feature.ServiceNode.Tests
                 16174,
                 new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
                 new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
-                ecdsa.PubKey,
+                privateKey.PubKey,
                 new Uri("https://redstone.com/test"));
 
             // Only the 'header' portion of the registration token gets signed, minus the length bytes
             var message = token.GetHeaderBytes();
 
-            token.EcdsaSignature = CryptoUtils.SignDataECDSA(message.ToArray(), ecdsa);
+            token.Signature = CryptoUtils.SignData(message.ToArray(), privateKey);
 
-            var signature = CryptoUtils.SignDataECDSA(message.ToArray(), ecdsa);
-            Assert.True(CryptoUtils.VerifySignatureECDSA(message.ToArray(), ecdsa.PubKey, Encoding.UTF8.GetString(signature)));
+            var signature = CryptoUtils.SignData(message.ToArray(), privateKey);
+            Assert.True(CryptoUtils.VerifySignature(message.ToArray(), privateKey.PubKey, Encoding.UTF8.GetString(signature)));
             Assert.True(token.VerifySignatures());
         }
 
         [Fact]
         public void CanVerifySignature()
         {
-            var ecdsa = new Key().GetBitcoinSecret(RedstoneNetworks.Main);
+            var privateKey = new Key();
 
             var token = new RegistrationToken(1,
                 IPAddress.Parse("172.16.1.10"),
@@ -74,10 +71,10 @@ namespace Redstone.Feature.ServiceNode.Tests
                 16174,
                 new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
                 new KeyId("dbb476190a81120928763ee8ce97e4c0bcfd6624"),
-                ecdsa.PubKey,
+                privateKey.PubKey,
                 new Uri("https://redstone.com.test"));
 
-            token.EcdsaSignature = CryptoUtils.SignDataECDSA(token.GetHeaderBytes().ToArray(), ecdsa);
+            token.Signature = CryptoUtils.SignData(token.GetHeaderBytes().ToArray(), privateKey);
 
             Assert.True(token.VerifySignatures());
         }

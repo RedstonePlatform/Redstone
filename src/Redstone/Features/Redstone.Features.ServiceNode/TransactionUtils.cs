@@ -15,7 +15,6 @@ namespace Redstone.Features.ServiceNode
         public static Transaction BuildTransaction(
             Network network,
             IWalletTransactionHandler walletTransactionHandler,
-            IWalletManager walletManager,
             IServiceNodeRegistrationConfig registrationConfig,
             RegistrationToken registrationToken,
             string walletName,
@@ -28,9 +27,6 @@ namespace Redstone.Features.ServiceNode
                 WalletName = walletName
             };
             
-            Wallet wallet = walletManager.LoadWallet(password, walletName);
-            HdAddress hdAddress = wallet.GetAllAddresses().FirstOrDefault(hda => hda.Address == registrationConfig.EcdsaPrivateKey.GetAddress().ToString());
-
             var context = new TransactionBuildContext(network)
             {
                 AccountReference = accountReference,
@@ -51,7 +47,7 @@ namespace Redstone.Features.ServiceNode
 
         private static List<Recipient> GetRecipients(IServiceNodeRegistrationConfig registrationConfig, RegistrationToken registrationToken)
         {
-            byte[] tokenBytes = registrationToken.GetRegistrationTokenBytes(registrationConfig.EcdsaPrivateKey);
+            byte[] tokenBytes = registrationToken.GetRegistrationTokenBytes(registrationConfig.PrivateKey);
             byte[] markerBytes = Encoding.UTF8.GetBytes(RegistrationToken.Marker);
 
             var recipients = new List<Recipient>

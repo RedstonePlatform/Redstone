@@ -33,7 +33,8 @@ namespace Redstone.Feature.ServiceNode.Tests
         private IAddressIndexer addressIndexer;
         private IServiceNodeManager watchingServiceNodeManager;
         private IAddressIndexer watchingAddressIndexer;
-        private BitcoinSecret serverSecret;
+        private Key walletKey;
+        private BitcoinSecret walletSecret;
         private readonly Money collateral;
         private readonly int maturity;
 
@@ -82,7 +83,7 @@ namespace Redstone.Feature.ServiceNode.Tests
                 AssertNodeCountAndBalance(1, new Money(0, MoneyUnit.BTC));
 
                 // Pay Collateral
-                CreateTransactionAndBroadcast(this.collateral, this.serverSecret);
+                CreateTransactionAndBroadcast(this.collateral, this.walletSecret);
                 MineConnectAndSync();
                 AssertNodeCountAndBalance(1, this.collateral);
 
@@ -115,7 +116,7 @@ namespace Redstone.Feature.ServiceNode.Tests
                 Money collateral = this.collateral - 1;
 
                 // Pay Collateral
-                CreateTransactionAndBroadcast(collateral, this.serverSecret);
+                CreateTransactionAndBroadcast(collateral, this.walletSecret);
                 MineConnectAndSync();
                 AssertNodeCountAndBalance(1, collateral);
 
@@ -149,16 +150,18 @@ namespace Redstone.Feature.ServiceNode.Tests
             this.watchingServiceNodeManager = this.watchingNode.FullNode.NodeService<IServiceNodeManager>();
             this.watchingAddressIndexer = this.watchingNode.FullNode.NodeService<IAddressIndexer>();
 
-            this.serverSecret = this.GetWalletPrivateKeyForServer();
+            this.walletKey = this.GetWalletPrivateKeyForServer();
+            this.walletSecret = this.walletKey.GetBitcoinSecret(this.network);
         }
-        private BitcoinSecret GetWalletPrivateKeyForServer()
+
+        private Key GetWalletPrivateKeyForServer()
         {
             IWalletManager wm = this.node.FullNode.NodeService<IWalletManager>();
 
             Wallet wallet = wm.LoadWallet(Password, WalletName);
             HdAddress hdAddress = wallet.GetAllAddresses().Last();
             ISecret extendedPrivateKey = wallet.GetExtendedPrivateKeyForAddress(Password, hdAddress);
-            return extendedPrivateKey.PrivateKey.GetBitcoinSecret(this.network);
+            return extendedPrivateKey.PrivateKey;
         }
 
         private void MineConnectAndSync(int mineBlockCount = 1)
@@ -174,10 +177,10 @@ namespace Redstone.Feature.ServiceNode.Tests
 
         private void AssertNodeCountAndBalance(int expectedNodeCount, Money expectedBalance)
         {
-            Money balance = this.addressIndexer.GetAddressBalance(this.serverSecret.GetAddress().ToString()) ?? 0;
+            Money balance = this.addressIndexer.GetAddressBalance(this.walletSecret.GetAddress().ToString()) ?? 0;
             List<IServiceNode> nodes = this.serviceNodeManager.GetServiceNodes();
 
-            Money watchingBalance = this.watchingAddressIndexer.GetAddressBalance(this.serverSecret.GetAddress().ToString()) ?? 0;
+            Money watchingBalance = this.watchingAddressIndexer.GetAddressBalance(this.walletSecret.GetAddress().ToString()) ?? 0;
             List<IServiceNode> watchingNodes = this.watchingServiceNodeManager.GetServiceNodes();
 
             this.output.WriteLine($"Expected {expectedBalance?.ToUnit(MoneyUnit.BTC)} | Balance: {balance?.ToUnit(MoneyUnit.BTC)}");
@@ -219,9 +222,9 @@ namespace Redstone.Feature.ServiceNode.Tests
                 ProtocolVersion = (int)ServiceNodeProtocolVersion.INITIAL,
                 Ipv4Address = IPAddress.Parse("127.0.0.1"),
                 Port = 37123,
-                CollateralPubKeyHash = this.serverSecret.PubKeyHash,
-                RewardPubKeyHash = this.serverSecret.PubKeyHash,
-                EcdsaPrivateKey = this.serverSecret,
+                CollateralPubKeyHash = this.walletSecret.PubKeyHash,
+                RewardPubKeyHash = this.walletSecret.PubKeyHash,
+                PrivateKey = this.walletKey,
                 ServiceEndpoint = new Uri("https://redstone.com/test")
             };
 
@@ -231,7 +234,6 @@ namespace Redstone.Feature.ServiceNode.Tests
             Transaction transaction = TransactionUtils.BuildTransaction(
                 this.network,
                 walletTransactionHandler,
-                this.walletManager,
                 config,
                 registrationToken,
                 WalletName,

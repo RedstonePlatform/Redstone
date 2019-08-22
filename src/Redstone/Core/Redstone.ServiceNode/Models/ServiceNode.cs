@@ -17,7 +17,7 @@ namespace Redstone.ServiceNode.Models
         public string ServerId => this.CollateralPubKeyHash.ToString();
 
         /// <inheritdoc />
-        public PubKey EcdsaPubKey => this.RegistrationRecord.Token.EcdsaPubKey;
+        public PubKey EcdsaPubKey => this.RegistrationRecord.Token.PubKey;
 
         /// <inheritdoc />
         public KeyId CollateralPubKeyHash => this.RegistrationRecord.Token.CollateralPubKeyHash;

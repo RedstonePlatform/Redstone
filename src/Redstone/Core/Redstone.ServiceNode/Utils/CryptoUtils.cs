@@ -5,15 +5,15 @@ namespace Redstone.ServiceNode.Utils
 {
     public class CryptoUtils
     {
-        public static byte[] SignDataECDSA(byte[] message, BitcoinSecret privateEcdsaKey)
+        public static byte[] SignData(byte[] message, Key privateKey)
         {
-            var signature = privateEcdsaKey.PrivateKey.SignMessage(message);
+            var signature = privateKey.SignMessage(message);
             var signedBytes = Encoding.UTF8.GetBytes(signature);
 
             return signedBytes;
         }
 
-        public static bool VerifySignatureECDSA(byte[] message, PubKey key, string signature)
+        public static bool VerifySignature(byte[] message, PubKey key, string signature)
         {
             return key.VerifyMessage(message, signature);
         }

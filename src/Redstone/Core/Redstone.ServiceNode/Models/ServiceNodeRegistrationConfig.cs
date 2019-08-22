@@ -16,7 +16,7 @@ namespace Redstone.ServiceNode.Models
                 this.Port,
                 this.CollateralPubKeyHash,
                 this.RewardPubKeyHash,
-                this.EcdsaPrivateKey.PubKey,
+                this.PrivateKey.PubKey,
                 this.ServiceEndpoint);
         }
 
@@ -38,7 +38,7 @@ namespace Redstone.ServiceNode.Models
 
         public KeyId RewardPubKeyHash { get; set; }
 
-        public BitcoinSecret EcdsaPrivateKey { get; set; }
+        public Key PrivateKey { get; set; }
 
         public Uri ServiceEndpoint { get; set; }
     }

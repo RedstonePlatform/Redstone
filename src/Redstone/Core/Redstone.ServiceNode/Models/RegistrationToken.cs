@@ -85,10 +85,10 @@ namespace Redstone.ServiceNode.Models
         [JsonConverter(typeof(UriConverter))]
         public Uri ServiceEndpoint { get; set; }
 
-        public byte[] EcdsaSignature { get; set; }
+        public byte[] Signature { get; set; }
 
         [JsonConverter(typeof(PubKeyConverter))]
-        public PubKey EcdsaPubKey { get; set; }
+        public PubKey PubKey { get; set; }
 
 
         public RegistrationToken(
@@ -99,7 +99,7 @@ namespace Redstone.ServiceNode.Models
             int port,
             KeyId collateralPubKeyHash,
             KeyId rewardPubKeyHash,
-            PubKey ecdsaPubKey,
+            PubKey pubKey,
             Uri serviceEndpoint)
         {
             this.ProtocolVersion = protocolVersion;
@@ -109,7 +109,7 @@ namespace Redstone.ServiceNode.Models
             this.Port = port;
             this.CollateralPubKeyHash = collateralPubKeyHash;
             this.RewardPubKeyHash = rewardPubKeyHash;
-            this.EcdsaPubKey = ecdsaPubKey;
+            this.PubKey = pubKey;
             this.ServiceEndpoint = serviceEndpoint;
         }
 
@@ -190,21 +190,21 @@ namespace Redstone.ServiceNode.Models
             return token;
         }
 
-        public byte[] GetRegistrationTokenBytes(BitcoinSecret ecsdaPrivateKey)
+        public byte[] GetRegistrationTokenBytes(Key privateKey)
         {
             var token = GetHeaderBytes();
 
-            // Sign header (excluding preliminary length marker bytes) with ECDSA
-            this.EcdsaSignature = CryptoUtils.SignDataECDSA(token.ToArray(), ecsdaPrivateKey);
-            byte[] ecdsaLength = BitConverter.GetBytes(this.EcdsaSignature.Length);
+            // Sign header (excluding preliminary length marker bytes) with private key
+            this.Signature = CryptoUtils.SignData(token.ToArray(), privateKey);
+            byte[] ecdsaLength = BitConverter.GetBytes(this.Signature.Length);
 
             token.AddRange(ecdsaLength);
-            token.AddRange(this.EcdsaSignature);
+            token.AddRange(this.Signature);
 
-            byte[] pubKeyLength = BitConverter.GetBytes(this.EcdsaPubKey.ToBytes().Length);
+            byte[] pubKeyLength = BitConverter.GetBytes(this.PubKey.ToBytes().Length);
             token.Add(pubKeyLength[0]);
             token.Add(pubKeyLength[1]);
-            token.AddRange(this.EcdsaPubKey.ToBytes());
+            token.AddRange(this.PubKey.ToBytes());
 
             // Finally add protocol byte and computed length to beginning of header
             byte[] protocolVersionByte = BitConverter.GetBytes(this.ProtocolVersion);
@@ -386,14 +386,14 @@ namespace Redstone.ServiceNode.Models
             var ecdsaLength = (temp[1] << 8) + temp[0];
             position += 4;
 
-            this.EcdsaSignature = GetSubArray(bitstream, position, ecdsaLength);
+            this.Signature = GetSubArray(bitstream, position, ecdsaLength);
             position += ecdsaLength;
 
             temp = GetSubArray(bitstream, position, 2);
             var ecdsaPubKeyLength = (temp[1] << 8) + temp[0];
             position += 2;
 
-            this.EcdsaPubKey = new PubKey(GetSubArray(bitstream, position, ecdsaPubKeyLength));
+            this.PubKey = new PubKey(GetSubArray(bitstream, position, ecdsaPubKeyLength));
             position += ecdsaPubKeyLength;
 
             // TODO: Validate signatures
@@ -401,15 +401,15 @@ namespace Redstone.ServiceNode.Models
 
         public bool VerifySignatures()
         {
-            if (this.EcdsaPubKey != null && this.EcdsaSignature != null)
-                return this.EcdsaPubKey.VerifyMessage(GetHeaderBytes().ToArray(), Encoding.UTF8.GetString(this.EcdsaSignature));
+            if (this.PubKey != null && this.Signature != null)
+                return this.PubKey.VerifyMessage(GetHeaderBytes().ToArray(), Encoding.UTF8.GetString(this.Signature));
             else
                 return false;
         }
 
         public bool Validate(Network network)
         {
-            if (this.EcdsaPubKey == null)
+            if (this.PubKey == null)
                 return false;
 
             if (this.CollateralPubKeyHash == null)
@@ -454,8 +454,8 @@ namespace Redstone.ServiceNode.Models
                    this.OnionAddress == token.OnionAddress &&
                    this.Port == token.Port &&
                    EqualityComparer<Uri>.Default.Equals(this.ServiceEndpoint, token.ServiceEndpoint) &&
-                   EqualityComparer<byte[]>.Default.Equals(this.EcdsaSignature, token.EcdsaSignature) &&
-                   EqualityComparer<PubKey>.Default.Equals(this.EcdsaPubKey, token.EcdsaPubKey);
+                   EqualityComparer<byte[]>.Default.Equals(this.Signature, token.Signature) &&
+                   EqualityComparer<PubKey>.Default.Equals(this.PubKey, token.PubKey);
         }
 
         public override int GetHashCode()
@@ -469,8 +469,8 @@ namespace Redstone.ServiceNode.Models
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(this.OnionAddress);
             hashCode = hashCode * -1521134295 + this.Port.GetHashCode();
             hashCode = hashCode * -1521134295 + EqualityComparer<Uri>.Default.GetHashCode(this.ServiceEndpoint);
-            hashCode = hashCode * -1521134295 + EqualityComparer<byte[]>.Default.GetHashCode(this.EcdsaSignature);
-            hashCode = hashCode * -1521134295 + EqualityComparer<PubKey>.Default.GetHashCode(this.EcdsaPubKey);
+            hashCode = hashCode * -1521134295 + EqualityComparer<byte[]>.Default.GetHashCode(this.Signature);
+            hashCode = hashCode * -1521134295 + EqualityComparer<PubKey>.Default.GetHashCode(this.PubKey);
             return hashCode;
         }
     }
